@@ -47,13 +47,25 @@ object DateUtils {
         return "${date.get(Calendar.YEAR)}-$m-$d"
     }
 
-    /** 依据开学日期与总周数推算当前教学周（1..totalWeeks）。 */
-    fun currentWeek(semesterStart: String?, totalWeeks: Int): Int {
-        val start = parseLocalDate(semesterStart)
-        val diffDays = Math.floor((System.currentTimeMillis() - start.timeInMillis) / 86400000.0).toLong()
+    /** 依据开学日期与总周数推算当前教学周（1..totalWeeks）。
+     *  按「日历天数差」计算，与当天几点打开无关——
+     *  此前按「开学日正午」作锚点，跨周日上午仍会显示上一周，已修复。 */
+    fun currentWeek(semesterStart: String?, totalWeeks: Int, nowMillis: Long = System.currentTimeMillis()): Int {
+        val startMid = midnightOf(parseLocalDate(semesterStart))
+        val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
+        val diffDays = Math.round((midnightOf(now).timeInMillis - startMid.timeInMillis) / 86400000.0)
         val limit = if (totalWeeks > 0) totalWeeks else 20
         return Math.max(1, Math.min(limit, Math.floor(diffDays / 7.0).toInt() + 1))
     }
+
+    /** 归一到当天 0 点，消除时刻差异；用 round 吸收夏令时带来的 ±1 小时偏移。 */
+    private fun midnightOf(cal: Calendar): Calendar =
+        (cal.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
 
     /** 某教学周（week 从 1 开始）的周一至周日日期信息。 */
     fun datesForWeek(semesterStart: String?, week: Int): List<DayInfo> {
