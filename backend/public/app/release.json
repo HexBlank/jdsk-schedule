@@ -1,6 +1,6 @@
 {
-  "versionCode": 23,
-  "versionName": "1.2.20",
-  "changelog": "1. 设置页新增「开源项目地址」，可一键访问 GitHub 仓库",
-  "fileName": "jidianshangke-1.2.20.apk"
+  "versionCode": 24,
+  "versionName": "1.2.21",
+  "changelog": "1. 修复周一上午打开课表仍停留在上一周的问题",
+  "fileName": "jidianshangke-1.2.21.apk"
 }
