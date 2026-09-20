@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rescheduleScroll"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:overScrollMode="never">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_sheet"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="18dp">
+
+        <View
+            android:layout_width="38dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="15dp"
+            android:background="@drawable/bg_sheet_handle" />
+
+        <TextView
+            android:id="@+id/rescheduleTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="@string/reschedule_title"
+            android:textColor="@color/heading_ink"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="@string/reschedule_intro"
+            android:textColor="@color/sub_8a"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/reschedule_source_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/rescheduleSource"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_reschedule_source"
+            android:lineSpacingExtra="2dp"
+            android:textColor="@color/body_ink"
+            android:textSize="13sp" />
+
+        <!-- 目标日期：整学期日历直选（与调休面板同一个控件），
+             替代旧版「目标周次胶囊行 + 目标星期分段」两行抽象输入。 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/reschedule_date_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/rescheduleCalendarCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:paddingStart="8dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="10dp">
+
+            <com.zhusijiao.app.ui.common.HolidayCalendarView
+                android:id="@+id/rescheduleCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/rescheduleNoCalendar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/tt_section_bg"
+            android:padding="11dp"
+            android:text="@string/reschedule_no_calendar"
+            android:textColor="@color/sub_8a"
+            android:textSize="12.5sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/reschedule_section"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.zhusijiao.app.ui.common.ChipRowView
+            android:id="@+id/rescheduleSectionChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/reschedule_section" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/reschedule_room_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/rescheduleRoom"
+            style="@style/FieldInput"
+            android:layout_height="50dp"
+            android:backgroundTint="@null"
+            android:hint="@string/reschedule_room_hint"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLength="80"
+            android:singleLine="true" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_reschedule_summary"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/reschedule_summary_label"
+                android:textColor="@color/accent_strong"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/rescheduleSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/value_ink"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/rescheduleSave"
+            style="@style/PrimaryButton"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/reschedule_save" />
+
+        <TextView
+            android:id="@+id/rescheduleCancel"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_menu_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/common_cancel"
+            android:textColor="@color/sub_68"
+            android:textSize="14sp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

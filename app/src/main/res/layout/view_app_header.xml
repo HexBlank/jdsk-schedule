@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <TextView
+        android:id="@+id/headerBack"
+        android:layout_width="44dp"
+        android:layout_height="48dp"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="‹"
+        android:textColor="@color/ink"
+        android:textSize="28sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/headerTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/ink"
+        android:textSize="@dimen/text_nav_title"
+        android:textStyle="bold"
+        tools:text="课表库" />
+
+    <LinearLayout
+        android:id="@+id/headerActions"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="end|center_vertical"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp" />
+</merge>

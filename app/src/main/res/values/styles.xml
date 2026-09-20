@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 主要实心按钮：一页最多一个 -->
+    <style name="PrimaryButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/button_min_height</item>
+        <item name="android:background">@drawable/bg_primary_button</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textSize">@dimen/text_button</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+    </style>
+
+    <!-- 次要描边按钮 -->
+    <style name="GhostButton" parent="PrimaryButton">
+        <item name="android:background">@drawable/bg_ghost_button</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+
+    <style name="SectionTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">@dimen/text_section</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="PageTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/title_ink</item>
+        <item name="android:textSize">@dimen/text_page_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="PageSubtitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/muted</item>
+        <item name="android:textSize">@dimen/text_sub</item>
+        <item name="android:lineSpacingMultiplier">1.4</item>
+    </style>
+
+    <style name="FieldLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/field_label</item>
+        <item name="android:textSize">12.5sp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+    </style>
+
+    <style name="FieldInput">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:background">@drawable/bg_field</item>
+        <item name="android:paddingStart">11dp</item>
+        <item name="android:paddingEnd">11dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColorHint">@color/sub_a0</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:saveEnabled">false</item>
+    </style>
+
+    <!-- 空状态卡片标题/描述 -->
+    <style name="EmptyTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="EmptyDesc">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginBottom">14dp</item>
+        <item name="android:textColor">@color/muted</item>
+        <item name="android:textSize">@dimen/text_sub</item>
+        <item name="android:lineSpacingMultiplier">1.4</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <!-- 课表卡底栏的次级文字操作（更新/分享/删除） -->
+    <style name="CardAction">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/action_ink</item>
+        <item name="android:background">@drawable/bg_menu_row</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+</resources>

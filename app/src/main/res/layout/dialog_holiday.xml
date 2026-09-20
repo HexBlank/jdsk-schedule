@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  调休面板：上半部是整学期日历（可滚动），下半部是「所选日期 + 可做的操作」（固定不滚动），
+  点日历选日期后动作区始终在手边，不需要再往下翻。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="14dp">
+
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <TextView
+        android:id="@+id/holidayTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:text="@string/holiday_title"
+        android:textColor="@color/heading_ink"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/holidayIntro"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/holiday_intro"
+        android:textColor="@color/sub_8a"
+        android:textSize="12.5sp" />
+
+    <!-- 已有安排：默认收起为一行摘要，展开后列表就在日历上方 -->
+    <LinearLayout
+        android:id="@+id/holidaySummaryRow"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_menu_row"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/holidayListLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/holiday_list_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/holidayExpand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/accent_strong"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/holidayScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/holidayList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/holidayLegend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/holiday_calendar_hint"
+                android:textColor="@color/sub_a2"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:id="@+id/holidayCalendarCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:paddingStart="8dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="10dp">
+
+                <com.zhusijiao.app.ui.common.HolidayCalendarView
+                    android:id="@+id/holidayCalendar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/line" />
+
+    <!-- 所选日期 + 可做的操作；固定在底部，跟随日历点选实时刷新 -->
+    <LinearLayout
+        android:id="@+id/holidayEditor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/holidaySelectedCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_reschedule_summary"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/holidaySelectedTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:textColor="@color/heading_ink"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/holidaySelectedDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/sub_68"
+                android:textSize="12.5sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/holidayDurationRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/holiday_duration_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.StepperFieldView
+                android:id="@+id/holidayDays"
+                android:layout_width="176dp"
+                android:layout_height="46dp"
+                android:contentDescription="@string/holiday_days_label" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/holidayActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/holidayReadOnly"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@color/tt_section_bg"
+        android:padding="11dp"
+        android:text="@string/detail_read_only_hint"
+        android:textColor="@color/sub_8a"
+        android:textSize="12.5sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/holidayClose"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_menu_row"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="@string/common_done"
+        android:textColor="@color/sub_68"
+        android:textSize="14sp" />
+</LinearLayout>

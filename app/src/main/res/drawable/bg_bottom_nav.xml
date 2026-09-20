@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 顶部发丝线 + 白底：先用分隔线色铺满，再用白底覆盖除顶部 1dp 外的区域 -->
+    <item>
+        <shape android:shape="rectangle"><solid android:color="@color/line" /></shape>
+    </item>
+    <item android:top="1dp">
+        <shape android:shape="rectangle"><solid android:color="@color/surface" /></shape>
+    </item>
+</layer-list>

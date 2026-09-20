@@ -1,0 +1,51 @@
+# Gradle / Android
+*.iml
+.gradle/
+.kotlin/
+local.properties
+.idea/
+.vscode/
+.fleet/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.hprof
+*.keystore
+*.jks
+keystore.properties
+!debug.keystore
+
+# Node（后端）
+backend/node_modules/
+backend/data/
+backend/.env
+backend/.env.*
+!backend/.env.example
+node_modules/
+
+# 本机环境说明（含真实路径，不进版本库；模板见 LOCAL_ENV.example.md）
+LOCAL_ENV.md
+
+# 本机 AI 助手指引（各环境不同，不进版本库）
+CLAUDE.md
+AGENTS.md
+
+# 运行时更新清单（含私有域名，不进版本库；模板见 release.example.json）
+backend/public/app/release-*.json
+backend/public/app/ch/*/release.json
+
+# 本机保留、不进开源仓库（仓库只保留根 README）
+LOCAL_ENV.example.md
+CHANGELOG.md
+docs/
+backend/public/app/README.md
+keystore/README.md
+
+# 日志与临时
+*.log
+*.tmp
+*.swp

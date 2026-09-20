@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 尺寸约定：以 750 设计稿宽度 = 屏宽为基准，静态界面取 1dp ≈ 2 设计稿单位。
+         课表（TimetableView）另行按屏宽等比换算 px，保证整周一屏、列宽精确。 -->
+    <dimen name="page_padding">14dp</dimen>
+    <dimen name="card_radius">9dp</dimen>
+    <dimen name="card_radius_lg">10dp</dimen>
+    <dimen name="card_radius_sm">5dp</dimen>
+    <dimen name="button_radius">7dp</dimen>
+    <dimen name="button_min_height">44dp</dimen>
+
+    <!-- 字号：1sp ≈ 2 设计稿单位 -->
+    <dimen name="text_nav_title">17sp</dimen>
+    <dimen name="text_page_title">20sp</dimen>
+    <dimen name="text_section">15sp</dimen>
+    <dimen name="text_button">15sp</dimen>
+    <dimen name="text_body">14sp</dimen>
+    <dimen name="text_sub">13sp</dimen>
+</resources>

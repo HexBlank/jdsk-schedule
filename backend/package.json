@@ -1,0 +1,25 @@
+{
+  "name": "zhusijiao-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "珠四角共享课表后端（Fastify + SQLite），供原生 App 调用",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "check": "node --check src/app.js && node --check src/index.js && node --check src/device-auth.js && node --check src/schedule-service.js && node --check src/validation.js",
+    "test": "node smoke.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "11.3.0",
+    "@fastify/helmet": "13.1.1",
+    "@fastify/jwt": "10.2.2",
+    "@fastify/rate-limit": "11.2.0",
+    "better-sqlite3": "13.0.3",
+    "dotenv": "17.4.2",
+    "fastify": "5.12.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

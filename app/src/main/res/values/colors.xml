@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== 全局语义色 ===== -->
+    <color name="ink">#202725</color>
+    <color name="muted">#7d8783</color>
+    <color name="background">#f5f7f6</color>
+    <color name="background_alt">#f7f8f7</color>
+    <color name="surface">#ffffff</color>
+    <color name="accent">#2f7d68</color>
+    <color name="accent_strong">#287760</color>
+    <color name="accent_soft">#e4f0ec</color>
+    <color name="line">#e9edeb</color>
+
+    <!-- 主文字/次文字的近色阶，忠实还原各页 WXSS -->
+    <color name="title_ink">#1d2421</color>
+    <color name="heading_ink">#202623</color>
+    <color name="value_ink">#21302b</color>
+    <color name="body_ink">#333a37</color>
+    <color name="field_label">#5f6965</color>
+    <color name="sub_94">#949d99</color>
+    <color name="sub_8a">#8a9490</color>
+    <color name="sub_9b">#9ba49f</color>
+    <color name="sub_a2">#a2aba7</color>
+    <color name="sub_a8">#a8b0ac</color>
+    <color name="sub_a0">#a0a8a4</color>
+    <color name="sub_77">#77817d</color>
+    <color name="sub_6c">#6c7672</color>
+    <color name="sub_68">#68726e</color>
+    <color name="sub_3e">#3e4743</color>
+    <color name="action_ink">#35403b</color>
+
+    <!-- 危险/删除 -->
+    <color name="danger">#b44c48</color>
+    <color name="danger_soft">#fff1f0</color>
+    <color name="danger_action">#b4544f</color>
+    <color name="danger_confirm">#d9553b</color>
+    <color name="danger_confirm_alt">#c04f39</color>
+    <color name="error_bg">#fdf2f1</color>
+
+    <!-- 悬停/按压底 -->
+    <color name="hover_bg">#f2f5f4</color>
+
+    <!-- ===== 课表（供 TimetableView 程序化绘制） ===== -->
+    <color name="tt_border">#e7ebe9</color>
+    <color name="tt_head_border">#e2e7e4</color>
+    <color name="tt_corner_bg">#fbfcfb</color>
+    <color name="tt_corner_border">#edf0ee</color>
+    <color name="tt_day_text">#7b8581</color>
+    <color name="tt_today_text">#1f6f58</color>
+    <color name="tt_today_bg">#222a27</color>
+    <color name="tt_time_number">#3b4641</color>
+    <color name="tt_time_clock">#9ba49f</color>
+    <color name="tt_grid_v">#f0f2f1</color>
+    <color name="tt_grid_h">#e8ecea</color>
+    <color name="tt_section_bg">#fbfcfb</color>
+    <color name="tt_chevron">#6f7a76</color>
+    <color name="tt_chevron_off">#cbd1ce</color>
+    <color name="tt_caret">#939b97</color>
+    <color name="tt_week_hint">#8b948f</color>
+    <color name="tt_badge_bg">#38ffffff</color>
+    <!-- 表头日历角标：补（橙）/休（灰） -->
+    <color name="tt_mark_makeup_text">#b26205</color>
+    <color name="tt_mark_makeup_bg">#fdeedd</color>
+    <color name="tt_mark_off_text">#8a9490</color>
+    <color name="tt_mark_off_bg">#edf0ef</color>
+    <!-- 自定义开关（ToggleView） -->
+    <color name="toggle_track_off">#cbd1ce</color>
+    <color name="toggle_thumb_border">#14000000</color>
+
+    <!-- 课程详情抽屉 -->
+    <color name="sheet_handle">#d8dddb</color>
+    <color name="sheet_close_text">#246f59</color>
+    <color name="sheet_close_bg">#edf7f3</color>
+    <color name="detail_border">#edf0ee</color>
+    <color name="detail_label">#9aa19e</color>
+
+    <!-- 卡片操作/状态 -->
+    <color name="card_border_active">#b7d2c8</color>
+    <color name="tag_text">#287760</color>
+    <color name="tag_bg">#e8f2ee</color>
+    <color name="sync_dot">#3d9a7c</color>
+    <color name="sync_dot_idle">#c3cac7</color>
+    <color name="foot_border">#eef1ef</color>
+    <color name="skeleton">#eef1ef</color>
+    <color name="arrow_grey">#a2aaa6</color>
+    <color name="status_pill_text">#2f7d68</color>
+
+    <!-- 分享码字符格 -->
+    <color name="code_cell_border">#e4e9e7</color>
+    <color name="code_cell_border_filled">#cfd8d4</color>
+    <color name="code_cell_active_bg">#f4f9f7</color>
+    <color name="code_char_bg">#f5f8f7</color>
+
+    <!-- 导入页 -->
+    <color name="privacy_note_text">#4f6f65</color>
+    <color name="privacy_note_bg">#eaf3f0</color>
+
+    <!-- 底部导航 -->
+    <color name="nav_text">#8a9490</color>
+
+    <!-- 启动图标背景 -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

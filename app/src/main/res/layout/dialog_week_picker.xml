@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="14dp">
+
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="13dp"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/pickerTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/week_picker_title"
+            android:textColor="@color/heading_ink"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/backToCurrent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_tag"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            android:text="@string/week_picker_back_current"
+            android:textColor="@color/accent_strong"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <com.zhusijiao.app.ui.common.MaxHeightScrollView
+        android:id="@+id/weekScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/weekRows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </com.zhusijiao.app.ui.common.MaxHeightScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/detail_border" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:text="@string/week_picker_weekend_section"
+        android:textColor="@color/field_label"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView，
+         行本身不参与键盘焦点，避免每行多出一个看不见的停留点。 -->
+    <LinearLayout
+        android:id="@+id/weekendAutoRow"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:gravity="center_vertical"
+        android:importantForAccessibility="no"
+        android:orientation="horizontal"
+        tools:ignore="KeyboardInaccessibleWidget">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/week_picker_auto_weekend"
+            android:textColor="@color/body_ink"
+            android:textSize="13.5sp" />
+
+        <com.zhusijiao.app.ui.common.ToggleView
+            android:id="@+id/weekendAutoToggle"
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:contentDescription="@string/week_picker_auto_weekend" />
+    </LinearLayout>
+</LinearLayout>
