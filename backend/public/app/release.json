@@ -1,6 +1,6 @@
 {
-  "versionCode": 22,
-  "versionName": "1.2.19",
-  "changelog": "1. 服务器迁移到 kbapi.sixw.de：更新后需重新发布或用分享码重新加入课表\n2. 修复设置里填服务器地址、更新通道时输入框被输入法挡住的问题，键盘弹出会把面板上抬\n3. 单次调课与调休统一为在整学期日历上直接点日期\n4. 周末显示精简为「当周周六日有课时才显示」单开关\n5. 教务导入默认手机模式；设置页新增用户交流 QQ 群",
-  "fileName": "jidianshangke-1.2.19.apk"
+  "versionCode": 23,
+  "versionName": "1.2.20",
+  "changelog": "1. 设置页新增「开源项目地址」，可一键访问 GitHub 仓库",
+  "fileName": "jidianshangke-1.2.20.apk"
 }
