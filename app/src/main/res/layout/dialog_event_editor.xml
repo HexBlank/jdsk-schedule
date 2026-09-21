@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/eventScroll"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:overScrollMode="never">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_sheet"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="18dp">
+
+        <View
+            android:layout_width="38dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="15dp"
+            android:background="@drawable/bg_sheet_handle" />
+
+        <TextView
+            android:id="@+id/eventTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="@string/event_new_title"
+            android:textColor="@color/heading_ink"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="@string/event_intro"
+            android:textColor="@color/sub_8a"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/event_name_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/eventName"
+            style="@style/FieldInput"
+            android:layout_height="50dp"
+            android:backgroundTint="@null"
+            android:hint="@string/event_name_hint"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLength="40"
+            android:singleLine="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/event_place_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/eventPlace"
+            style="@style/FieldInput"
+            android:layout_height="50dp"
+            android:backgroundTint="@null"
+            android:hint="@string/event_place_hint"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLength="40"
+            android:singleLine="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/event_note_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/eventNote"
+            style="@style/FieldInput"
+            android:backgroundTint="@null"
+            android:gravity="top|start"
+            android:hint="@string/event_note_hint"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine"
+            android:maxLength="200"
+            android:maxLines="3"
+            android:minHeight="66dp" />
+
+        <!-- 时间：按节次填（默认）或按钟点填。钟点只决定显示文案，
+             占位节次由 ScheduleTime.sectionSpanFor 换算，摘要里会写明占哪几节。 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/event_time_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.zhusijiao.app.ui.common.SegmentedChoiceView
+            android:id="@+id/eventTimeMode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/eventSectionArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_start_section_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.ChipRowView
+                android:id="@+id/eventStartChips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/event_start_section_label" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_span_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.ChipRowView
+                android:id="@+id/eventSpanChips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/event_span_label" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/eventClockArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_clock_start_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.zhusijiao.app.ui.common.StepperFieldView
+                    android:id="@+id/eventStartHour"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <com.zhusijiao.app.ui.common.StepperFieldView
+                    android:id="@+id/eventStartMinute"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_clock_end_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.zhusijiao.app.ui.common.StepperFieldView
+                    android:id="@+id/eventEndHour"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <com.zhusijiao.app.ui.common.StepperFieldView
+                    android:id="@+id/eventEndMinute"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/event_repeat_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.zhusijiao.app.ui.common.SegmentedChoiceView
+            android:id="@+id/eventRepeat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/eventRepeatEndArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_repeat_end_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.ChipRowView
+                android:id="@+id/eventEndWeekChips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/event_repeat_end_label" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/event_color_label"
+            android:textColor="@color/field_label"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/eventColorRow"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_menu_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+            <View
+                android:id="@+id/eventColorSwatch"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginEnd="10dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/event_color_pick"
+                android:textColor="@color/body_ink"
+                android:textSize="13.5sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_reschedule_summary"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/event_summary_label"
+                android:textColor="@color/accent_strong"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/eventSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/value_ink"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 与课重叠时的一键避让：只在算得出空节次时出现 -->
+        <TextView
+            android:id="@+id/eventAvoid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_menu_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:lineSpacingExtra="2dp"
+            android:padding="11dp"
+            android:textColor="@color/accent_strong"
+            android:textSize="12.5sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/eventSave"
+            style="@style/PrimaryButton"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/event_save" />
+
+        <TextView
+            android:id="@+id/eventCancel"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_menu_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/common_cancel"
+            android:textColor="@color/sub_68"
+            android:textSize="14sp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
