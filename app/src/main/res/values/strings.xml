@@ -370,12 +370,13 @@
     <string name="import_week_range">%1$d–%2$d 周</string>
     <string name="import_week_list">%1$s 周</string>
     <string name="import_guide_title">怎样从教务导入？</string>
-    <string name="import_guide_content">推荐用「从教务系统导入」：在应用内打开教务系统网页，登录后点击页面右下角「导入课表」，脚本只在本地解析并把结果交回应用，不上传账号、密码或 Cookie。也可在电脑浏览器运行导出助手生成 JSON，再回到这里选择文件或粘贴。</string>
+    <string name="import_guide_content">推荐用「从教务系统导入」：在应用内打开教务系统网页，登录后进入「学生课表」页面，再点击右下角「导入课表」，脚本只在本地解析并把结果交回应用，不上传账号、密码或 Cookie。\n\n如果网页提示读到了课表却没能自动交回，点网页上的「复制课表数据」，回到这一页点「读取剪贴板」即可继续。也可以在电脑浏览器运行导出助手生成 JSON，再回到这里选择文件或粘贴。</string>
     <string name="import_helper_unavailable_title">未配置数据服务</string>
     <string name="import_helper_unavailable_content">配置 API 域名后，可复制服务端的导出助手地址；开发阶段也可直接使用仓库 backend/scripts 目录内的文件。</string>
     <string name="import_helper_copied">导出助手地址已复制</string>
     <string name="import_original_failed">原课表加载失败</string>
     <string name="import_source_eams">来自教务系统</string>
+    <string name="import_eams_empty">教务页面没有交回课表数据，请回到教务页面再试一次</string>
     <string name="import_source_clipboard">来自剪贴板</string>
     <string name="import_file_default_name">课表文件</string>
 
@@ -386,7 +387,12 @@
     <string name="eams_mode_desktop">电脑模式</string>
     <string name="eams_mode_mobile">手机模式</string>
     <string name="eams_parsing">正在读取课表…</string>
-    <string name="eams_parse_error">没能读取课表：%1$s</string>
+    <string name="eams_parse_failed_title">没能读取课表</string>
+    <string name="eams_parse_error">%1$s\n\n请确认已经登录教务系统、并停在「学生课表」页面，然后再点一次右下角「导入课表」。反复失败可以在导入页用「复制导出助手地址」，改在电脑浏览器里导出。</string>
+    <string name="eams_error_unknown">教务系统没有给出原因</string>
+    <string name="eams_result_empty">网页交回的课表数据是空的，请回到「学生课表」页面再点一次「导入课表」。</string>
+    <string name="eams_stuck_title">还没收到课表数据</string>
+    <string name="eams_stuck_content">等了一会儿仍没有收到结果，可能是教务系统响应慢，或者登录已经过期。\n\n请重新登录后回到「学生课表」页面，再点一次右下角「导入课表」。\n\n如果网页上出现了「复制课表数据」按钮，点它复制，再回到导入页点「读取剪贴板」也能接着导入。</string>
     <string name="eams_ssl_title">证书提示</string>
     <string name="eams_ssl_blocked_message">此页面的安全证书无效，已停止加载。请检查系统时间、网络环境或联系学校修复证书后再试。</string>
     <string name="eams_untrusted_page">请先回到学校教务页面再导入</string>

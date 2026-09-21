@@ -9,6 +9,10 @@ $env:JAVA_HOME = $javaHome
 & .\gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# 教务导出脚本跑在 WebView 里，Gradle 单测覆盖不到，用 node 冒烟守住交回 App 的两条路径
+node .\scripts\smoke-eams-export.js
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 Push-Location backend
 try {
     npm run check

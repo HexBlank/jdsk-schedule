@@ -116,7 +116,7 @@
   function parse(html) {
     var unit = html.match(/var\s+unitCount\s*=\s*(\d+)/);
     var marshal = html.match(/marshalTable\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/);
-    if (!unit || !marshal) throw new Error('页面中没有课表数据，请先从教务系统打开“学生课表”页面');
+    if (!unit || !marshal) throw new Error('这个页面里没有课表数据');
     var unitCount = Number(unit[1]);
     var from = Number(marshal[1]);
     var startWeek = Number(marshal[2]);
@@ -170,7 +170,7 @@
         });
       });
     }
-    if (!raw.length) throw new Error('没有解析到有效课程');
+    if (!raw.length) throw new Error('这学期没有解析到任何课程');
     return { courses: merge(raw), totalWeeks: endWeek };
   }
 
@@ -206,7 +206,7 @@
       var ids = []; var reId = /addInput\(form,"ids","(\d+)"\)/g; var im;
       while ((im = reId.exec(html)) !== null) ids.push(im[1]);
       var semesterId = semesterFrom(html);
-      if (!ids.length || !semesterId) throw new Error('未获取到学生或学期信息，请确认已经登录教务系统');
+      if (!ids.length || !semesterId) throw new Error('没读到学生或学期信息（可能还没登录）');
       return { id: ids[0], semesterId: semesterId };
     });
   }
@@ -218,17 +218,103 @@
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' },
       body: 'ignoreHead=1&setting.kind=std&startWeek=&semester.id=' + encodeURIComponent(info.semesterId) + '&ids=' + encodeURIComponent(info.id)
     }).then(function (response) {
-      if (!response.ok) throw new Error('课表请求失败（' + response.status + '）');
+      if (!response.ok) throw new Error('教务接口请求失败（HTTP ' + response.status + '）');
       return response.text();
     });
   }
 
+  /**
+   * 调用原生桥，返回是否真的送达。
+   * 以前这里失败是静默的：桥不存在时脚本照样把按钮改成「已读取 N 个时段」，
+   * 用户看着像成功、App 里却什么都没发生。现在由调用方按返回值决定兜底。
+   */
   function bridge(name, payload) {
-    try { if (window.ZSJBridge && window.ZSJBridge[name]) window.ZSJBridge[name](payload || ''); } catch (e) {}
+    try {
+      if (!window.ZSJBridge || typeof window.ZSJBridge[name] !== 'function') return false;
+      window.ZSJBridge[name](payload || '');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function removePanel() {
+    var old = document.getElementById('zsj-export-panel');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+  }
+
+  /** 页面内提示卡片：桥失效时原生弹窗也弹不出来，话只能在网页上说。 */
+  function showPanel(title, message, json) {
+    if (!document.body) return;
+    removePanel();
+    var box = document.createElement('div');
+    box.id = 'zsj-export-panel';
+    Object.assign(box.style, {
+      position: 'fixed', zIndex: '2147483646', left: '12px', right: '12px', bottom: '80px',
+      padding: '14px 16px', background: '#fffdf7', color: '#17322d', borderRadius: '14px',
+      border: '1px solid rgba(23,50,45,.12)', boxShadow: '0 12px 30px rgba(0,0,0,.26)',
+      fontSize: '14px', lineHeight: '1.6', maxHeight: '56vh', overflowY: 'auto'
+    });
+
+    var heading = document.createElement('div');
+    heading.textContent = title;
+    Object.assign(heading.style, { fontWeight: '700', fontSize: '15px', marginBottom: '6px' });
+    box.appendChild(heading);
+
+    var body = document.createElement('div');
+    body.textContent = message;
+    Object.assign(body.style, { color: '#41564f', whiteSpace: 'pre-line' });
+    box.appendChild(body);
+
+    if (json) {
+      var area = document.createElement('textarea');
+      area.value = json;
+      area.readOnly = true;
+      Object.assign(area.style, {
+        width: '100%', height: '82px', marginTop: '10px', padding: '8px', boxSizing: 'border-box',
+        fontSize: '12px', borderRadius: '10px', border: '1px solid rgba(23,50,45,.18)',
+        background: '#f5f2ea', color: '#17322d'
+      });
+      box.appendChild(area);
+
+      var copy = document.createElement('button');
+      copy.textContent = '复制课表数据';
+      Object.assign(copy.style, {
+        marginTop: '10px', marginRight: '8px', padding: '9px 14px', border: '0', borderRadius: '11px',
+        background: '#17322d', color: '#fffdf7', fontSize: '13px', fontWeight: '700'
+      });
+      copy.addEventListener('click', function () {
+        copy.textContent = copyText(area) ? '已复制，回 App 点「读取剪贴板」' : '复制失败，请长按文本框全选';
+      });
+      box.appendChild(copy);
+    }
+
+    var close = document.createElement('button');
+    close.textContent = '关闭';
+    Object.assign(close.style, {
+      marginTop: '10px', padding: '9px 14px', border: '1px solid rgba(23,50,45,.2)',
+      borderRadius: '11px', background: 'transparent', color: '#41564f', fontSize: '13px'
+    });
+    close.addEventListener('click', removePanel);
+    box.appendChild(close);
+
+    document.body.appendChild(box);
+  }
+
+  function copyText(area) {
+    try {
+      area.focus();
+      area.select();
+      if (area.setSelectionRange) area.setSelectionRange(0, area.value.length);
+      return document.execCommand('copy');
+    } catch (e) {
+      return false;
+    }
   }
 
   function run() {
     var button = window.ZSJExport.__button;
+    removePanel();
     if (button) { button.disabled = true; button.textContent = '正在读取课表…'; }
     bridge('onLog', 'start');
     studentInfo()
@@ -240,14 +326,41 @@
           name: '我的课表', semesterStart: '', totalWeeks: parsed.totalWeeks,
           timeSlots: TIME_SLOTS, courses: parsed.courses
         };
-        bridge('onSchedule', JSON.stringify(pkg));
-        if (button) button.textContent = '已读取 ' + parsed.courses.length + ' 个时段';
+        var json = JSON.stringify(pkg);
+        if (bridge('onSchedule', json)) {
+          if (button) button.textContent = '已读取 ' + parsed.courses.length + ' 个时段';
+          return;
+        }
+        // 读到了但交不回 App（桥失效）：把数据直接交到用户手里，别让人卡在「读完没反应」
+        if (button) button.textContent = '读到了，请按提示操作';
+        showPanel(
+          '课表已读到 ' + parsed.courses.length + ' 个时段，但没能自动交回 App',
+          '点下面的「复制课表数据」，回到 App 的导入页点「读取剪贴板」就能接着导入。\n'
+            + '复制没反应时，可以长按下面的文本框全选再复制。',
+          json
+        );
       })
       .catch(function (error) {
-        bridge('onError', (error && error.message) || String(error));
-        if (button) button.textContent = '导入课表';
+        var reason = (error && error.message) || String(error);
+        if (button) button.textContent = '重新导入课表';
+        // 桥可用就交给 App 弹原生提示，否则只能在网页上说明
+        if (!bridge('onError', reason)) showPanel('没能读取课表', reason + '\n' + nextStep(reason));
       })
       .then(function () { if (button) button.disabled = false; });
+  }
+
+  /** 按失败原因给一句可操作的下一步，避免只甩一个错误名词。 */
+  function nextStep(reason) {
+    if (reason.indexOf('登录') >= 0 || reason.indexOf('学生或学期') >= 0) {
+      return '请先在本页登录教务系统，登录后再点「导入课表」。';
+    }
+    if (reason.indexOf('课表数据') >= 0) {
+      return '请先在教务系统里打开「学生课表 / 我的课表」页面，再点「导入课表」。';
+    }
+    if (reason.indexOf('请求失败') >= 0) {
+      return '多半是登录已过期或校园网不稳定：重新登录教务系统后再试一次。';
+    }
+    return '可以重新登录教务系统、回到学生课表页后再试一次。';
   }
 
   function installButton() {

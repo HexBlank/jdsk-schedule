@@ -43,7 +43,10 @@ class ImportActivity : BaseActivity() {
     private val eamsLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val json = result.data?.getStringExtra(EamsWebActivity.EXTRA_JSON)
-            if (!json.isNullOrBlank()) {
+            if (json.isNullOrBlank()) {
+                // 走到这里说明教务页宣称成功却没带回内容，给一句话，别让页面看着像没点过
+                Ui.toast(this, getString(R.string.import_eams_empty))
+            } else {
                 binding.sourceInput.setText(json)
                 showFileInfo(getString(R.string.import_source_eams), json.length)
                 parseSource()
