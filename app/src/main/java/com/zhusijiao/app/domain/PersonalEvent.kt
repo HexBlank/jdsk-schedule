@@ -136,8 +136,10 @@ object PersonalEventValidator {
     /**
      * 校验并规范化；不合法时抛 [IllegalArgumentException]，message 即用户可读文案。
      *
-     * 填了自定义时间的，占位节次一律由 [ScheduleTime.sectionSpanFor] **重新算**，
-     * 保证「占位 = 时间换算结果」这个不变量与调用方无关地成立。
+     * 占位节次**以调用方给的为准**：节次是用户在网格上亲手点的，块画在哪一格必须与他
+     * 点的一致。自定义时间只是显示文案，不反过来改占位——早期版本用
+     * [ScheduleTime.sectionSpanFor] 覆盖节次，会出现「我选了第 10 节、块却自己跑了」。
+     * 那个换算现在只用来在编辑器里给一条可点的建议。
      */
     fun normalize(
         draft: PersonalEventDraft,
@@ -156,8 +158,6 @@ object PersonalEventValidator {
         val hasStart = !draft.startTime.isNullOrBlank()
         val hasEnd = !draft.endTime.isNullOrBlank()
         require(hasStart == hasEnd) { "开始时间和结束时间要一起填写" }
-        var startSection = draft.startSection
-        var endSection = draft.endSection
         var startTime: String? = null
         var endTime: String? = null
         if (hasStart) {
@@ -168,12 +168,9 @@ object PersonalEventValidator {
             require(end > start) { "结束时间要晚于开始时间" }
             startTime = ScheduleTime.formatTime(start)
             endTime = ScheduleTime.formatTime(end)
-            val span = ScheduleTime.sectionSpanFor(startTime, endTime, slots)
-            startSection = span.first
-            endSection = span.last
         }
-        require(startSection in 1..ScheduleTime.MAX_SECTION) { "日程节次无效" }
-        require(endSection in startSection..ScheduleTime.MAX_SECTION) { "日程节次无效" }
+        require(draft.startSection in 1..ScheduleTime.MAX_SECTION) { "日程节次无效" }
+        require(draft.endSection in draft.startSection..ScheduleTime.MAX_SECTION) { "日程节次无效" }
 
         val weeks = draft.weeks.filter { it > 0 }.distinct().sorted()
         require(weeks.isNotEmpty()) { "请至少选择一个周次" }
@@ -186,8 +183,6 @@ object PersonalEventValidator {
             title = title,
             position = position,
             note = note,
-            startSection = startSection,
-            endSection = endSection,
             startTime = startTime,
             endTime = endTime,
             weeks = weeks,

@@ -114,14 +114,30 @@ class PersonalEventTest {
     // ===== 校验 =====
 
     @Test
-    fun `填了自定义时间时占位节次由换算结果覆盖`() {
+    fun `填了自定义时间也不改用户选的占位节次`() {
+        // 节次是用户在网格上亲手点的，块必须画在他点的那一格；
+        // 时间只是显示文案，不能反过来把格子挪走
         val normalized = PersonalEventValidator.normalize(
-            draft(start = 1, end = 1, startTime = "18:30", endTime = "20:30"),
+            draft(start = 10, end = 11, startTime = "18:30", endTime = "20:30"),
             totalWeeks = 20,
             slots = slots
         )
         assertEquals(10, normalized.startSection)
         assertEquals(11, normalized.endSection)
+        assertEquals("18:30", normalized.startTime)
+    }
+
+    @Test
+    fun `时间与所选节次不匹配时保留用户选择由界面去建议`() {
+        val normalized = PersonalEventValidator.normalize(
+            draft(start = 1, end = 1, startTime = "18:30", endTime = "20:30"),
+            totalWeeks = 20,
+            slots = slots
+        )
+        assertEquals(1, normalized.startSection)
+        assertEquals(1, normalized.endSection)
+        // 编辑器据此给出「这个时间更接近第 10–11 节」的可点建议
+        assertEquals(10..11, ScheduleTime.sectionSpanFor("18:30", "20:30", slots))
     }
 
     @Test(expected = IllegalArgumentException::class)

@@ -20,7 +20,7 @@
             android:layout_width="38dp"
             android:layout_height="4dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="14dp"
             android:background="@drawable/bg_sheet_handle" />
 
         <TextView
@@ -33,18 +33,31 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <!-- 实时摘要放在最上面：用户从空格子点进来，第一眼要确认的就是「在给哪一格加东西」，
+             不该让他翻到面板底部去找。原来底部那张摘要卡因此取消。 -->
         <TextView
+            android:id="@+id/eventHeadline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="@string/event_intro"
-            android:textColor="@color/sub_8a"
-            android:textSize="12sp" />
+            android:layout_marginTop="7dp"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="2dp"
+            android:textColor="@color/accent_strong"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/event_privacy"
+            android:textColor="@color/sub_9b"
+            android:textSize="11.5sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
             android:layout_marginBottom="6dp"
             android:text="@string/event_name_label"
             android:textColor="@color/field_label"
@@ -62,103 +75,75 @@
             android:maxLength="40"
             android:singleLine="true" />
 
+        <!-- 节次：12 节全部铺开成网格，每格带上课时间，直接点选区间。
+             不用横滚胶囊行——第 11、12 节会被屏幕边界藏掉，用户不知道还有。 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="6dp"
-            android:text="@string/event_place_label"
-            android:textColor="@color/field_label"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/eventPlace"
-            style="@style/FieldInput"
-            android:layout_height="50dp"
-            android:backgroundTint="@null"
-            android:hint="@string/event_place_hint"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:maxLength="40"
-            android:singleLine="true" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="6dp"
-            android:text="@string/event_note_label"
-            android:textColor="@color/field_label"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/eventNote"
-            style="@style/FieldInput"
-            android:backgroundTint="@null"
-            android:gravity="top|start"
-            android:hint="@string/event_note_hint"
-            android:importantForAutofill="no"
-            android:inputType="textMultiLine"
-            android:maxLength="200"
-            android:maxLines="3"
-            android:minHeight="66dp" />
-
-        <!-- 时间：按节次填（默认）或按钟点填。钟点只决定显示文案，
-             占位节次由 ScheduleTime.sectionSpanFor 换算，摘要里会写明占哪几节。 -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/event_time_label"
             android:textColor="@color/field_label"
             android:textSize="12sp"
             android:textStyle="bold" />
 
-        <com.zhusijiao.app.ui.common.SegmentedChoiceView
-            android:id="@+id/eventTimeMode"
+        <com.zhusijiao.app.ui.common.SectionPickerView
+            android:id="@+id/eventSections"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <LinearLayout
-            android:id="@+id/eventSectionArea"
+        <TextView
+            android:id="@+id/eventSectionHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="8dp"
+            android:lineSpacingExtra="1dp"
+            android:textColor="@color/sub_9b"
+            android:textSize="11.5sp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="6dp"
-                android:text="@string/event_start_section_label"
-                android:textColor="@color/field_label"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+        <!-- 精确到分钟：默认关闭。开了之后时间从所选节次预填，多数人只需微调几步。 -->
+        <LinearLayout
+            android:id="@+id/eventExactRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_menu_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="10dp">
 
-            <com.zhusijiao.app.ui.common.ChipRowView
-                android:id="@+id/eventStartChips"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/event_start_section_label" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="6dp"
-                android:text="@string/event_span_label"
-                android:textColor="@color/field_label"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/event_exact_label"
+                    android:textColor="@color/body_ink"
+                    android:textSize="13.5sp" />
 
-            <com.zhusijiao.app.ui.common.ChipRowView
-                android:id="@+id/eventSpanChips"
-                android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/event_exact_desc"
+                    android:textColor="@color/sub_9b"
+                    android:textSize="11.5sp" />
+            </LinearLayout>
+
+            <com.zhusijiao.app.ui.common.ToggleView
+                android:id="@+id/eventExactToggle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/event_span_label" />
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <LinearLayout
@@ -168,20 +153,19 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="6dp"
-                android:text="@string/event_clock_start_label"
-                android:textColor="@color/field_label"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/event_clock_start_label"
+                    android:textColor="@color/field_label"
+                    android:textSize="12.5sp" />
 
                 <com.zhusijiao.app.ui.common.StepperFieldView
                     android:id="@+id/eventStartHour"
@@ -193,24 +177,23 @@
                     android:id="@+id/eventStartMinute"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1" />
             </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="6dp"
-                android:text="@string/event_clock_end_label"
-                android:textColor="@color/field_label"
-                android:textSize="12sp"
-                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/event_clock_end_label"
+                    android:textColor="@color/field_label"
+                    android:textSize="12.5sp" />
 
                 <com.zhusijiao.app.ui.common.StepperFieldView
                     android:id="@+id/eventEndHour"
@@ -222,16 +205,39 @@
                     android:id="@+id/eventEndMinute"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/eventClockNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/sub_9b"
+                android:textSize="11.5sp" />
+
+            <!-- 时间改到别的节次范围时给一条可点的建议，避免「写早上 8 点、块画在晚上」 -->
+            <TextView
+                android:id="@+id/eventClockSuggest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_menu_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:lineSpacingExtra="1dp"
+                android:padding="10dp"
+                android:textColor="@color/accent_strong"
+                android:textSize="12sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/event_repeat_label"
             android:textColor="@color/field_label"
             android:textSize="12sp"
@@ -246,95 +252,141 @@
             android:id="@+id/eventRepeatEndArea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:text="@string/event_repeat_end_label"
+                android:textColor="@color/field_label"
+                android:textSize="12.5sp" />
+
+            <com.zhusijiao.app.ui.common.StepperFieldView
+                android:id="@+id/eventEndWeek"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/eventRepeatSummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/sub_9b"
+            android:textSize="11.5sp" />
+
+        <!-- 地点/备注/颜色都不是必填，收起来让主路径只剩「名称 + 节次 + 重复」 -->
+        <TextView
+            android:id="@+id/eventMoreToggle"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_menu_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/event_more_label"
+            android:textColor="@color/sub_68"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/eventMoreArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
                 android:layout_marginBottom="6dp"
-                android:text="@string/event_repeat_end_label"
+                android:text="@string/event_place_label"
                 android:textColor="@color/field_label"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
-            <com.zhusijiao.app.ui.common.ChipRowView
-                android:id="@+id/eventEndWeekChips"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/event_repeat_end_label" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="6dp"
-            android:text="@string/event_color_label"
-            android:textColor="@color/field_label"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:id="@+id/eventColorRow"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:background="@drawable/bg_menu_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp">
-
-            <View
-                android:id="@+id/eventColorSwatch"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginEnd="10dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/event_color_pick"
-                android:textColor="@color/body_ink"
-                android:textSize="13.5sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_reschedule_summary"
-            android:orientation="vertical"
-            android:padding="12dp">
+            <EditText
+                android:id="@+id/eventPlace"
+                style="@style/FieldInput"
+                android:layout_height="50dp"
+                android:backgroundTint="@null"
+                android:hint="@string/event_place_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLength="40"
+                android:singleLine="true" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/event_summary_label"
-                android:textColor="@color/accent_strong"
-                android:textSize="11sp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_note_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
+            <EditText
+                android:id="@+id/eventNote"
+                style="@style/FieldInput"
+                android:layout_height="50dp"
+                android:backgroundTint="@null"
+                android:hint="@string/event_note_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLength="200"
+                android:singleLine="true" />
+
             <TextView
-                android:id="@+id/eventSummary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:lineSpacingExtra="2dp"
-                android:textColor="@color/value_ink"
-                android:textSize="14sp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_color_label"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
                 android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/eventColorRow"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/bg_menu_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <View
+                    android:id="@+id/eventColorSwatch"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/event_color_pick"
+                    android:textColor="@color/body_ink"
+                    android:textSize="13.5sp" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- 与课重叠时的一键避让：只在算得出空节次时出现 -->
         <TextView
             android:id="@+id/eventAvoid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="14dp"
             android:background="@drawable/bg_menu_row"
             android:clickable="true"
             android:focusable="true"
@@ -348,7 +400,7 @@
             android:id="@+id/eventSave"
             style="@style/PrimaryButton"
             android:layout_height="50dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="18dp"
             android:text="@string/event_save" />
 
         <TextView
