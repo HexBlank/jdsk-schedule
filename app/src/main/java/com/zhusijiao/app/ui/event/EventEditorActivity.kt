@@ -63,7 +63,10 @@ class EventEditorActivity : BaseActivity() {
         setContentView(binding.root)
         binding.header.setBackVisible(true)
         binding.header.onBackClick = { finish() }
-        Ui.padBottomNav(binding.eventBottomBar)
+        // 与其它页面一致：安全区留在根布局上。
+        // 不能用 padBottomNav(底栏)——它是覆盖写 paddingBottom，会把底栏自己的留白顶掉，
+        // 保存按钮就贴到屏幕最底边。liftAboveIme 额外保证键盘弹出时按钮仍在输入法上方。
+        Ui.liftAboveIme(binding.root)
 
         val scheduleId = intent.getStringExtra(EXTRA_SCHEDULE_ID).orEmpty()
         val eventId = intent.getStringExtra(EXTRA_EVENT_ID)

@@ -60,7 +60,7 @@ class SectionPickerView @JvmOverloads constructor(
             val row = LinearLayout(context).apply {
                 orientation = HORIZONTAL
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-                    .apply { if (index > 0) topMargin = Rpx.dp(6f) }
+                    .apply { if (index > 0) topMargin = Rpx.dp(CELL_GAP_DP) }
             }
             for (column in 0 until COLUMNS) {
                 val slot = slots.getOrNull(index + column)
@@ -88,7 +88,7 @@ class SectionPickerView @JvmOverloads constructor(
             gravity = Gravity.CENTER
             includeFontPadding = false
             isDuplicateParentStateEnabled = true
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(ContextCompat.getColorStateList(context, R.color.reschedule_choice_text))
         }
@@ -97,16 +97,16 @@ class SectionPickerView @JvmOverloads constructor(
             gravity = Gravity.CENTER
             includeFontPadding = false
             isDuplicateParentStateEnabled = true
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
             alpha = 0.82f
             setTextColor(ContextCompat.getColorStateList(context, R.color.reschedule_choice_text))
         }
         return LinearLayout(context).apply {
             orientation = VERTICAL
             gravity = Gravity.CENTER
-            // 触摸目标 ≥48dp（D17：所有选择项都要够大）
-            layoutParams = LayoutParams(0, Rpx.dp(54f), 1f).apply {
-                if (column > 0) marginStart = Rpx.dp(6f)
+            // 宽约 78dp（四列平分），高 46dp，触摸目标仍远大于 D17 要求的 48dp 对角线
+            layoutParams = LayoutParams(0, Rpx.dp(CELL_HEIGHT_DP), 1f).apply {
+                if (column > 0) marginStart = Rpx.dp(CELL_GAP_DP)
             }
             setBackgroundResource(R.drawable.bg_reschedule_choice)
             isClickable = true
@@ -122,8 +122,8 @@ class SectionPickerView @JvmOverloads constructor(
 
     /** 最后一行不足 4 格时补空位，保证各列宽度一致。 */
     private fun spacer(column: Int) = TextView(context).apply {
-        layoutParams = LayoutParams(0, Rpx.dp(54f), 1f).apply {
-            if (column > 0) marginStart = Rpx.dp(6f)
+        layoutParams = LayoutParams(0, Rpx.dp(CELL_HEIGHT_DP), 1f).apply {
+            if (column > 0) marginStart = Rpx.dp(CELL_GAP_DP)
         }
     }
 
@@ -155,5 +155,7 @@ class SectionPickerView @JvmOverloads constructor(
 
     companion object {
         private const val COLUMNS = 4
+        private const val CELL_HEIGHT_DP = 46f
+        private const val CELL_GAP_DP = 5f
     }
 }

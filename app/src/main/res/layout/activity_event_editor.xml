@@ -30,7 +30,7 @@
                 android:id="@+id/eventHeadline"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="14dp"
                 android:includeFontPadding="false"
                 android:lineSpacingExtra="2dp"
                 android:textColor="@color/accent_strong"
@@ -48,7 +48,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="6dp"
                 android:text="@string/event_name_label"
                 android:textColor="@color/field_label"
@@ -70,7 +70,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/event_time_label"
                 android:textColor="@color/field_label"
@@ -200,7 +200,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/event_repeat_label"
                 android:textColor="@color/field_label"
@@ -232,6 +232,11 @@
                     android:id="@+id/eventEndWeek"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
                     android:layout_weight="1" />
             </LinearLayout>
 
@@ -248,7 +253,7 @@
                 android:id="@+id/eventMoreToggle"
                 android:layout_width="match_parent"
                 android:layout_height="46dp"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_menu_row"
                 android:clickable="true"
                 android:focusable="true"
@@ -363,6 +368,11 @@
     </androidx.core.widget.NestedScrollView>
 
     <!-- 保存钉在底部：表单长，不该让用户滚到底才能提交 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line" />
+
     <LinearLayout
         android:id="@+id/eventBottomBar"
         android:layout_width="match_parent"
@@ -372,7 +382,7 @@
         android:paddingStart="@dimen/page_padding"
         android:paddingTop="10dp"
         android:paddingEnd="@dimen/page_padding"
-        android:paddingBottom="10dp">
+        android:paddingBottom="12dp">
 
         <TextView
             android:id="@+id/eventSave"
