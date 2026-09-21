@@ -4,7 +4,6 @@
 // @version      0.1.0
 // @description  在浏览器本地解析学校 EAMS 课表并导出几点上课 JSON，不上传账号、密码或 Cookie。
 // @match        https://webvpn.hstc.edu.cn/*
-// @match        http://jw.hstc.edu.cn/*
 // @match        https://jw.hstc.edu.cn/*
 // @grant        none
 // @run-at       document-idle
