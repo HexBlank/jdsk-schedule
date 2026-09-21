@@ -20,7 +20,6 @@ import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.PersonalEvent
-import com.zhusijiao.app.domain.PersonalEventDraft
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.TimetableAppearance
@@ -28,12 +27,12 @@ import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.EventDetailSheet
-import com.zhusijiao.app.ui.common.EventEditorSheet
 import com.zhusijiao.app.ui.common.HolidaySheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.TimetableView
 import com.zhusijiao.app.ui.common.RescheduleSheet
 import com.zhusijiao.app.ui.common.WeekPickerSheet
+import com.zhusijiao.app.ui.event.EventEditorActivity
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
 import kotlinx.coroutines.Dispatchers
@@ -290,8 +289,9 @@ class ScheduleFragment : Fragment(), Refreshable {
     // ===== 自定义日程 =====
 
     /**
-     * 点空格子新建、或从详情进入编辑。
+     * 点空格子新建、或从详情进入编辑。字段多，用独立页面而不是底部面板。
      * 不判断 isOwner——日程是本机私有数据，订阅别人课表的同学同样可以加自己的安排。
+     * 保存后返回本页，MainActivity.onResume 会触发 refresh() 重新读日程。
      */
     private fun showEventEditor(
         editing: PersonalEvent?,
@@ -300,15 +300,16 @@ class ScheduleFragment : Fragment(), Refreshable {
         section: Int
     ) {
         val current = schedule ?: return
-        EventEditorSheet(
-            requireContext(),
-            schedule = current,
-            events = events,
-            editing = editing,
-            initialWeek = week,
-            initialDay = day,
-            initialSection = section
-        ) { draft -> persistEvent(draft, editing?.id) }.show()
+        startActivity(
+            EventEditorActivity.intent(
+                requireContext(),
+                scheduleId = current.id,
+                eventId = editing?.id,
+                week = week,
+                day = day,
+                section = section
+            )
+        )
     }
 
     private fun showEvent(click: TimetableView.EventClick) {
@@ -330,27 +331,6 @@ class ScheduleFragment : Fragment(), Refreshable {
                 ) { deleteEvent(click.event.id) }
             }
         ).show()
-    }
-
-    private fun persistEvent(draft: PersonalEventDraft, eventId: String?) {
-        val current = schedule ?: return
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    PersonalEventStore.save(
-                        scheduleId = current.id,
-                        draft = draft,
-                        eventId = eventId,
-                        totalWeeks = current.totalWeeks,
-                        slots = ScheduleTime.slotsOf(current.timeSlots)
-                    )
-                }
-                reloadEvents(current.id)
-                Ui.toast(requireContext(), getString(R.string.event_saved))
-            } catch (error: Exception) {
-                Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
-            }
-        }
     }
 
     private fun deleteEvent(eventId: String) {
