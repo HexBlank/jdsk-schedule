@@ -35,7 +35,9 @@ import com.zhusijiao.app.domain.CourseAdjustment
 import com.zhusijiao.app.domain.DayHoliday
 import com.zhusijiao.app.domain.DayMakeup
 import com.zhusijiao.app.domain.DateUtils
+import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimeSlot
 import com.zhusijiao.app.domain.TimetableAppearance
@@ -87,9 +89,23 @@ class TimetableView @JvmOverloads constructor(
         val makeup: DayMakeup?
     )
 
+    /** 点击自定义日程块（本机私有安排，订阅课表同样可编辑）。 */
+    data class EventClick(
+        val event: PersonalEvent,
+        val week: Int,
+        val dayName: String,
+        val backgroundColor: Int
+    )
+
     enum class Occurrence { NORMAL, MOVED_IN, MOVED_OUT }
 
     var onCourseClick: ((CourseClick) -> Unit)? = null
+
+    /** 点击日程块：查看/编辑/删除。 */
+    var onEventClick: ((EventClick) -> Unit)? = null
+
+    /** 点击或长按空格子：在该时段新建日程，参数为 (周次, 星期, 节次)。 */
+    var onEmptySlotClick: ((week: Int, day: Int, section: Int) -> Unit)? = null
 
     /** 长按课程块：手动选择课程颜色（仅发布者）。 */
     var onCourseLongClick: ((CourseClick) -> Unit)? = null
@@ -97,6 +113,7 @@ class TimetableView @JvmOverloads constructor(
     var onWeekChanged: ((week: Int, isFirst: Boolean, isLast: Boolean) -> Unit)? = null
 
     private var schedule: Schedule? = null
+    private var events: List<PersonalEvent> = emptyList()
     private var paletteMap: Map<String, ScheduleView.Palette> = emptyMap()
     private var week = 1
     private var currentWeekNumber = 1
@@ -151,13 +168,21 @@ class TimetableView @JvmOverloads constructor(
         val orphaned: Boolean = false,
         val holiday: DayHoliday? = null,
         val makeup: DayMakeup? = null,
-        val madeUpNote: String? = null
+        val madeUpNote: String? = null,
+        val event: PersonalEvent? = null
     ) {
         var left = 0f; var top = 0f; var right = 0f; var bottom = 0f
         var nameLayout: StaticLayout? = null
         var teacherLayout: StaticLayout? = null
         var placeLayout: StaticLayout? = null
         var badgeWidth = 0f
+        /** 同格分栏时本块所在的栏（0 左 / 1 右）与该格的总栏数（1 表示独占整格）。 */
+        var column = 0
+        var columnCount = 1
+
+        /** 「鬼影」块：已调出、整日停课、补课来源日——当天都不上，不参与冲突分栏。 */
+        val ghosted: Boolean
+            get() = occurrence == Occurrence.MOVED_OUT || holiday != null || madeUpNote != null
     }
 
     // ===== 画笔 =====
@@ -173,6 +198,13 @@ class TimetableView @JvmOverloads constructor(
     private val teacherPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val placePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    // 分栏块（日程与课同格时左右等分）专用画笔：字号降一档。
+    // 必须与常规块分开——StaticLayout 持有 TextPaint 引用，排版与绘制得用同一支笔，
+    // 若在循环里反复改同一支笔的字号，先排好的块会被按最后一次的字号画出来。
+    private val splitNamePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.DEFAULT_BOLD }
+    private val splitTeacherPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+    private val splitPlacePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
 
     private val c = { id: Int -> ContextCompat.getColor(context, id) }
     private val colBgWhite = c(R.color.surface)
@@ -190,6 +222,9 @@ class TimetableView @JvmOverloads constructor(
     private val colGridH = c(R.color.tt_grid_h)
     private val colEmpty = c(R.color.sub_a0)
     private val colBadgeBg = c(R.color.tt_badge_bg)
+    // 默认日程色：冷灰蓝，刻意与 20 色课程色板拉开，一眼能分出「这不是课」
+    private val colEventBg = Color.rgb(74, 90, 114)
+    private val colEventText = Color.WHITE
     private val colSuspendedBg = Color.rgb(238, 240, 243)
     private val colSuspendedText = Color.rgb(105, 112, 124)
     private val colMarkMakeupText = c(R.color.tt_mark_makeup_text)
@@ -290,10 +325,12 @@ class TimetableView @JvmOverloads constructor(
 
     fun setSchedule(
         schedule: Schedule?,
+        events: List<PersonalEvent> = emptyList(),
         jumpToCurrent: Boolean = true,
         weekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO
     ) {
         this.schedule = schedule
+        this.events = events
         weekendDisplayMode = weekendMode
         pageOffset = 0f
         secondaryWeek = null
@@ -308,11 +345,11 @@ class TimetableView @JvmOverloads constructor(
             schedule.courses + schedule.adjustments.map { it.courseSnapshot },
             schedule.courseColors
         )
-        sectionsList = visibleSections(schedule)
+        sectionsList = visibleSections(schedule, events)
         currentWeekNumber = DateUtils.currentWeek(schedule.semesterStart, schedule.totalWeeks)
         if (jumpToCurrent) week = currentWeekNumber
         week = week.coerceIn(1, max(1, schedule.totalWeeks))
-        dayCount = WeekendDisplay.dayCount(schedule, week, weekendDisplayMode)
+        dayCount = WeekendDisplay.dayCount(schedule, week, weekendDisplayMode, events)
         dense = dayCount > WEEKDAY_COUNT
         renderFor(week)
         requestLayout()
@@ -450,7 +487,7 @@ class TimetableView @JvmOverloads constructor(
     /** 自动模式下切周可能在 5/7 列之间变化；列数变化时统一清空与列宽有关的缓存。 */
     private fun applyDayCountForWeek(targetWeek: Int): Boolean {
         val s = schedule ?: return false
-        val target = WeekendDisplay.dayCount(s, targetWeek, weekendDisplayMode)
+        val target = WeekendDisplay.dayCount(s, targetWeek, weekendDisplayMode, events)
         if (target == dayCount) return false
         dayCount = target
         dense = dayCount > WEEKDAY_COUNT
@@ -578,6 +615,33 @@ class TimetableView @JvmOverloads constructor(
                 )
             }
         }
+        // 自定义日程：本机私有安排，与课程重叠时由 layoutBlocks 左右分栏（左课右程）。
+        // 停课/补课不影响日程——停的是课，社团活动照常，所以这里不做任何鬼影处理。
+        events.forEach { event ->
+            if (!event.occursIn(w) || event.day > dayCount) return@forEach
+            val manual = ScheduleView.manualPalette(event.color)
+            r.blocks += Block(
+                course = Course(
+                    id = event.id,
+                    name = event.title,
+                    // 复用课程块的「教师」槽位放自定义时间行，「地点」槽位仍放地点
+                    teacher = event.blockTimeText(sectionsList).orEmpty(),
+                    position = event.position,
+                    day = event.day,
+                    startSection = event.startSection,
+                    endSection = event.endSection,
+                    weeks = event.weeks
+                ),
+                background = manual?.background ?: colEventBg,
+                foreground = manual?.foreground ?: colEventText,
+                badge = context.getString(R.string.event_badge),
+                compact = event.span == 1,
+                col = event.day,
+                startSection = event.startSection,
+                span = event.span,
+                event = event
+            )
+        }
         layoutBlocks(r)
         return r
     }
@@ -621,19 +685,48 @@ class TimetableView @JvmOverloads constructor(
     /** 课程块四周留白：越大块越瘦，格线露出越多。 */
     private fun blockMarginPx() = rpx(appearance.blockMarginRpx)
 
-    /** 课程块内左右、顶部内边距；七列时收窄一档。 */
-    private fun blockPadH() = if (dense) rpx(7f) else rpx(10f)
+    /** 课程块内左右、顶部内边距；七列时收窄一档，分栏块再减半把宽度让给文字。 */
+    private fun blockPadH(split: Boolean = false): Float {
+        val base = if (dense) rpx(7f) else rpx(10f)
+        return if (split) base * 0.5f else base
+    }
 
-    private fun blockPadTop() = if (dense) rpx(9f) else rpx(11f)
+    private fun blockPadTop(split: Boolean = false): Float {
+        val base = if (dense) rpx(9f) else rpx(11f)
+        return if (split) base * 0.8f else base
+    }
 
     /** 单双周角标行高；字号随文字档位缩放，排版与绘制共用同一份计算。 */
     private fun badgeHeightPx() = badgePaint.textSize * 1.3f + rpx(4f)
+
+    /**
+     * 分栏：日程与课程在同一格重叠时左右等分（左课右程），中间留 [SPLIT_GAP_RPX] 的缝。
+     *
+     * 只有「至少一条是日程」的重叠才分栏——纯课程之间的重叠是既有行为（后画的盖前面），
+     * 不该被这个功能改变。鬼影块（停课/已调出/补课来源日）当天不上课，不算冲突。
+     * 同一时段最多允许一条日程（见 PersonalEventStore），所以右栏恒为一块。
+     */
+    private fun assignColumns(blocks: List<Block>) {
+        blocks.forEach { it.column = 0; it.columnCount = 1 }
+        blocks.forEach { event ->
+            if (event.event == null) return@forEach
+            val eventEnd = event.startSection + event.span - 1
+            val clashes = blocks.filter { other ->
+                other.event == null && !other.ghosted && other.col == event.col &&
+                    other.startSection <= eventEnd &&
+                    event.startSection <= other.startSection + other.span - 1
+            }
+            if (clashes.isEmpty()) return@forEach
+            event.column = 1
+            event.columnCount = 2
+            clashes.forEach { it.column = 0; it.columnCount = 2 }
+        }
+    }
 
     private fun layoutBlocks(render: WeekRender) {
         if (width <= 0) return
         timeColPx = rpx(timeColumnRpx(dayCount))
         dayColPx = (width - timeColPx) / dayCount
-        val padH = blockPadH()
         // 文字档位（小/标准/大）统一缩放四个字号；七列的降档系数保留，两者相乘
         val scale = appearance.textScale
         namePaint.textSize = rpx((if (dense) 21f else 24f) * scale)
@@ -641,27 +734,64 @@ class TimetableView @JvmOverloads constructor(
         // 教室名字号略小于教师名，同拾光课程表对齐：同一行能容纳更多字，减少换行
         placePaint.textSize = rpx((if (dense) 15f else 17f) * scale)
         badgePaint.textSize = rpx(BADGE_TEXT_RPX * scale)
+        // 分栏块只有半格宽，字号统一降到七列档；七列本就窄，再乘一档收缩系数
+        val splitScale = scale * if (dense) SPLIT_DENSE_SCALE else 1f
+        splitNamePaint.textSize = rpx(21f * splitScale)
+        splitTeacherPaint.textSize = rpx(18f * splitScale)
+        splitPlacePaint.textSize = rpx(15f * splitScale)
 
+        assignColumns(render.blocks)
         val margin = blockMarginPx()
+        val gap = rpx(SPLIT_GAP_RPX)
         render.blocks.forEach { b ->
-            b.left = timeColPx + (b.col - 1) * dayColPx + margin
-            b.right = timeColPx + b.col * dayColPx - margin
+            val split = b.columnCount > 1
+            val colLeft = timeColPx + (b.col - 1) * dayColPx
+            if (split) {
+                val each = max(1f, (dayColPx - margin * 2f - gap) / 2f)
+                b.left = colLeft + margin + b.column * (each + gap)
+                b.right = b.left + each
+            } else {
+                b.left = colLeft + margin
+                b.right = colLeft + dayColPx - margin
+            }
             b.top = headerHeightPx + (b.startSection - 1) * rowHeightPx + margin
             b.bottom = headerHeightPx + (b.startSection - 1 + b.span) * rowHeightPx - margin
+            val padH = blockPadH(split)
+            val padTop = blockPadTop(split)
             val contentWidth = max(1, (b.right - b.left - padH * 2).roundToInt())
+            // 分栏块窄到放不下角标（七列时内容宽只剩约 35rpx），一律省掉只留标题；
+            // 教师、地点与「调课/补课」状态都在详情抽屉里给全。
+            b.badgeWidth = if (!split && b.badge.isNotEmpty() && !b.compact) {
+                badgePaint.measureText(b.badge) + rpx(16f)
+            } else {
+                0f
+            }
             // 块内可用高度 = 课程块高度 - 上下留白 - 徽标行（与 drawBlocks 的徽标占位一致）。
             // 文本行数按剩余高度动态分配：高度足够时完整显示教室名，空间不足才省略，
             // 修复连续多节课时教室名被省略号吞掉、短课时文字被块底边截断的问题。
-            val padTop = blockPadTop()
-            val badgeUsed = if (b.badge.isNotEmpty() && !b.compact) badgeHeightPx() + rpx(6f) else 0f
+            val badgeUsed = if (b.badgeWidth > 0f) badgeHeightPx() + rpx(6f) else 0f
             var availH = (b.bottom - b.top) - padTop * 2f - badgeUsed
-            val nameLayout = fitLayout(b.course.name, namePaint, contentWidth, if (b.compact) 2 else 4, 1.2f, availH)
+            val nameLayout = fitLayout(
+                b.course.name,
+                if (split) splitNamePaint else namePaint,
+                contentWidth,
+                if (b.compact) 2 else 4,
+                1.2f,
+                availH
+            )
             b.nameLayout = nameLayout
             availH -= nameLayout.height
             val secondary = b.displayNote ?: b.course.teacher
             if (secondary.isNotBlank()) {
                 availH -= if (b.compact) rpx(4f) else rpx(8f)
-                val teacherLayout = fitLayout(secondary, teacherPaint, contentWidth, if (b.compact) 1 else 2, 1.25f, availH)
+                val teacherLayout = fitLayout(
+                    secondary,
+                    if (split) splitTeacherPaint else teacherPaint,
+                    contentWidth,
+                    if (b.compact) 1 else 2,
+                    1.25f,
+                    availH
+                )
                 b.teacherLayout = teacherLayout
                 availH -= teacherLayout.height
             } else {
@@ -669,11 +799,17 @@ class TimetableView @JvmOverloads constructor(
             }
             if (b.displayNote == null && !b.compact && b.course.position.isNotBlank()) {
                 availH -= rpx(4f)
-                b.placeLayout = fitLayout(b.course.position, placePaint, contentWidth, PLACE_MAX_LINES, 1.25f, availH)
+                b.placeLayout = fitLayout(
+                    b.course.position,
+                    if (split) splitPlacePaint else placePaint,
+                    contentWidth,
+                    PLACE_MAX_LINES,
+                    1.25f,
+                    availH
+                )
             } else {
                 b.placeLayout = null
             }
-            b.badgeWidth = if (b.badge.isNotEmpty() && !b.compact) badgePaint.measureText(b.badge) + rpx(16f) else 0f
         }
     }
 
@@ -846,9 +982,10 @@ class TimetableView @JvmOverloads constructor(
 
     private fun drawBlocks(canvas: Canvas, render: WeekRender) {
         val radius = rpx(12f)
-        val padTop = blockPadTop()
-        val padH = blockPadH()
         render.blocks.forEach { b ->
+            val split = b.columnCount > 1
+            val padTop = blockPadTop(split)
+            val padH = blockPadH(split)
             val rect = RectF(b.left, b.top, b.right, b.bottom)
             fillPaint.color = b.background
             canvas.drawRoundRect(rect, radius, radius, fillPaint)
@@ -873,19 +1010,19 @@ class TimetableView @JvmOverloads constructor(
                 y += badgeH + rpx(6f)
             }
             b.nameLayout?.let {
-                namePaint.color = b.foreground
+                (if (split) splitNamePaint else namePaint).color = b.foreground
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
                 y += it.height
             }
             b.teacherLayout?.let {
                 y += if (b.compact) rpx(4f) else rpx(8f)
-                teacherPaint.color = withAlpha(b.foreground, 0.94f)
+                (if (split) splitTeacherPaint else teacherPaint).color = withAlpha(b.foreground, 0.94f)
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
                 y += it.height
             }
             b.placeLayout?.let {
                 y += rpx(4f)
-                placePaint.color = withAlpha(b.foreground, 0.85f)
+                (if (split) splitPlacePaint else placePaint).color = withAlpha(b.foreground, 0.85f)
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
             }
             canvas.restore()
@@ -903,11 +1040,20 @@ class TimetableView @JvmOverloads constructor(
     private val longPressHandler = Handler(Looper.getMainLooper())
     private var longPressFired = false
     private val longPressRunnable = Runnable {
-        if (dragging || schedule == null || onCourseLongClick == null) return@Runnable
+        if (dragging || schedule == null) return@Runnable
         val render = renderFor(week)
         val hit = render.blocks.lastOrNull {
             (downX - pageOffset) in it.left..it.right && downY in it.top..it.bottom
-        } ?: return@Runnable
+        }
+        // 空格子长按：与点按一样新建日程；日程块长按不做事（选色只针对课程，编辑在详情里）
+        if (hit == null) {
+            if (onEmptySlotClick == null) return@Runnable
+            longPressFired = true
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            openEmptySlot(downX - pageOffset, downY)
+            return@Runnable
+        }
+        if (hit.event != null || onCourseLongClick == null) return@Runnable
         longPressFired = true
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         openBlock(render, hit, onCourseLongClick)
@@ -1012,8 +1158,25 @@ class TimetableView @JvmOverloads constructor(
             }
         }
         val render = renderFor(week)
-        val hit = render.blocks.lastOrNull { x in it.left..it.right && y in it.top..it.bottom } ?: return
-        openBlock(render, hit)
+        val hit = render.blocks.lastOrNull { x in it.left..it.right && y in it.top..it.bottom }
+        if (hit != null) {
+            openBlock(render, hit)
+            return
+        }
+        openEmptySlot(x, y)
+    }
+
+    /**
+     * 点击空格子：在这个时段新建日程。
+     * 发布者和订阅者都可以——日程是本机私有数据，与课表的编辑权限无关。
+     */
+    private fun openEmptySlot(x: Float, y: Float) {
+        val sink = onEmptySlotClick ?: return
+        if (dayColPx <= 0f || rowHeightPx <= 0f || x <= timeColPx || y <= headerHeightPx) return
+        val day = ((x - timeColPx) / dayColPx).toInt() + 1
+        val section = ((y - headerHeightPx) / rowHeightPx).toInt() + 1
+        if (day !in 1..dayCount || section !in 1..sectionsList.size) return
+        sink(week, day, section)
     }
 
     private fun openDay(day: Int) {
@@ -1031,6 +1194,20 @@ class TimetableView @JvmOverloads constructor(
     }
 
     private fun openBlock(render: WeekRender, hit: Block, sink: ((CourseClick) -> Unit)? = null) {
+        hit.event?.let { event ->
+            // 长按（sink 非空）只对课程块有效，日程的编辑/删除在详情抽屉里
+            if (sink != null) return
+            val date = render.dates.getOrNull(hit.col - 1)
+            onEventClick?.invoke(
+                EventClick(
+                    event = event,
+                    week = week,
+                    dayName = if (date != null) "周${date.name}" else context.getString(R.string.detail_day_fallback),
+                    backgroundColor = hit.background
+                )
+            )
+            return
+        }
         val start = sectionsList.find { it.number == hit.course.startSection }
         val end = sectionsList.find { it.number == hit.course.endSection }
         // 日期列以块所在列为准（补课块显示在目标日，而 course.day 是来源日）。
@@ -1064,6 +1241,12 @@ class TimetableView @JvmOverloads constructor(
     }
 
     private fun blockDescription(block: Block): String {
+        block.event?.let { event ->
+            val time = event.timeText(sectionsList)?.let { "，$it" }.orEmpty()
+            val place = event.position.takeIf { it.isNotBlank() }?.let { "，地点$it" }.orEmpty()
+            return "日程${event.title}，周${dayName(block.col)}，" +
+                "第${block.startSection}到${block.startSection + block.span - 1}节$time$place"
+        }
         val status = when {
             block.makeup != null -> "，补第${block.makeup.sourceWeek}周周${dayName(block.makeup.sourceDay)}的课"
             block.madeUpNote != null -> "，已补课"
@@ -1098,6 +1281,10 @@ class TimetableView @JvmOverloads constructor(
         const val HEADER_HEIGHT_RPX = 92f
         /** 单双周角标基准字号；实际字号再乘外观的文字缩放系数。 */
         const val BADGE_TEXT_RPX = 17f
+        /** 日程与课程同格分栏时两栏之间的缝宽（设计稿单位），不要 0 距离贴在一起。 */
+        const val SPLIT_GAP_RPX = 4f
+        /** 七列模式下分栏块的额外字号收缩系数；五列分栏只降到七列档，不再乘。 */
+        const val SPLIT_DENSE_SCALE = 0.85f
         const val MIN_SECTIONS = 8
         const val WEEKDAY_COUNT = WeekendDisplay.WEEKDAY_COUNT
         const val FULL_WEEK_COUNT = WeekendDisplay.FULL_WEEK_COUNT
@@ -1111,25 +1298,21 @@ class TimetableView @JvmOverloads constructor(
 
         fun timeColumnRpx(dayCount: Int): Float = TIME_COLUMN[dayCount] ?: TIME_COLUMN[FULL_WEEK_COUNT]!!
 
-        /** 用课表自带作息覆盖默认作息（缺失的节次回退到默认值）。 */
-        fun scheduleTimeSlots(timeSlots: List<TimeSlot>?): List<TimeSlot> {
-            val provided = (timeSlots ?: emptyList()).associateBy { it.number }
-            return com.zhusijiao.app.domain.EamsParser.DEFAULT_TIME_SLOTS.map { fallback ->
-                val slot = provided[fallback.number]
-                TimeSlot(
-                    number = fallback.number,
-                    startTime = slot?.startTime?.takeIf { it.isNotBlank() } ?: fallback.startTime,
-                    endTime = slot?.endTime?.takeIf { it.isNotBlank() } ?: fallback.endTime
-                )
-            }
-        }
-
-        /** 实际用到的最大节次决定显示行数，最少 8、最多 12。 */
-        fun visibleSections(schedule: Schedule): List<TimeSlot> {
-            val slots = scheduleTimeSlots(schedule.timeSlots)
+        /**
+         * 实际用到的最大节次决定显示行数，最少 8、最多 12。
+         *
+         * 日程的结束节必须算进来：学校课表只排到下午时行数只有 8，
+         * 晚上根本没有格子可以放「周五晚上的社团活动」，功能会直接不可用。
+         */
+        fun visibleSections(
+            schedule: Schedule,
+            events: List<PersonalEvent> = emptyList()
+        ): List<TimeSlot> {
+            val slots = ScheduleTime.slotsOf(schedule.timeSlots)
             val lastUsed = maxOf(
                 schedule.courses.maxOfOrNull { it.endSection } ?: 0,
-                schedule.adjustments.maxOfOrNull { it.targetEndSection } ?: 0
+                schedule.adjustments.maxOfOrNull { it.targetEndSection } ?: 0,
+                events.maxOfOrNull { it.endSection } ?: 0
             )
             val count = minOf(slots.size, maxOf(MIN_SECTIONS, lastUsed))
             return slots.take(count)

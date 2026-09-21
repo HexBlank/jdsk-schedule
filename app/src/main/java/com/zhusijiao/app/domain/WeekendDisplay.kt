@@ -14,12 +14,23 @@ object WeekendDisplay {
     const val WEEKDAY_COUNT = 5
     const val FULL_WEEK_COUNT = 7
 
-    fun dayCount(schedule: Schedule, week: Int, mode: WeekendDisplayMode): Int = when (mode) {
+    fun dayCount(
+        schedule: Schedule,
+        week: Int,
+        mode: WeekendDisplayMode,
+        events: List<PersonalEvent> = emptyList()
+    ): Int = when (mode) {
         WeekendDisplayMode.ALWAYS -> FULL_WEEK_COUNT
-        WeekendDisplayMode.AUTO -> if (hasWeekendArrangement(schedule, week)) FULL_WEEK_COUNT else WEEKDAY_COUNT
+        WeekendDisplayMode.AUTO ->
+            if (hasWeekendArrangement(schedule, week, events)) FULL_WEEK_COUNT else WEEKDAY_COUNT
     }
 
-    fun hasWeekendArrangement(schedule: Schedule, week: Int): Boolean =
+    /** 自定义日程同样算「周末有安排」，否则周六的社团活动所在列根本不显示。 */
+    fun hasWeekendArrangement(
+        schedule: Schedule,
+        week: Int,
+        events: List<PersonalEvent> = emptyList()
+    ): Boolean =
         schedule.courses.any { course -> course.day > WEEKDAY_COUNT && week in course.weeks } ||
             schedule.adjustments.any { adjustment ->
                 adjustment.targetWeek == week && adjustment.targetDay > WEEKDAY_COUNT
@@ -30,5 +41,6 @@ object WeekendDisplay {
             schedule.makeups.any { makeup ->
                 (makeup.targetWeek == week && makeup.targetDay > WEEKDAY_COUNT) ||
                     (makeup.sourceWeek == week && makeup.sourceDay > WEEKDAY_COUNT)
-            }
+            } ||
+            events.any { event -> event.day > WEEKDAY_COUNT && event.occursIn(week) }
 }
