@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  课表外观面板：只占屏幕下半部分，背景几乎不压暗（Theme.Zhusijiao.Sheet.Clear），
+  用户一边点档位一边能看到上半屏真实课表的变化，因此没有「确定」按钮——改一下即时生效。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="14dp">
+
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="13dp"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/appearance_title"
+            android:textColor="@color/heading_ink"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/appearanceReset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_tag"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            android:text="@string/appearance_reset"
+            android:textColor="@color/accent_strong"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/appearance_hint"
+        android:textColor="@color/sub_a8"
+        android:textSize="11sp" />
+
+    <!-- 小屏或系统大字体下内容仍可能超出，这里限高可滚，保证三排档位都够得着 -->
+    <com.zhusijiao.app.ui.common.MaxHeightScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/appearance_row_height"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                android:id="@+id/heightChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp" />
+
+            <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView -->
+            <LinearLayout
+                android:id="@+id/fitScreenRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="false"
+                android:gravity="center_vertical"
+                android:importantForAccessibility="no"
+                android:minHeight="52dp"
+                android:orientation="horizontal"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                tools:ignore="KeyboardInaccessibleWidget">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/appearance_fit_screen"
+                        android:textColor="@color/body_ink"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/appearance_fit_screen_sub"
+                        android:textColor="@color/sub_a8"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <com.zhusijiao.app.ui.common.ToggleView
+                    android:id="@+id/fitScreenToggle"
+                    android:layout_width="50dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/appearance_fit_screen" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/detail_border" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:text="@string/appearance_padding"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="@string/appearance_padding_sub"
+                android:textColor="@color/sub_a8"
+                android:textSize="11sp" />
+
+            <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                android:id="@+id/paddingChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="13dp"
+                android:text="@string/appearance_text_size"
+                android:textColor="@color/field_label"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                android:id="@+id/textChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp" />
+        </LinearLayout>
+    </com.zhusijiao.app.ui.common.MaxHeightScrollView>
+</LinearLayout>

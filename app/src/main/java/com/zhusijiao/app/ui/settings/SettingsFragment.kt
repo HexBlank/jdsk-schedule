@@ -24,6 +24,7 @@ import com.zhusijiao.app.data.UpdateCheck
 import com.zhusijiao.app.databinding.FragmentSettingsBinding
 import com.zhusijiao.app.domain.ServerAddress
 import com.zhusijiao.app.domain.UpdateChannelOptions
+import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
@@ -48,6 +49,7 @@ class SettingsFragment : Fragment(), Refreshable {
         super.onViewCreated(view, savedInstanceState)
         binding.header.setTitle(getString(R.string.settings_title))
         bindStatus()
+        bindAppearanceRow()
         bindUpdateSection()
         bindServerRow()
         bindChannelRow()
@@ -99,8 +101,17 @@ class SettingsFragment : Fragment(), Refreshable {
     override fun refresh() {
         if (_binding != null) {
             bindStatus()
+            bindAppearanceRow()
             bindServerRow()
             bindChannelRow()
+        }
+    }
+
+    /** 「课表外观」行：副标题摘要当前档位，点击切到课表页并弹出外观面板。 */
+    private fun bindAppearanceRow() {
+        binding.appearanceSub.text = AppearanceSheet.summary(requireContext(), Prefs.timetableAppearance)
+        binding.menuAppearance.setOnClickListener {
+            (activity as? MainActivity)?.openTimetableAppearance()
         }
     }
 

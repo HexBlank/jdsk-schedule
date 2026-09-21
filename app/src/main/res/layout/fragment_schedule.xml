@@ -109,8 +109,10 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- 内容区：课表可竖向滚动，加载/空/错误态覆盖其上 -->
+    <!-- 内容区：课表可竖向滚动，加载/空/错误态覆盖其上。
+         始终可见，「铺满一屏」用它的高度算行高（scroll 在空/加载态是 gone，量不到） -->
     <FrameLayout
+        android:id="@+id/contentArea"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">

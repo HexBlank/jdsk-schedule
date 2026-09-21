@@ -43,6 +43,11 @@
         <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
+    <!-- 课表外观面板专用：几乎不压暗背景，让用户一边调档位一边看到上半屏的真实课表 -->
+    <style name="Theme.Zhusijiao.Sheet.Clear" parent="Theme.Zhusijiao.Sheet">
+        <item name="android:backgroundDimAmount">0.12</item>
+    </style>
+
     <style name="SheetAnimation" parent="@android:style/Animation.Dialog">
         <item name="android:windowEnterAnimation">@anim/sheet_up</item>
         <item name="android:windowExitAnimation">@anim/sheet_down</item>

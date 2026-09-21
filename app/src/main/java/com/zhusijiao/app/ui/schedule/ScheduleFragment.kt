@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +19,8 @@ import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.domain.TimetableAppearance
+import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.HolidaySheet
@@ -31,6 +34,7 @@ import kotlinx.coroutines.launch
 import com.zhusijiao.app.util.Rpx
 import com.zhusijiao.app.util.Ui
 import java.util.Calendar
+import kotlin.math.roundToInt
 
 /** 周课表页：应用主界面。 */
 class ScheduleFragment : Fragment(), Refreshable {
@@ -46,6 +50,9 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     /** 打开中的调休面板：保存后就地刷新，不必关掉再进。 */
     private var holidaySheet: HolidaySheet? = null
+
+    /** 从设置页跳过来时先记下，等课表视图就绪再弹外观面板。 */
+    private var pendingAppearanceSheet = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScheduleBinding.inflate(inflater, container, false)
@@ -75,6 +82,16 @@ class ScheduleFragment : Fragment(), Refreshable {
         }
         if (ApiClient.isLocalMode) binding.emptyJoin.text = getString(R.string.library_join_offline)
         binding.errorRetry.setOnClickListener { load(silent = false) }
+        binding.timetable.setAppearance(Prefs.timetableAppearance)
+        // 「铺满一屏」要按可视高度平分行高；用始终可见的内容区测量，首帧就是最终高度，
+        // 容器高度变化（分屏、系统字体缩放）时也会再次告知
+        binding.contentArea.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
+            binding.timetable.setViewportHeight(bottom - top)
+        }
+        if (pendingAppearanceSheet) {
+            pendingAppearanceSheet = false
+            binding.timetable.post { showAppearanceSheet() }
+        }
     }
 
     override fun onDestroyView() {
@@ -118,7 +135,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 Prefs.activeScheduleId = loadedSchedule.id
                 currentWeekNumber = DateUtils.currentWeek(loadedSchedule.semesterStart, loadedSchedule.totalWeeks)
                 binding.header.setTitle(loadedSchedule.name)
-                updateHolidayAction()
+                updateHeaderActions()
                 binding.timetable.setSchedule(
                     loadedSchedule,
                     jumpToCurrent = !sameSchedule,
@@ -242,7 +259,7 @@ class ScheduleFragment : Fragment(), Refreshable {
     private fun applyUpdatedSchedule(updated: Schedule) {
         schedule = updated
         binding.header.setTitle(updated.name)
-        updateHolidayAction()
+        updateHeaderActions()
         binding.timetable.setSchedule(
             updated,
             jumpToCurrent = false,
@@ -251,10 +268,14 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.goToWeek(currentWeek)
     }
 
-    /** 页头「调休」入口：仅发布者可见；弱化为安静的次要文字，不与标题抢视觉。 */
-    private fun updateHolidayAction() {
+    /**
+     * 页头操作区：左「课表外观」图标（所有人可见），右「调休」文字（仅发布者）。
+     * 外观用图标而非文字，避免两个中文按钮把居中的课表名挤掉。
+     */
+    private fun updateHeaderActions() {
         val header = binding.header
         header.clearActions()
+        header.addAction(appearanceAction())
         if (schedule?.isOwner != true) return
         val action = TextView(requireContext()).apply {
             text = getString(R.string.header_holiday_action)
@@ -273,6 +294,56 @@ class ScheduleFragment : Fragment(), Refreshable {
             setOnClickListener { showHolidaySheet(currentWeek, defaultHolidayDay()) }
         }
         header.addAction(action)
+    }
+
+    private fun appearanceAction(): View = AppCompatImageView(requireContext()).apply {
+        setImageResource(R.drawable.ic_appearance)
+        val borderless = TypedValue()
+        context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, borderless, true)
+        setBackgroundResource(borderless.resourceId)
+        val pad = Rpx.dp(12f)
+        setPadding(pad, pad, pad, pad)
+        minimumWidth = Rpx.dp(44f)
+        minimumHeight = Rpx.dp(44f)
+        isClickable = true
+        isFocusable = true
+        contentDescription = getString(R.string.appearance_action)
+        setOnClickListener { showAppearanceSheet() }
+    }
+
+    /** 供设置页「课表外观」跳转过来时直接弹面板；视图未就绪则记下待办。 */
+    fun requestAppearanceSheet() {
+        if (_binding == null) {
+            pendingAppearanceSheet = true
+            return
+        }
+        binding.timetable.post { showAppearanceSheet() }
+    }
+
+    /**
+     * 课表外观面板：改一下即时生效并写入本机偏好。
+     * 行高变化后按新旧行高比例换算滚动位置，用户正在看的节次不会因为变高变矮而跳走。
+     */
+    private fun showAppearanceSheet() {
+        if (_binding == null) return
+        AppearanceSheet(requireContext(), Prefs.timetableAppearance) { value ->
+            Prefs.timetableAppearance = value
+            applyAppearance(value)
+        }.show()
+    }
+
+    private fun applyAppearance(value: TimetableAppearance) {
+        if (_binding == null) return
+        val scroll = binding.scroll
+        val beforeRow = binding.timetable.currentRowHeightPx()
+        val beforeScroll = scroll.scrollY
+        binding.timetable.setAppearance(value)
+        if (beforeRow <= 0f || beforeScroll <= 0) return
+        scroll.post {
+            if (_binding == null) return@post
+            val afterRow = binding.timetable.currentRowHeightPx()
+            if (afterRow > 0f) scroll.scrollTo(0, (beforeScroll * afterRow / beforeRow).roundToInt())
+        }
     }
 
     /** 页头进入调休时的默认选中日：正看本周就选今天，否则选该周周一。 */

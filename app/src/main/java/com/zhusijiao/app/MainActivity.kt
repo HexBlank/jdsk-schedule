@@ -96,6 +96,15 @@ class MainActivity : BaseActivity() {
         showTab(BottomNavView.Tab.SCHEDULE)
     }
 
+    /**
+     * 设置页「课表外观」入口：先切到课表页再弹外观面板。
+     * 外观要对着真实课表调才看得出效果，所以不在设置页就地弹。
+     */
+    fun openTimetableAppearance() {
+        openScheduleTab()
+        scheduleFragment.requestAppearanceSheet()
+    }
+
     /** 供删除全部数据等明确流程回到课表库；空课表页本身不会强制跳转。 */
     fun openLibraryTab() {
         binding.bottomNav.setCurrent(BottomNavView.Tab.LIBRARY)

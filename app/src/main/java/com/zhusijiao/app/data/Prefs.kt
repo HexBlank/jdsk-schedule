@@ -3,6 +3,7 @@ package com.zhusijiao.app.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.zhusijiao.app.MainApplication
+import com.zhusijiao.app.domain.TimetableAppearance
 import com.zhusijiao.app.domain.UpdateChannelOption
 import com.zhusijiao.app.domain.UpdateChannelOptions
 import com.zhusijiao.app.domain.WeekendDisplayMode
@@ -27,6 +28,10 @@ object Prefs {
     private const val KEY_CUSTOM_COURSE_COLORS = "customCourseColors"
     private const val KEY_SERVER_OVERRIDE = "serverBaseUrlOverride"
     private const val KEY_UPDATE_CHANNEL = "updateChannelId"
+    private const val KEY_TT_ROW_HEIGHT = "timetableRowHeightLevel"
+    private const val KEY_TT_PADDING = "timetablePaddingLevel"
+    private const val KEY_TT_TEXT = "timetableTextLevel"
+    private const val KEY_TT_FIT_SCREEN = "timetableFitScreen"
     private const val KEY_CUSTOM_CHANNELS = "customUpdateChannels"
     private val HEX_COLOR = Regex("^#[0-9A-F]{6}$")
 
@@ -83,6 +88,29 @@ object Prefs {
             sp.edit()
                 .putString(KEY_WEEKEND_DISPLAY_MODE, value.name)
                 .remove(KEY_SHOW_WEEKEND)
+                .apply()
+        }
+
+    /**
+     * 课表外观（格子高度/留白/文字大小、铺满一屏）。
+     * 纯本机显示偏好，不随课表同步：同一份课表各人可以各调各的。
+     */
+    var timetableAppearance: TimetableAppearance
+        get() = TimetableAppearance(
+            rowHeightLevel = sp.getInt(KEY_TT_ROW_HEIGHT, TimetableAppearance.DEFAULT_ROW_HEIGHT_LEVEL)
+                .coerceIn(TimetableAppearance.ROW_HEIGHTS.indices),
+            paddingLevel = sp.getInt(KEY_TT_PADDING, TimetableAppearance.DEFAULT_PADDING_LEVEL)
+                .coerceIn(TimetableAppearance.BLOCK_MARGINS.indices),
+            textLevel = sp.getInt(KEY_TT_TEXT, TimetableAppearance.DEFAULT_TEXT_LEVEL)
+                .coerceIn(TimetableAppearance.TEXT_SCALES.indices),
+            fitScreen = sp.getBoolean(KEY_TT_FIT_SCREEN, false)
+        )
+        set(value) {
+            sp.edit()
+                .putInt(KEY_TT_ROW_HEIGHT, value.rowHeightLevel)
+                .putInt(KEY_TT_PADDING, value.paddingLevel)
+                .putInt(KEY_TT_TEXT, value.textLevel)
+                .putBoolean(KEY_TT_FIT_SCREEN, value.fitScreen)
                 .apply()
         }
 

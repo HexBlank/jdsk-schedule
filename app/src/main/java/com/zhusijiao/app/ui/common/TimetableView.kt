@@ -38,6 +38,7 @@ import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimeSlot
+import com.zhusijiao.app.domain.TimetableAppearance
 import com.zhusijiao.app.domain.WeekendDisplay
 import com.zhusijiao.app.domain.WeekendDisplayMode
 import kotlin.math.abs
@@ -49,6 +50,9 @@ import kotlin.math.roundToInt
  * 周课表视图：
  * 顶部星期/日期（今天深色圆角标记）、左侧节次与上下课时间、课程块（圆角、配色、单双周角标、课程名/教师/地点）。
  * 整周一屏、列宽以 750 设计稿宽度为基准按视图宽度等比换算。
+ *
+ * 行高、课程块留白与字号由 [TimetableAppearance] 决定（见 [setAppearance]），列宽不可调：
+ * 整周一屏是硬约束，列宽恒为「视图宽度减时间列后平分给各天」。
  *
  * 周次切换采用「连续横向分页」：相邻周作为独立页面并排绘制，跟随手指整体平移，
  * 松手后平滑吸附到最近一页（类似拾光课程表的连贯翻页），而非淡入淡出闪现。
@@ -101,6 +105,11 @@ class TimetableView @JvmOverloads constructor(
     private var dayCount = WEEKDAY_COUNT
     private var dense = false
     private var sectionsList: List<TimeSlot> = emptyList()
+
+    // 本机外观偏好（格子高度/留白/文字大小、铺满一屏），不随课表同步
+    private var appearance = TimetableAppearance.DEFAULT
+    /** 课表在页面里的可视高度（px），由外层滚动容器告知，只有「铺满一屏」用得到。 */
+    private var viewportHeightPx = 0
 
     // 分页状态：pageOffset 为当前页的水平平移量；secondaryWeek 为并排显示的相邻页
     private var pageOffset = 0f
@@ -315,6 +324,37 @@ class TimetableView @JvmOverloads constructor(
     fun setWeekendDisplayMode(mode: WeekendDisplayMode) {
         weekendDisplayMode = mode
         if (applyDayCountForWeek(week)) renderFor(week)
+        invalidate()
+    }
+
+    /** 应用本机课表外观偏好：立刻重新测量、重排已缓存的各周并重绘，不改变当前周次。 */
+    fun setAppearance(value: TimetableAppearance) {
+        if (value == appearance) return
+        appearance = value
+        refreshMetrics()
+    }
+
+    /** 当前行高（px），供外层在改档位后按比例换算滚动位置，保持用户正在看的节次不跳。 */
+    fun currentRowHeightPx(): Float = rowHeightPx
+
+    /**
+     * 由外层滚动容器告知课表的可视高度（px），供「铺满一屏」平分行高。
+     * 容器高度变化（如系统字体缩放、分屏）时再调一次即可。
+     */
+    fun setViewportHeight(px: Int) {
+        if (px == viewportHeightPx) return
+        viewportHeightPx = px
+        if (appearance.fitScreen) refreshMetrics()
+    }
+
+    /** 几何参数变化后的统一收尾：重算尺寸、重排缓存、刷新无障碍节点。 */
+    private fun refreshMetrics() {
+        if (width > 0) {
+            applyMetrics(width)
+            weekCache.values.forEach { layoutBlocks(it) }
+        }
+        accessibilityHelper.invalidateRoot()
+        requestLayout()
         invalidate()
     }
 
@@ -546,40 +586,64 @@ class TimetableView @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        unit = if (width > 0) width / 750f else resources.displayMetrics.widthPixels / 750f
-        headerHeightPx = rpx(92f)
-        rowHeightPx = rpx(124f)
-        val rows = if (sectionsList.isNotEmpty()) sectionsList.size else MIN_SECTIONS
-        bodyHeightPx = rows * rowHeightPx
+        applyMetrics(if (width > 0) width else resources.displayMetrics.widthPixels)
         setMeasuredDimension(width, (headerHeightPx + bodyHeightPx).roundToInt())
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (w > 0) {
-            unit = w / 750f
-            headerHeightPx = rpx(92f)
-            rowHeightPx = rpx(124f)
-            bodyHeightPx = (if (sectionsList.isNotEmpty()) sectionsList.size else MIN_SECTIONS) * rowHeightPx
+            applyMetrics(w)
             weekCache.values.forEach { layoutBlocks(it) }
         }
     }
 
+    /** 按视图宽度算出等比单位、表头高度、行高与表体高度。 */
+    private fun applyMetrics(widthPx: Int) {
+        unit = widthPx / 750f
+        headerHeightPx = rpx(HEADER_HEIGHT_RPX)
+        val rows = if (sectionsList.isNotEmpty()) sectionsList.size else MIN_SECTIONS
+        rowHeightPx = rpx(rowHeightRpx(rows))
+        bodyHeightPx = rows * rowHeightPx
+    }
+
+    /**
+     * 当前行高（设计稿单位）：开启「铺满一屏」时把可视高度减去表头后平分给各节次，
+     * 拿不到可视高度（容器还没布局）时退回高度档位，不会出现 0 高度的空白课表。
+     */
+    private fun rowHeightRpx(rows: Int): Float {
+        if (!appearance.fitScreen || viewportHeightPx <= 0 || unit <= 0f) return appearance.rowHeightRpx
+        return TimetableAppearance.fitRowHeightRpx(viewportHeightPx / unit - HEADER_HEIGHT_RPX, rows)
+    }
+
     private fun rpx(v: Float) = v * unit
+
+    /** 课程块四周留白：越大块越瘦，格线露出越多。 */
+    private fun blockMarginPx() = rpx(appearance.blockMarginRpx)
+
+    /** 课程块内左右、顶部内边距；七列时收窄一档。 */
+    private fun blockPadH() = if (dense) rpx(7f) else rpx(10f)
+
+    private fun blockPadTop() = if (dense) rpx(9f) else rpx(11f)
+
+    /** 单双周角标行高；字号随文字档位缩放，排版与绘制共用同一份计算。 */
+    private fun badgeHeightPx() = badgePaint.textSize * 1.3f + rpx(4f)
 
     private fun layoutBlocks(render: WeekRender) {
         if (width <= 0) return
         timeColPx = rpx(timeColumnRpx(dayCount))
         dayColPx = (width - timeColPx) / dayCount
-        val padH = if (dense) rpx(7f) else rpx(10f)
-        namePaint.textSize = if (dense) rpx(21f) else rpx(24f)
-        teacherPaint.textSize = if (dense) rpx(18f) else rpx(20f)
+        val padH = blockPadH()
+        // 文字档位（小/标准/大）统一缩放四个字号；七列的降档系数保留，两者相乘
+        val scale = appearance.textScale
+        namePaint.textSize = rpx((if (dense) 21f else 24f) * scale)
+        teacherPaint.textSize = rpx((if (dense) 18f else 20f) * scale)
         // 教室名字号略小于教师名，同拾光课程表对齐：同一行能容纳更多字，减少换行
-        placePaint.textSize = if (dense) rpx(15f) else rpx(17f)
-        badgePaint.textSize = rpx(17f)
+        placePaint.textSize = rpx((if (dense) 15f else 17f) * scale)
+        badgePaint.textSize = rpx(BADGE_TEXT_RPX * scale)
 
+        val margin = blockMarginPx()
         render.blocks.forEach { b ->
-            val margin = rpx(4f)
             b.left = timeColPx + (b.col - 1) * dayColPx + margin
             b.right = timeColPx + b.col * dayColPx - margin
             b.top = headerHeightPx + (b.startSection - 1) * rowHeightPx + margin
@@ -588,8 +652,8 @@ class TimetableView @JvmOverloads constructor(
             // 块内可用高度 = 课程块高度 - 上下留白 - 徽标行（与 drawBlocks 的徽标占位一致）。
             // 文本行数按剩余高度动态分配：高度足够时完整显示教室名，空间不足才省略，
             // 修复连续多节课时教室名被省略号吞掉、短课时文字被块底边截断的问题。
-            val padTop = if (dense) rpx(9f) else rpx(11f)
-            val badgeUsed = if (b.badge.isNotEmpty() && !b.compact) rpx(17f) * 1.3f + rpx(4f) + rpx(6f) else 0f
+            val padTop = blockPadTop()
+            val badgeUsed = if (b.badge.isNotEmpty() && !b.compact) badgeHeightPx() + rpx(6f) else 0f
             var availH = (b.bottom - b.top) - padTop * 2f - badgeUsed
             val nameLayout = fitLayout(b.course.name, namePaint, contentWidth, if (b.compact) 2 else 4, 1.2f, availH)
             b.nameLayout = nameLayout
@@ -782,8 +846,8 @@ class TimetableView @JvmOverloads constructor(
 
     private fun drawBlocks(canvas: Canvas, render: WeekRender) {
         val radius = rpx(12f)
-        val padTop = if (dense) rpx(9f) else rpx(11f)
-        val padH = if (dense) rpx(7f) else rpx(10f)
+        val padTop = blockPadTop()
+        val padH = blockPadH()
         render.blocks.forEach { b ->
             val rect = RectF(b.left, b.top, b.right, b.bottom)
             fillPaint.color = b.background
@@ -799,7 +863,7 @@ class TimetableView @JvmOverloads constructor(
             val contentLeft = b.left + padH
             var y = b.top + padTop
             if (b.badge.isNotEmpty() && !b.compact && b.badgeWidth > 0f) {
-                val badgeH = rpx(17f) * 1.3f + rpx(4f)
+                val badgeH = badgeHeightPx()
                 fillPaint.color = colBadgeBg
                 val br = RectF(contentLeft, y, contentLeft + b.badgeWidth, y + badgeH)
                 canvas.drawRoundRect(br, rpx(8f), rpx(8f), fillPaint)
@@ -1030,7 +1094,10 @@ class TimetableView @JvmOverloads constructor(
     companion object {
         /** 教室名允许的最大行数；实际行数仍受课程块剩余高度约束（见 fitLayout）。 */
         const val PLACE_MAX_LINES = 4
-        const val ROW_HEIGHT_RPX = 124f
+        /** 表头（星期 + 日期）高度，不随外观档位变化。 */
+        const val HEADER_HEIGHT_RPX = 92f
+        /** 单双周角标基准字号；实际字号再乘外观的文字缩放系数。 */
+        const val BADGE_TEXT_RPX = 17f
         const val MIN_SECTIONS = 8
         const val WEEKDAY_COUNT = WeekendDisplay.WEEKDAY_COUNT
         const val FULL_WEEK_COUNT = WeekendDisplay.FULL_WEEK_COUNT

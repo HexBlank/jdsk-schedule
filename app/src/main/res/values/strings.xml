@@ -160,6 +160,35 @@
     <string name="week_picker_auto_weekend">当周周六日有课时才显示</string>
     <string name="header_holiday_action">调休</string>
 
+    <!-- 课表外观：格子高度/留白/文字大小，纯本机显示偏好 -->
+    <string name="appearance_title">课表外观</string>
+    <string name="appearance_action">课表外观</string>
+    <string name="appearance_hint">调完立刻生效，只改这台手机的显示</string>
+    <string name="appearance_reset">恢复默认</string>
+    <string name="appearance_row_height">格子高度</string>
+    <string name="appearance_height_1">最矮</string>
+    <string name="appearance_height_2">偏矮</string>
+    <string name="appearance_height_3">标准</string>
+    <string name="appearance_height_4">偏高</string>
+    <string name="appearance_height_5">最高</string>
+    <string name="appearance_fit_screen">自动铺满一屏</string>
+    <string name="appearance_fit_screen_sub">按节次数平分高度，一屏看全不用滚；手动选高度即关闭</string>
+    <string name="appearance_padding">格子留白</string>
+    <string name="appearance_padding_sub">整周一屏，列宽不可调；留白越大，格子看起来越瘦</string>
+    <string name="appearance_padding_1">紧凑</string>
+    <string name="appearance_padding_2">标准</string>
+    <string name="appearance_padding_3">宽松</string>
+    <string name="appearance_text_size">文字大小</string>
+    <string name="appearance_text_1">较小</string>
+    <string name="appearance_text_2">标准</string>
+    <string name="appearance_text_3">较大</string>
+    <string name="appearance_desc_height">格子高度：</string>
+    <string name="appearance_desc_padding">格子留白：</string>
+    <string name="appearance_desc_text">文字大小：</string>
+    <string name="appearance_summary_fit">铺满一屏</string>
+    <string name="appearance_summary_height">格子%1$s</string>
+    <string name="appearance_summary">%1$s · 留白%2$s · 文字%3$s</string>
+
     <!-- 课表库 library -->
     <string name="library_title">课表库</string>
     <string name="library_intro">管理保存在本机和通过分享码加入的课表。</string>
@@ -246,6 +275,8 @@
     <string name="settings_status_unavailable">同步服务暂不可用，本地功能正常</string>
     <string name="settings_status_scope">适用范围</string>
     <string name="settings_status_scope_value">学校教务系统导出的课表</string>
+    <string name="settings_section_display">显示</string>
+    <string name="settings_appearance_row">课表外观</string>
     <string name="settings_section_update">应用更新</string>
     <string name="settings_update_auto">自动检查更新</string>
     <string name="settings_update_auto_sub">启动时检测新版本并提醒</string>

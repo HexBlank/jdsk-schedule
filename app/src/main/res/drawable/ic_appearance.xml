@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 课表外观入口：两条带滑块的调节轨道，页头按 sub_6c 着色 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M3,8 L8,8 M14,8 L21,8 M3,16 L10,16 M16,16 L21,16"
+        android:fillColor="#00000000"
+        android:strokeColor="@color/sub_6c"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M8.4,8 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0"
+        android:fillColor="@color/sub_6c" />
+    <path
+        android:pathData="M10.4,16 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0"
+        android:fillColor="@color/sub_6c" />
+</vector>
