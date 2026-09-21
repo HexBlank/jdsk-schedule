@@ -43,14 +43,17 @@ class SegmentedChoiceView @JvmOverloads constructor(
                 text = label
                 gravity = Gravity.CENTER
                 includeFontPadding = false
+                // 高度交给内容 + minHeight：写死高度时系统字体调大会把文字裁掉
                 minHeight = Rpx.dp(48f)
+                val padV = Rpx.dp(6f)
+                setPadding(0, padV, 0, padV)
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 setTextColor(ContextCompat.getColorStateList(context, R.color.reschedule_choice_text))
                 setBackgroundResource(R.drawable.bg_reschedule_choice)
                 isClickable = true
                 isFocusable = true
                 contentDescription = "$contentDescriptionPrefix$label"
-                layoutParams = LayoutParams(0, Rpx.dp(48f), 1f).apply {
+                layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
                     if (index > 0) marginStart = Rpx.dp(5f)
                 }
                 setOnClickListener { setSelection(index, notify = true) }

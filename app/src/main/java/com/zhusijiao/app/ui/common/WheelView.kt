@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
@@ -97,8 +98,21 @@ class WheelView @JvmOverloads constructor(
         }
     }
 
+    /** sp → px，走 TypedValue 而不是 scaledDensity：API 34+ 的非线性字体缩放也能算对。 */
+    private fun sp(value: Float): Float =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, resources.displayMetrics)
+
+    /**
+     * 行高不写死：系统字体放大后若行高不变，上下两项会挤在一起甚至叠字，
+     * 所以取「基准行高」与「选中字号 × 1.55」的较大者。
+     */
     private fun itemHeight(): Float {
-        if (itemHeightPx <= 0f) itemHeightPx = ITEM_HEIGHT_DP * resources.displayMetrics.density
+        if (itemHeightPx <= 0f) {
+            itemHeightPx = maxOf(
+                ITEM_HEIGHT_DP * resources.displayMetrics.density,
+                sp(SELECTED_SP) * 1.55f
+            )
+        }
         return itemHeightPx
     }
 
@@ -119,13 +133,12 @@ class WheelView @JvmOverloads constructor(
         canvas.drawLine(0f, centerY - step / 2f, width.toFloat(), centerY - step / 2f, linePaint)
         canvas.drawLine(0f, centerY + step / 2f, width.toFloat(), centerY + step / 2f, linePaint)
 
-        val density = resources.displayMetrics.density
         labels.forEachIndexed { index, label ->
             val y = centerY + index * step - offset
             if (y < -step || y > height + step) return@forEachIndexed
             // 距离中心越远字越小越淡，形成滚轮的纵深感
             val distance = min(1f, abs(index * step - offset) / step)
-            textPaint.textSize = (SELECTED_SP - (SELECTED_SP - NORMAL_SP) * distance) * density
+            textPaint.textSize = sp(SELECTED_SP - (SELECTED_SP - NORMAL_SP) * distance)
             val color = if (distance < 0.5f) colorSelected else colorNormal
             textPaint.color = withAlpha(color, 1f - 0.45f * distance)
             val fm = textPaint.fontMetrics

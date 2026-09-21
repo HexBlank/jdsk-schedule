@@ -89,6 +89,7 @@ class SectionPickerView @JvmOverloads constructor(
             includeFontPadding = false
             isDuplicateParentStateEnabled = true
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            maxLines = 1
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(ContextCompat.getColorStateList(context, R.color.reschedule_choice_text))
         }
@@ -98,16 +99,21 @@ class SectionPickerView @JvmOverloads constructor(
             includeFontPadding = false
             isDuplicateParentStateEnabled = true
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+            maxLines = 1
             alpha = 0.82f
             setTextColor(ContextCompat.getColorStateList(context, R.color.reschedule_choice_text))
         }
         return LinearLayout(context).apply {
             orientation = VERTICAL
             gravity = Gravity.CENTER
-            // 宽约 78dp（四列平分），高 46dp，触摸目标仍远大于 D17 要求的 48dp 对角线
-            layoutParams = LayoutParams(0, Rpx.dp(CELL_HEIGHT_DP), 1f).apply {
+            // 宽度四列平分；高度**不写死**——写死的话用户把系统字体调大后，
+            // 里面的 sp 文字会撑出盒子被裁掉。交给内容决定，minHeight 保证触摸目标够大。
+            layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
                 if (column > 0) marginStart = Rpx.dp(CELL_GAP_DP)
             }
+            minimumHeight = Rpx.dp(CELL_MIN_HEIGHT_DP)
+            val padV = Rpx.dp(7f)
+            setPadding(0, padV, 0, padV)
             setBackgroundResource(R.drawable.bg_reschedule_choice)
             isClickable = true
             isFocusable = true
@@ -122,7 +128,7 @@ class SectionPickerView @JvmOverloads constructor(
 
     /** 最后一行不足 4 格时补空位，保证各列宽度一致。 */
     private fun spacer(column: Int) = TextView(context).apply {
-        layoutParams = LayoutParams(0, Rpx.dp(CELL_HEIGHT_DP), 1f).apply {
+        layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
             if (column > 0) marginStart = Rpx.dp(CELL_GAP_DP)
         }
     }
@@ -155,7 +161,8 @@ class SectionPickerView @JvmOverloads constructor(
 
     companion object {
         private const val COLUMNS = 4
-        private const val CELL_HEIGHT_DP = 46f
+        /** 格子最小高度；字体放大时格子会跟着长高，不会裁字。 */
+        private const val CELL_MIN_HEIGHT_DP = 46f
         private const val CELL_GAP_DP = 5f
     }
 }
