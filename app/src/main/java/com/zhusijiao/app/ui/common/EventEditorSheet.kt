@@ -98,7 +98,10 @@ class EventEditorSheet(
 
     /**
      * 钟点输入复用项目自有的 [StepperFieldView]，不引入系统 TimePickerDialog。
-     * 分钟用「第几个 5 分钟」做内部值、formatter 显示真实分钟，不必给步进器加 step 参数。
+     *
+     * 分钟逐分钟可调，不做 5 分钟对齐：学校作息本身就有 11:31 这种非整五的时刻，
+     * 按 5 分钟取整连自家节次的开始时间都回填不准，还是静默改掉用户填的值。
+     * 快速调整靠 [StepperFieldView] 的长按连发。
      */
     private fun configureClock() {
         val range = sectionPicker.selection
@@ -128,20 +131,18 @@ class EventEditorSheet(
         hour.contentDescription = label + context.getString(R.string.event_hour_desc)
         minute.contentDescription = label + context.getString(R.string.event_minute_desc)
         hour.configure(0, 23, value / 60, { "%02d 时".format(it) }) { refresh() }
-        minute.configure(0, (60 / MINUTE_STEP) - 1, (value % 60) / MINUTE_STEP, {
-            "%02d 分".format(it * MINUTE_STEP)
-        }) { refresh() }
+        minute.configure(0, 59, value % 60, { "%02d 分".format(it) }) { refresh() }
     }
 
     private fun prefillClockFromSections() {
         val range = sectionPicker.selection ?: return
         ScheduleTime.minutesOf(slots.find { it.number == range.first }?.startTime)?.let {
             startHour.setValue(it / 60)
-            startMinute.setValue((it % 60) / MINUTE_STEP)
+            startMinute.setValue(it % 60)
         }
         ScheduleTime.minutesOf(slots.find { it.number == range.last }?.endTime)?.let {
             endHour.setValue(it / 60)
-            endMinute.setValue((it % 60) / MINUTE_STEP)
+            endMinute.setValue(it % 60)
         }
     }
 
@@ -309,9 +310,9 @@ class EventEditorSheet(
 
     // ===== 草稿 =====
 
-    private fun currentStartMinutes() = startHour.value * 60 + startMinute.value * MINUTE_STEP
+    private fun currentStartMinutes() = startHour.value * 60 + startMinute.value
 
-    private fun currentEndMinutes() = endHour.value * 60 + endMinute.value * MINUTE_STEP
+    private fun currentEndMinutes() = endHour.value * 60 + endMinute.value
 
     private fun currentTimeText() = ScheduleTime.formatTime(currentStartMinutes()) +
         "–" + ScheduleTime.formatTime(currentEndMinutes())
@@ -413,9 +414,6 @@ class EventEditorSheet(
         private const val REPEAT_WEEKLY = 1
         private const val REPEAT_ODD = 2
         private const val REPEAT_EVEN = 3
-
-        /** 分钟步进粒度：社团活动用 5 分钟足够，长按连发能很快滚到目标值。 */
-        private const val MINUTE_STEP = 5
 
         /** 与 TimetableView 的默认日程色保持一致（冷灰蓝）。 */
         const val DEFAULT_EVENT_COLOR = 0xFF4A5A72.toInt()
