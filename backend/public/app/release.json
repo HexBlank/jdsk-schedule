@@ -1,6 +1,6 @@
 {
-  "versionCode": 24,
-  "versionName": "1.2.21",
-  "changelog": "1. 修复周一上午打开课表仍停留在上一周的问题",
-  "fileName": "jidianshangke-1.2.21.apk"
+  "versionCode": 25,
+  "versionName": "1.2.22",
+  "changelog": "1. 课表格子可以自己调了：设置 → 课表外观，可改格子高矮、留白与文字大小，也能一键铺满一屏\n2. 修复从教务系统导入时，网页显示「已读取 N 个时段」之后却没有反应的问题\n3. 导入失败会说明原因和下一步；万一仍交不回 App，可在网页上复制课表数据，回导入页点「读取剪贴板」继续",
+  "fileName": "jidianshangke-1.2.22.apk"
 }
