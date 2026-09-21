@@ -117,37 +117,31 @@ object ScheduleValidator {
         }
     }
 
-    /** 返回目标时段内会重叠的正常课或调入课，供界面做二次确认。 */
+    /**
+     * 返回目标时段内实际会发生、且与目标节次重叠的课，供界面做二次确认。
+     *
+     * 口径统一走 [ScheduleOccurrences]：停课日的课、已调出的课、补课来源日的课当天都不上，
+     * 不算冲突；补课日从来源日搬过来的整天课要算。正在编辑的那条调课先从课表里摘掉再问，
+     * 避免把自己算成冲突。
+     */
     fun conflicts(
         schedule: Schedule,
         draft: CourseAdjustmentDraft,
         replacingId: String? = null
     ): List<Course> {
-        val movedOut = schedule.adjustments
-            .filter { it.id != replacingId }
-            .map { Triple(it.courseId, it.sourceWeek, it.sourceDay) }
-            .toSet()
-        val base = schedule.courses.filter { course ->
-            draft.targetWeek in course.weeks && course.day == draft.targetDay &&
-                !(course.id == draft.courseId && draft.targetWeek == draft.sourceWeek) &&
-                Triple(course.id, draft.targetWeek, course.day) !in movedOut &&
-                overlaps(course.startSection, course.endSection, draft.targetStartSection, draft.targetEndSection)
-        }
-        val adjusted = schedule.adjustments.filter { it.id != replacingId && it.targetWeek == draft.targetWeek &&
-            it.targetDay == draft.targetDay && overlaps(
-                it.targetStartSection,
-                it.targetEndSection,
-                draft.targetStartSection,
-                draft.targetEndSection
-            )
-        }.map { adjustment ->
-            adjustment.targetCourse(schedule.courses.find { it.id == adjustment.courseId })
-        }
-        return (base + adjusted).distinctBy { "${it.id}:${it.day}:${it.startSection}:${it.endSection}" }
+        val probe = if (replacingId == null) schedule
+        else schedule.copy(adjustments = schedule.adjustments.filterNot { it.id == replacingId })
+        return ScheduleOccurrences.coursesOverlapping(
+            probe,
+            draft.targetWeek,
+            draft.targetDay,
+            draft.targetStartSection,
+            draft.targetEndSection
+        )
+            // 原地微调（同一周同一天只换教室/节次）时，被移动的课本身不算冲突
+            .filterNot { it.id == draft.courseId && draft.targetWeek == draft.sourceWeek }
+            .distinctBy { "${it.id}:${it.day}:${it.startSection}:${it.endSection}" }
     }
-
-    private fun overlaps(startA: Int, endA: Int, startB: Int, endB: Int): Boolean =
-        startA <= endB && startB <= endA
 
     private fun validDate(value: String): Boolean {
         if (!Regex("^\\d{4}-\\d{2}-\\d{2}$").matches(value)) return false
