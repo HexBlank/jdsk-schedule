@@ -313,6 +313,17 @@
                         android:text="@string/import_date_hint"
                         android:textColor="@color/sub_a0" />
 
+                    <!-- 常驻显示第 1 周的真实起止，用户一眼能核对「第 1 周是不是这一周」 -->
+                    <TextView
+                        android:id="@+id/dateHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="2dp"
+                        android:textColor="@color/sub_8a"
+                        android:textSize="11sp"
+                        android:visibility="gone" />
+
                     <TextView
                         style="@style/FieldLabel"
                         android:text="@string/import_weeks_label" />

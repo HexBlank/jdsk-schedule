@@ -85,6 +85,7 @@
     <!-- 停课与补课（假期调休）：日历直选，不再让用户心算「第几周周几」 -->
     <string name="holiday_title">调休安排</string>
     <string name="holiday_intro">在日历上点一天，再选要停课还是补课</string>
+    <string name="holiday_week_notice">开学日期填的是 %1$s（周%2$s），第 1 周已按所在周的周一 %3$s 起算，日历上的星期与真实日历一致。若周次对不上，可在导入页重新设置开学日期。</string>
     <string name="holiday_list_label">已有安排</string>
     <string name="holiday_list_count">已有安排 · %1$d</string>
     <string name="holiday_empty">暂无安排</string>
@@ -338,6 +339,8 @@
     <string name="import_name_hint">例如：2026 秋季课表</string>
     <string name="import_date_label">第一周的周一</string>
     <string name="import_date_hint">请选择日期</string>
+    <string name="import_date_week1">第 1 周：%1$s（周一）– %2$s（周日）</string>
+    <string name="import_date_snapped">开学日期已按所在周的周一算起：%1$s</string>
     <string name="import_weeks_label">学期总周数</string>
     <string name="import_save">创建课表</string>
     <string name="import_mode_title">导入到哪里？</string>

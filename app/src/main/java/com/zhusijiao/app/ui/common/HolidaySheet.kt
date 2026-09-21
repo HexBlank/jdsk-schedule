@@ -131,12 +131,49 @@ class HolidaySheet(
     // ===== 渲染 =====
 
     private fun render() {
+        renderWeekNotice()
         calendar.setSelection(
             primaryIndex = if (makeupSource >= 0) makeupSource else selected,
             secondaryIndex = if (makeupSource >= 0) makeupTarget else -1
         )
         renderList()
         if (makeupSource >= 0) renderMakeupPicking() else renderSelectedDay()
+    }
+
+    /**
+     * 开学日期不是周一时，讲明第 1 周实际从哪天算起。
+     * 停错课的代价太大，宁可多一行字，也不让用户拿着对不上的周次去点日历。
+     */
+    private fun renderWeekNotice() {
+        val notice = findViewById<TextView>(R.id.holidayWeekNotice)
+        val start = schedule.semesterStart
+        if (!DateUtils.hasSemesterStart(start) || DateUtils.isMonday(start)) {
+            notice.visibility = View.GONE
+            return
+        }
+        notice.visibility = View.VISIBLE
+        notice.text = context.getString(
+            R.string.holiday_week_notice,
+            humanDate(start),
+            weekdayNameOf(start),
+            humanDate(DateUtils.weekStartOf(start))
+        )
+    }
+
+    /** "2026-09-12" → "9月12日"。 */
+    private fun humanDate(iso: String): String {
+        val parts = iso.split("-").mapNotNull { it.toIntOrNull() }
+        return if (parts.size == 3) "${parts[1]}月${parts[2]}日" else iso
+    }
+
+    /** 该日期的星期名（一…日）；由所在周的周一往后数得出，不依赖课表自身的周次定义。 */
+    private fun weekdayNameOf(iso: String): String {
+        val monday = DateUtils.weekStartOf(iso)
+        val names = listOf("一", "二", "三", "四", "五", "六", "日")
+        val index = (0..6).firstOrNull { offset ->
+            DateUtils.datesForWeek(monday, 1).getOrNull(offset)?.iso == iso
+        } ?: return ""
+        return names[index]
     }
 
     private fun renderSelectedDay() {

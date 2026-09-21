@@ -38,6 +38,19 @@
         android:textColor="@color/sub_8a"
         android:textSize="12.5sp" />
 
+    <!-- 开学日期不是周一时才显示：停错课的代价太大，这里把起算口径直接讲明白 -->
+    <TextView
+        android:id="@+id/holidayWeekNotice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_error_note"
+        android:lineSpacingExtra="2dp"
+        android:padding="10dp"
+        android:textColor="@color/sub_6c"
+        android:textSize="11.5sp"
+        android:visibility="gone" />
+
     <!-- 已有安排：默认收起为一行摘要，展开后列表就在日历上方 -->
     <LinearLayout
         android:id="@+id/holidaySummaryRow"

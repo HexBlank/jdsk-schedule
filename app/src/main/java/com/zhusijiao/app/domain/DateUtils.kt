@@ -38,6 +38,28 @@ object DateUtils {
         return parts.size == 3
     }
 
+    /**
+     * 教学周锚点：开学日期所在自然周的周一。
+     *
+     * 全 App 约定 day 1 = 周一，但用户填的开学日期未必是周一（学校常把报到日写成开学日，
+     * 例如 2026-09-12 是周六）。若直接拿它当第 1 天，此后每一天的星期都会整体偏移：
+     * 调休日历会把 10 月 10 日（周六）标成周一，用户照着那一格停课就停错了天。
+     * 所以日期推算一律先回退到那一周的周一。开学日期本就是周一时，这里是恒等变换。
+     */
+    private fun weekAnchor(semesterStart: String?): Calendar {
+        val date = parseLocalDate(semesterStart)
+        // Calendar 里 SUNDAY=1 … SATURDAY=7；+5 取模把周一映射为 0，得到「距本周一几天」
+        val backDays = (date.get(Calendar.DAY_OF_WEEK) + 5) % 7
+        return if (backDays == 0) date else addDays(date, -backDays)
+    }
+
+    /** 开学日期所在周的周一（YYYY-MM-DD）；导入页用它把用户选的日期规整到第 1 周周一。 */
+    fun weekStartOf(semesterStart: String?): String = formatDate(weekAnchor(semesterStart))
+
+    /** 这一天是否就是周一。 */
+    fun isMonday(value: String?): Boolean =
+        hasSemesterStart(value) && parseLocalDate(value).get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY
+
     private fun addDays(date: Calendar, amount: Int): Calendar =
         (date.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, amount) }
 
@@ -51,7 +73,7 @@ object DateUtils {
      *  按「日历天数差」计算，与当天几点打开无关——
      *  此前按「开学日正午」作锚点，跨周日上午仍会显示上一周，已修复。 */
     fun currentWeek(semesterStart: String?, totalWeeks: Int, nowMillis: Long = System.currentTimeMillis()): Int {
-        val startMid = midnightOf(parseLocalDate(semesterStart))
+        val startMid = midnightOf(weekAnchor(semesterStart))
         val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
         val diffDays = Math.round((midnightOf(now).timeInMillis - startMid.timeInMillis) / 86400000.0)
         val limit = if (totalWeeks > 0) totalWeeks else 20
@@ -67,9 +89,9 @@ object DateUtils {
             set(Calendar.MILLISECOND, 0)
         }
 
-    /** 某教学周（week 从 1 开始）的周一至周日日期信息。 */
+    /** 某教学周（week 从 1 开始）的周一至周日日期信息；第 1 天恒为真实的周一（见 [weekAnchor]）。 */
     fun datesForWeek(semesterStart: String?, week: Int): List<DayInfo> {
-        val start = addDays(parseLocalDate(semesterStart), (week - 1) * 7)
+        val start = addDays(weekAnchor(semesterStart), (week - 1) * 7)
         val today = formatDate(Calendar.getInstance())
         return dayNames.mapIndexed { index, name ->
             val date = addDays(start, index)

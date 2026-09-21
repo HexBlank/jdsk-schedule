@@ -17,6 +17,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.databinding.ActivityImportBinding
+import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.EamsParser
 import com.zhusijiao.app.domain.ParsedSchedule
 import com.zhusijiao.app.domain.Schedule
@@ -257,14 +258,42 @@ class ImportActivity : BaseActivity() {
         val parts = semesterStart.split("-").mapNotNull { it.toIntOrNull() }
         if (parts.size == 3) cal.set(parts[0], parts[1] - 1, parts[2])
         DatePickerDialog(this, { _, y, m, d ->
-            setDate("%04d-%02d-%02d".format(y, m + 1, d))
+            val picked = "%04d-%02d-%02d".format(y, m + 1, d)
+            setDate(picked)
+            // 选中的不是周一时说一声，别让人以为 App 记错了日子
+            if (!DateUtils.isMonday(picked)) {
+                Ui.toast(this, getString(R.string.import_date_snapped, semesterStart))
+            }
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
 
+    /**
+     * 第 1 周一律从周一算起：用户选了周中或周末的日子（学校常把报到日当开学日）就回退到
+     * 那一周的周一。否则 day 1 不是真正的周一，此后每一天的星期都会整体偏移，
+     * 调休日历会把周六标成周一，照着那一格停课就停错了天。
+     */
     private fun setDate(value: String) {
-        semesterStart = value
-        binding.datePicker.text = value
-        binding.datePicker.setTextColor(getColor(if (value.isBlank()) R.color.sub_a0 else R.color.ink))
+        val aligned = if (DateUtils.hasSemesterStart(value)) DateUtils.weekStartOf(value) else value
+        semesterStart = aligned
+        binding.datePicker.text = aligned.ifBlank { getString(R.string.import_date_hint) }
+        binding.datePicker.setTextColor(getColor(if (aligned.isBlank()) R.color.sub_a0 else R.color.ink))
+        renderWeekOneHint()
+    }
+
+    private fun renderWeekOneHint() {
+        if (!DateUtils.hasSemesterStart(semesterStart)) {
+            binding.dateHint.visibility = View.GONE
+            return
+        }
+        val week1 = DateUtils.datesForWeek(semesterStart, 1)
+        val first = week1.first()
+        val last = week1.last()
+        binding.dateHint.visibility = View.VISIBLE
+        binding.dateHint.text = getString(
+            R.string.import_date_week1,
+            "${first.month}月${first.day}日",
+            "${last.month}月${last.day}日"
+        )
     }
 
     private fun save() {

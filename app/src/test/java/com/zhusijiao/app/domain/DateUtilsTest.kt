@@ -53,4 +53,57 @@ class DateUtilsTest {
     fun `开学日期非法时按今天推算不崩溃`() {
         assertEquals(1, DateUtils.currentWeek(null, 20, at(2026, 9, 7, 8, 0)))
     }
+
+    // ===== 开学日期不是周一（用户反馈：调休日历把 10 月 10 日标成周一，它其实是周六）=====
+
+    /** 2026-09-12 是周六，所在周的周一是 2026-09-07。 */
+    private val saturdayStart = "2026-09-12"
+
+    @Test
+    fun `开学日期不是周一时回退到那一周的周一`() {
+        assertEquals("2026-09-07", DateUtils.weekStartOf(saturdayStart))
+        assertEquals("2026-09-07", DateUtils.weekStartOf("2026-09-13")) // 周日
+        assertEquals("2026-09-07", DateUtils.weekStartOf("2026-09-07")) // 周一本身不动
+    }
+
+    @Test
+    fun `每周第1天必须是真实的周一`() {
+        // 修复前：第 1 天直接取开学日期，于是「周一」栏里放的是 9-12 这个周六
+        assertEquals("2026-09-07", DateUtils.datesForWeek(saturdayStart, 1).first().iso)
+        assertEquals("2026-09-13", DateUtils.datesForWeek(saturdayStart, 1).last().iso)
+        assertEquals("2026-10-05", DateUtils.datesForWeek(saturdayStart, 5).first().iso)
+    }
+
+    @Test
+    fun `用户报告的日期落在正确的星期上`() {
+        // 2026-10-10 是周六：必须出现在第 5 周的第 6 格（周六），而不是第 1 格（周一）
+        val week5 = DateUtils.datesForWeek(saturdayStart, 5)
+        assertEquals("2026-10-10", week5[5].iso)
+        assertEquals("六", week5[5].name)
+        assertEquals("一", week5[0].name)
+        assertEquals("2026-10-05", week5[0].iso)
+    }
+
+    @Test
+    fun `非周一开学时教学周仍按周一切换`() {
+        assertEquals(1, DateUtils.currentWeek(saturdayStart, 20, at(2026, 9, 12, 10, 0)))
+        assertEquals(1, DateUtils.currentWeek(saturdayStart, 20, at(2026, 9, 13, 23, 0)))
+        // 9-14 是周一，进入第 2 周
+        assertEquals(2, DateUtils.currentWeek(saturdayStart, 20, at(2026, 9, 14, 0, 30)))
+        assertEquals(5, DateUtils.currentWeek(saturdayStart, 20, at(2026, 10, 10, 9, 0)))
+    }
+
+    @Test
+    fun `开学日期本就是周一时推算不变`() {
+        assertEquals(3, DateUtils.currentWeek(semesterStart, 20, at(2026, 9, 21, 8, 0)))
+        assertEquals("2026-09-21", DateUtils.datesForWeek(semesterStart, 3).first().iso)
+        assertEquals(semesterStart, DateUtils.weekStartOf(semesterStart))
+    }
+
+    @Test
+    fun `isMonday 只认周一`() {
+        assertEquals(true, DateUtils.isMonday("2026-09-07"))
+        assertEquals(false, DateUtils.isMonday("2026-09-12"))
+        assertEquals(false, DateUtils.isMonday(""))
+    }
 }
