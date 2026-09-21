@@ -133,6 +133,7 @@ object ApiClient {
             val schedule = LocalScheduleStore.getScheduleOrNull(id)
             val record = syncRecordFor(schedule)
             LocalScheduleStore.deleteSchedule(id)
+            PersonalEventStore.removeSchedule(id)
             if (record != null) ScheduleSyncStore.markPending(record, ScheduleSyncStore.PendingAction.LEAVE)
         }
     }
@@ -143,12 +144,16 @@ object ApiClient {
             val schedule = LocalScheduleStore.getScheduleOrNull(id)
             val record = syncRecordFor(schedule)
             LocalScheduleStore.deleteSchedule(id)
+            PersonalEventStore.removeSchedule(id)
             if (record != null) ScheduleSyncStore.markPending(record, ScheduleSyncStore.PendingAction.DELETE)
         }
     }
 
     suspend fun deleteAccount() {
-        withContext(Dispatchers.IO) { LocalScheduleStore.deleteAll() }
+        withContext(Dispatchers.IO) {
+            LocalScheduleStore.deleteAll()
+            PersonalEventStore.clear()
+        }
         if (!isLocalMode) {
             // 删除本机数据绝不依赖网络；服务端删除只做短时尽力尝试。
             withTimeoutOrNull(2_000) { runCatching { request("DELETE", "/api/v1/me") } }

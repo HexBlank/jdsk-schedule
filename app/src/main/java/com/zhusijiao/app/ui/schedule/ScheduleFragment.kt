@@ -15,14 +15,20 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
+import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
+import com.zhusijiao.app.domain.PersonalEvent
+import com.zhusijiao.app.domain.PersonalEventDraft
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.TimetableAppearance
 import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
+import com.zhusijiao.app.ui.common.EventDetailSheet
+import com.zhusijiao.app.ui.common.EventEditorSheet
 import com.zhusijiao.app.ui.common.HolidaySheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.TimetableView
@@ -30,7 +36,9 @@ import com.zhusijiao.app.ui.common.RescheduleSheet
 import com.zhusijiao.app.ui.common.WeekPickerSheet
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.zhusijiao.app.util.Rpx
 import com.zhusijiao.app.util.Ui
 import java.util.Calendar
@@ -43,6 +51,9 @@ class ScheduleFragment : Fragment(), Refreshable {
     private val binding get() = _binding!!
 
     private var schedule: Schedule? = null
+
+    /** 本机私有日程，不随课表同步；与课表分开加载、分开保存。 */
+    private var events: List<PersonalEvent> = emptyList()
     private var currentWeekNumber = 1
     private var currentWeek = 1
     private var restoredWeek: Int? = null
@@ -66,6 +77,10 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.onCourseClick = { click -> showCourse(click) }
         binding.timetable.onCourseLongClick = { click -> showCourseColorSheet(click) }
         binding.timetable.onDayClick = { click -> showHolidaySheet(click.week, click.day) }
+        binding.timetable.onEventClick = { click -> showEvent(click) }
+        binding.timetable.onEmptySlotClick = { week, day, section ->
+            showEventEditor(null, week, day, section)
+        }
         binding.timetable.onWeekChanged = { week, isFirst, isLast -> updateWeekBar(week, isFirst, isLast) }
         binding.prevWeek.setOnClickListener { binding.timetable.previousWeek() }
         binding.nextWeek.setOnClickListener { binding.timetable.nextWeek() }
@@ -117,6 +132,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 val schedules = ApiClient.listSchedules()
                 if (schedules.isEmpty()) {
                     schedule = null
+                    events = emptyList()
                     binding.timetable.setSchedule(null)
                     binding.header.setTitle(getString(R.string.index_default_title))
                     binding.header.clearActions()
@@ -128,6 +144,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 val activeId = Prefs.activeScheduleId
                 val summary = schedules.find { it.id == activeId } ?: schedules[0]
                 val loadedSchedule = ApiClient.getSchedule(summary.id)
+                events = withContext(Dispatchers.IO) { PersonalEventStore.list(loadedSchedule.id) }
                 // 同一份课表刷新（切后台回前台、同步完成等）时保持用户正在浏览的周次，
                 // 不能强制跳回本周；只有切换到另一份课表时才回到本周。
                 val sameSchedule = schedule?.id == loadedSchedule.id
@@ -138,6 +155,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 updateHeaderActions()
                 binding.timetable.setSchedule(
                     loadedSchedule,
+                    events = events,
                     jumpToCurrent = !sameSchedule,
                     weekendMode = Prefs.weekendDisplayMode
                 )
@@ -262,6 +280,101 @@ class ScheduleFragment : Fragment(), Refreshable {
         updateHeaderActions()
         binding.timetable.setSchedule(
             updated,
+            events = events,
+            jumpToCurrent = false,
+            weekendMode = Prefs.weekendDisplayMode
+        )
+        binding.timetable.goToWeek(currentWeek)
+    }
+
+    // ===== 自定义日程 =====
+
+    /**
+     * 点空格子新建、或从详情进入编辑。
+     * 不判断 isOwner——日程是本机私有数据，订阅别人课表的同学同样可以加自己的安排。
+     */
+    private fun showEventEditor(
+        editing: PersonalEvent?,
+        week: Int,
+        day: Int,
+        section: Int
+    ) {
+        val current = schedule ?: return
+        EventEditorSheet(
+            requireContext(),
+            schedule = current,
+            events = events,
+            editing = editing,
+            initialWeek = week,
+            initialDay = day,
+            initialSection = section
+        ) { draft -> persistEvent(draft, editing?.id) }.show()
+    }
+
+    private fun showEvent(click: TimetableView.EventClick) {
+        val current = schedule ?: return
+        EventDetailSheet(
+            requireContext(),
+            data = click,
+            slots = ScheduleTime.slotsOf(current.timeSlots),
+            onEdit = {
+                showEventEditor(click.event, click.week, click.event.day, click.event.startSection)
+            },
+            onDelete = {
+                Ui.confirm(
+                    requireContext(),
+                    getString(R.string.event_delete_title),
+                    getString(R.string.event_delete_content),
+                    confirmText = getString(R.string.event_delete),
+                    confirmColor = 1
+                ) { deleteEvent(click.event.id) }
+            }
+        ).show()
+    }
+
+    private fun persistEvent(draft: PersonalEventDraft, eventId: String?) {
+        val current = schedule ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    PersonalEventStore.save(
+                        scheduleId = current.id,
+                        draft = draft,
+                        eventId = eventId,
+                        totalWeeks = current.totalWeeks,
+                        slots = ScheduleTime.slotsOf(current.timeSlots)
+                    )
+                }
+                reloadEvents(current.id)
+                Ui.toast(requireContext(), getString(R.string.event_saved))
+            } catch (error: Exception) {
+                Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
+    }
+
+    private fun deleteEvent(eventId: String) {
+        val current = schedule ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) { PersonalEventStore.delete(current.id, eventId) }
+                reloadEvents(current.id)
+                Ui.toast(requireContext(), getString(R.string.event_deleted))
+            } catch (error: Exception) {
+                Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
+    }
+
+    /** 日程改动后就地重绘：课表本身没变，不必走整页 load。 */
+    private suspend fun reloadEvents(scheduleId: String) {
+        val loaded = withContext(Dispatchers.IO) { PersonalEventStore.list(scheduleId) }
+        if (_binding == null) return
+        events = loaded
+        val current = schedule ?: return
+        binding.timetable.setSchedule(
+            current,
+            events = events,
             jumpToCurrent = false,
             weekendMode = Prefs.weekendDisplayMode
         )
