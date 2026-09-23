@@ -162,7 +162,16 @@ object ApiClient {
             val record = syncRecordFor(schedule)
             LocalScheduleStore.deleteSchedule(id)
             PersonalEventStore.removeSchedule(id)
-            if (record != null) ScheduleSyncStore.markPending(record, ScheduleSyncStore.PendingAction.LEAVE)
+            when {
+                record == null -> Unit
+                // 服务端已经没有这份课表（或已不是成员）：退出请求没有意义，直接丢掉映射，
+                // 不留一条注定失败的待同步写入。
+                record.remoteGone != null -> {
+                    ScheduleSyncStore.remove(record.localId)
+                    SyncLog.log("移除已失效的订阅", "local=${record.localId} remote=${record.remoteId} gone=${record.remoteGone}")
+                }
+                else -> ScheduleSyncStore.markPending(record, ScheduleSyncStore.PendingAction.LEAVE)
+            }
         }
     }
 
@@ -244,10 +253,8 @@ object ApiClient {
                 val summaries = (0 until (array?.length() ?: 0)).map {
                     Schedule.fromJson(array?.optJSONObject(it) ?: JSONObject())
                 }
-                withContext(Dispatchers.IO) {
-                    ScheduleCache.putList(summaries)
-                    pruneRemovedSubscriptions(knownBefore, summaries.map { it.id }.toSet())
-                }
+                withContext(Dispatchers.IO) { ScheduleCache.putList(summaries) }
+                detectRemovedSubscriptions(knownBefore, summaries.map { it.id }.toSet())
                 for (summary in summaries) {
                     val record = withContext(Dispatchers.IO) { ScheduleSyncStore.findByRemoteId(summary.id) }
                     if (record?.dirty == true || record?.pendingAction != null) continue
@@ -278,6 +285,16 @@ object ApiClient {
 
     /** 这份本机课表最近一次推送失败的原因；没有失败返回 null。 */
     fun syncError(id: String): String? = ScheduleSyncStore.get(id)?.lastError
+
+    /** 这份本机课表在服务端是否已失效（发布者删除 / 已不是成员）；正常返回 null。 */
+    fun remoteGone(id: String): ScheduleSyncStore.RemoteGone? = ScheduleSyncStore.get(id)?.remoteGone
+
+    /** 失效且用户尚未在课表页表态过（需要弹窗询问是否移除）。 */
+    fun needsGonePrompt(id: String): Boolean =
+        ScheduleSyncStore.get(id)?.let { it.remoteGone != null && !it.goneAcknowledged } == true
+
+    /** 用户选择「暂不移除」：之后不再弹窗追问，课表库里的标识仍保留。 */
+    fun acknowledgeGone(id: String) = ScheduleSyncStore.acknowledgeGone(id)
 
     @Volatile private var reportedSyncError: String? = null
 
@@ -440,19 +457,50 @@ object ApiClient {
     }
 
     /**
-     * 清理服务端已不再返回的订阅副本（发布者删了课表或把自己移出）。
-     * 不清理的话副本会一直留在本机，用户再移除时产生一条永远 404 的退出请求。
-     * 只动订阅者副本：发布者的本机课表是权威数据，服务端丢了也不能删。
+     * 找出服务端列表里已经没有的订阅课表，并**只做标记**，由用户决定是否移除。
+     *
+     * 防误判：
+     * - 只看拉列表前的快照，拉取期间新加入的课表不会被当成「消失」；
+     * - 列表缺项不直接下结论，逐个调用状态接口确认：课表不存在才算「发布者已删除」，
+     *   课表还在但不是成员算「已不在同步名单」；接口出错、旧服务端没有该接口、
+     *   或状态显示仍是成员（与列表矛盾）时一律不标记，下次同步再看；
+     * - 发布者自己的本机课表是权威数据，从不标记；有待推送写入的也跳过。
+     * 课表重新出现在列表里时 link() 会生成新记录，标记自然清除。
      */
-    private fun pruneRemovedSubscriptions(knownBefore: List<ScheduleSyncStore.Record>, remoteIds: Set<String>) {
+    private suspend fun detectRemovedSubscriptions(knownBefore: List<ScheduleSyncStore.Record>, remoteIds: Set<String>) {
         for (record in knownBefore) {
             if (record.remoteId in remoteIds || record.dirty || record.pendingAction != null) continue
-            val local = LocalScheduleStore.getScheduleOrNull(record.localId)
-            if (local != null && local.isOwner) continue
-            LocalScheduleStore.deleteSchedule(record.localId)
-            PersonalEventStore.removeSchedule(record.localId)
-            ScheduleSyncStore.remove(record.localId)
-            SyncLog.log("清理订阅副本", "local=${record.localId} remote=${record.remoteId} name=${local?.name ?: "-"}")
+            if (record.remoteGone != null) continue
+            val local = withContext(Dispatchers.IO) { LocalScheduleStore.getScheduleOrNull(record.localId) }
+            if (local == null) {
+                // 本机副本已不在、也没有待推送动作：只剩一条无用映射，清掉即可
+                withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
+                SyncLog.log("清理无副本的同步映射", "local=${record.localId} remote=${record.remoteId}")
+                continue
+            }
+            if (local.isOwner) continue
+            val status = try {
+                request("GET", "/api/v1/schedules/${enc(record.remoteId)}/status").optJSONObject("status")
+            } catch (error: Exception) {
+                if (error is ApiException && error.networkFailure) throw error
+                SyncLog.log("订阅课表不在列表中，状态未能确认，暂不标记", "remote=${record.remoteId} | ${errorDetail(error)}")
+                continue
+            }
+            if (status == null || !status.has("exists")) {
+                SyncLog.log("状态接口返回异常，暂不标记", "remote=${record.remoteId}")
+                continue
+            }
+            val gone = when {
+                !status.optBoolean("exists") -> ScheduleSyncStore.RemoteGone.DELETED
+                !status.optBoolean("member") -> ScheduleSyncStore.RemoteGone.NOT_MEMBER
+                else -> null
+            }
+            if (gone == null) {
+                SyncLog.log("订阅课表不在列表中但状态显示仍是成员，暂不标记", "remote=${record.remoteId} status=$status")
+                continue
+            }
+            withContext(Dispatchers.IO) { ScheduleSyncStore.markGone(record.localId, gone) }
+            SyncLog.log("标记订阅课表失效", "local=${record.localId} remote=${record.remoteId} name=${local.name} gone=$gone")
         }
     }
 

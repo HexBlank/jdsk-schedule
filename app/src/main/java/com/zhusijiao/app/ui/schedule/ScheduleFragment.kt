@@ -17,6 +17,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
+import com.zhusijiao.app.data.ScheduleSyncStore
 import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
@@ -172,6 +173,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 setState(STATE_CONTENT)
                 // 要打开的课表已经不在本机时必须明说，否则用户只会看到「打开的是别的课表」
                 if (activeId.isNotBlank() && requested == null) notifyMissingSchedule(activeId, loadedSchedule.name)
+                else maybePromptGone(loadedSchedule)
                 syncRemoteThenReload(syncRemote)
             } catch (e: Exception) {
                 binding.errorMessage.text = e.message ?: getString(R.string.index_load_failed_title)
@@ -236,6 +238,39 @@ class ScheduleFragment : Fragment(), Refreshable {
         if (!synced) ApiClient.takeNewSyncError()?.let { Ui.toast(requireContext(), it) }
         // 失败也重载：单条写入失败时远端课表仍可能已拉取，或有订阅课表被清理
         load(silent = true, syncRemote = false)
+    }
+
+    /**
+     * 正在看的订阅课表在服务端已失效（发布者删除 / 已不在同步名单）：问用户要不要移除。
+     * 选「暂不移除」后不再追问（课表库卡片仍有标识）；同一进程内同一份只弹一次，
+     * 避免同步完成后的重载在弹窗还开着时又弹一个。
+     */
+    private fun maybePromptGone(current: Schedule) {
+        if (current.isOwner || !ApiClient.needsGonePrompt(current.id)) return
+        if (!promptedGone.add(current.id)) return
+        val deleted = ApiClient.remoteGone(current.id) == ScheduleSyncStore.RemoteGone.DELETED
+        Ui.confirm(
+            requireContext(),
+            getString(if (deleted) R.string.gone_deleted_title else R.string.gone_not_member_title),
+            getString(if (deleted) R.string.gone_deleted_content else R.string.gone_not_member_content, current.name),
+            confirmText = getString(R.string.gone_remove),
+            cancelText = getString(R.string.gone_keep),
+            confirmColor = ContextCompat.getColor(requireContext(), R.color.danger_confirm),
+            onCancel = { ApiClient.acknowledgeGone(current.id) }
+        ) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    ApiClient.leaveSchedule(current.id)
+                    if (Prefs.activeScheduleId == current.id) Prefs.removeActiveSchedule()
+                    Ui.toast(requireContext(), getString(R.string.gone_removed))
+                    load(silent = true, syncRemote = false)
+                } catch (e: Exception) {
+                    SyncLog.log("移除课表失败", "local=${current.id} ${e.javaClass.name}: ${e.message}")
+                    promptedGone.remove(current.id)
+                    Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
+                }
+            }
+        }
     }
 
     /** 当前课表指针指向的课表已不在本机：说明原因，以及现在显示的是哪份。 */
@@ -548,5 +583,8 @@ class ScheduleFragment : Fragment(), Refreshable {
         private const val STATE_EMPTY = 2
         private const val STATE_ERROR = 3
         private const val STATE_WEEK = "selectedWeek"
+
+        /** 本进程内已弹过「课表已失效」的课表，跨 Fragment 重建保留。 */
+        private val promptedGone = mutableSetOf<String>()
     }
 }

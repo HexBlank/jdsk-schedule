@@ -38,6 +38,20 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/goneTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_tag_danger"
+                android:paddingStart="8dp"
+                android:paddingTop="2.5dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2.5dp"
+                android:textColor="@color/danger"
+                android:textSize="11sp"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/activeTag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

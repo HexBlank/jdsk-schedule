@@ -212,6 +212,17 @@
     <string name="library_sync_local">仅保存在本机</string>
     <string name="library_sync_pending">已保存本机，等待联网同步</string>
     <string name="library_sync_failed">同步失败，点此查看原因</string>
+    <string name="library_gone_deleted">发布者已删除，建议移除</string>
+    <string name="library_gone_not_member">已不在同步名单，建议移除</string>
+    <string name="library_gone_tag_deleted">已删除</string>
+    <string name="library_gone_tag_not_member">已停止同步</string>
+    <string name="gone_deleted_title">发布者已删除这份课表</string>
+    <string name="gone_deleted_content">「%1$s」已被发布者删除，之后不会再有任何更新。本机保留的是删除前的最后一版。\n\n建议从课表库移除，移除后无法恢复。</string>
+    <string name="gone_not_member_title">这份课表已停止同步</string>
+    <string name="gone_not_member_content">「%1$s」还在，但你已不在它的同步名单里（例如换过手机或重装过 App），之后收不到更新。本机保留的是最后同步的一版。\n\n建议移除后，向发布者要分享码重新加入。</string>
+    <string name="gone_remove">从课表库移除</string>
+    <string name="gone_keep">暂不移除</string>
+    <string name="gone_removed">已从课表库移除</string>
     <string name="sync_failed_title">同步失败</string>
     <string name="sync_copy_log">复制日志</string>
     <string name="sync_log_copied">日志已复制，可直接粘贴发给开发者</string>

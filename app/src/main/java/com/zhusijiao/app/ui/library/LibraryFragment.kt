@@ -12,6 +12,8 @@ import com.zhusijiao.app.MainActivity
 import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.Prefs
+import com.zhusijiao.app.data.ScheduleSyncStore
+import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentLibraryBinding
 import com.zhusijiao.app.databinding.ItemScheduleCardBinding
 import com.zhusijiao.app.domain.DateUtils
@@ -107,8 +109,21 @@ class LibraryFragment : Fragment(), Refreshable {
         val shared = ApiClient.isShared(item.id)
         val pending = ApiClient.isSyncPending(item.id)
         val syncError = ApiClient.syncError(item.id)
+        val gone = if (isOwner) null else ApiClient.remoteGone(item.id)
         val syncing = if (isOwner) shared && !pending else true
-        card.syncText.text = if (syncError != null) {
+        card.goneTag.visibility = if (gone != null) View.VISIBLE else View.GONE
+        if (gone != null) {
+            card.goneTag.text = getString(
+                if (gone == ScheduleSyncStore.RemoteGone.DELETED) R.string.library_gone_tag_deleted
+                else R.string.library_gone_tag_not_member
+            )
+        }
+        card.syncText.text = if (gone != null) {
+            getString(
+                if (gone == ScheduleSyncStore.RemoteGone.DELETED) R.string.library_gone_deleted
+                else R.string.library_gone_not_member
+            )
+        } else if (syncError != null) {
             getString(R.string.library_sync_failed)
         } else if (isOwner) {
             when {
@@ -120,12 +135,15 @@ class LibraryFragment : Fragment(), Refreshable {
         } else getString(R.string.library_sync_subscriber)
         card.syncDot.setBackgroundResource(
             when {
-                syncError != null -> R.drawable.sync_dot_error
+                gone != null || syncError != null -> R.drawable.sync_dot_error
                 syncing -> R.drawable.sync_dot_green
                 else -> R.drawable.sync_dot_gray
             }
         )
-        if (syncError != null) {
+        if (gone != null) {
+            card.syncText.setTextColor(ContextCompat.getColor(requireContext(), R.color.danger))
+            card.syncText.setOnClickListener { showGoneDialog(item, gone) }
+        } else if (syncError != null) {
             card.syncText.setTextColor(ContextCompat.getColor(requireContext(), R.color.danger))
             card.syncText.setOnClickListener {
                 Ui.confirm(
@@ -169,15 +187,34 @@ class LibraryFragment : Fragment(), Refreshable {
         }
         val dangerColor = ContextCompat.getColor(requireContext(), R.color.danger_confirm)
         Ui.confirm(requireContext(), title, content, confirmColor = dangerColor) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    if (isOwner) ApiClient.deleteSchedule(item.id) else ApiClient.leaveSchedule(item.id)
-                    if (Prefs.activeScheduleId == item.id) Prefs.removeActiveSchedule()
-                    load()
-                    Ui.toast(requireContext(), getString(if (isOwner) R.string.library_deleted else R.string.library_left))
-                } catch (e: Exception) {
-                    Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
-                }
+            performRemove(item, isOwner, getString(if (isOwner) R.string.library_deleted else R.string.library_left))
+        }
+    }
+
+    /** 服务端已失效的订阅课表：说明原因，由用户决定是否移除（App 不替用户删）。 */
+    private fun showGoneDialog(item: Schedule, gone: ScheduleSyncStore.RemoteGone) {
+        val deleted = gone == ScheduleSyncStore.RemoteGone.DELETED
+        Ui.confirm(
+            requireContext(),
+            getString(if (deleted) R.string.gone_deleted_title else R.string.gone_not_member_title),
+            getString(if (deleted) R.string.gone_deleted_content else R.string.gone_not_member_content, item.name),
+            confirmText = getString(R.string.gone_remove),
+            cancelText = getString(R.string.gone_keep),
+            confirmColor = ContextCompat.getColor(requireContext(), R.color.danger_confirm),
+            onCancel = { ApiClient.acknowledgeGone(item.id) }
+        ) { performRemove(item, isOwner = false, getString(R.string.gone_removed)) }
+    }
+
+    private fun performRemove(item: Schedule, isOwner: Boolean, successMessage: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                if (isOwner) ApiClient.deleteSchedule(item.id) else ApiClient.leaveSchedule(item.id)
+                if (Prefs.activeScheduleId == item.id) Prefs.removeActiveSchedule()
+                load()
+                Ui.toast(requireContext(), successMessage)
+            } catch (e: Exception) {
+                SyncLog.log("移除课表失败", "local=${item.id} ${e.javaClass.name}: ${e.message}")
+                Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
             }
         }
     }

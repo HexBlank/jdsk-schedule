@@ -15,6 +15,14 @@ object ScheduleSyncStore {
 
     enum class PendingAction { DELETE, LEAVE }
 
+    /** 订阅课表在服务端已不可用的原因（经状态接口确认，不凭列表缺项推断）。 */
+    enum class RemoteGone {
+        /** 发布者已删除这份课表。 */
+        DELETED,
+        /** 课表还在，但本人已不在成员里（例如换了设备身份）。 */
+        NOT_MEMBER
+    }
+
     data class Record(
         val localId: String,
         val remoteId: String,
@@ -22,7 +30,11 @@ object ScheduleSyncStore {
         val dirty: Boolean,
         val pendingAction: PendingAction? = null,
         /** 最近一次推送失败的原因（用户可读）；推送成功或重新建立映射后清空。 */
-        val lastError: String? = null
+        val lastError: String? = null,
+        /** 非空表示服务端已没有这份课表；重新出现在列表里（link）时自动清空。 */
+        val remoteGone: RemoteGone? = null,
+        /** 用户已在课表页选择「暂不移除」，不再弹窗追问（课表库仍保留标识）。 */
+        val goneAcknowledged: Boolean = false
     )
 
     private val lock = Any()
@@ -56,6 +68,16 @@ object ScheduleSyncStore {
 
     fun markPending(record: Record, action: PendingAction) = synchronized(lock) {
         put(record.copy(dirty = false, pendingAction = action, lastError = null))
+    }
+
+    fun markGone(localId: String, gone: RemoteGone) = synchronized(lock) {
+        val existing = read().firstOrNull { it.localId == localId } ?: return@synchronized
+        if (existing.remoteGone != gone) put(existing.copy(remoteGone = gone, goneAcknowledged = false))
+    }
+
+    fun acknowledgeGone(localId: String) = synchronized(lock) {
+        val existing = read().firstOrNull { it.localId == localId } ?: return@synchronized
+        if (existing.remoteGone != null && !existing.goneAcknowledged) put(existing.copy(goneAcknowledged = true))
     }
 
     fun setError(localId: String, message: String?) = synchronized(lock) {
@@ -92,7 +114,10 @@ object ScheduleSyncStore {
                 dirty = item.optBoolean("dirty"),
                 pendingAction = item.optString("pendingAction").takeIf { it.isNotBlank() }
                     ?.let { runCatching { PendingAction.valueOf(it) }.getOrNull() },
-                lastError = item.optString("lastError").takeIf { it.isNotBlank() }
+                lastError = item.optString("lastError").takeIf { it.isNotBlank() },
+                remoteGone = item.optString("remoteGone").takeIf { it.isNotBlank() }
+                    ?.let { runCatching { RemoteGone.valueOf(it) }.getOrNull() },
+                goneAcknowledged = item.optBoolean("goneAcknowledged")
             )
         }
     }.getOrDefault(emptyList())
@@ -109,6 +134,8 @@ object ScheduleSyncStore {
                 .put("dirty", record.dirty)
                 .put("pendingAction", record.pendingAction?.name)
                 .put("lastError", record.lastError)
+                .put("remoteGone", record.remoteGone?.name)
+                .put("goneAcknowledged", record.goneAcknowledged)
         })
         FileOutputStream(temp).use { output ->
             output.write(json.toString().toByteArray(Charsets.UTF_8))
