@@ -28,6 +28,7 @@ import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
+import com.zhusijiao.app.util.SyncLogClipboard
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.launch
 import android.webkit.CookieManager
@@ -61,6 +62,7 @@ class SettingsFragment : Fragment(), Refreshable {
         }
         binding.menuQqGroup.setOnClickListener { copyQqGroupNumber() }
         binding.menuOpenSource.setOnClickListener { openProjectRepo() }
+        binding.menuSyncLog.setOnClickListener { SyncLogClipboard.copy(requireContext()) }
         binding.menuDelete.setOnClickListener {
             val danger = ContextCompat.getColor(requireContext(), R.color.danger_confirm_alt)
             Ui.confirm(

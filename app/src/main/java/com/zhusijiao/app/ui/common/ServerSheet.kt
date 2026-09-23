@@ -12,6 +12,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.data.ScheduleSyncStore
+import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.domain.ServerAddress
 import com.zhusijiao.app.util.Ui
 
@@ -60,6 +61,7 @@ class ServerSheet(
                 Prefs.serverBaseUrlOverride = newOverride
                 ApiClient.resetSession()
                 ScheduleSyncStore.clear()
+                SyncLog.log("切换数据服务，清空同步映射", newOverride.ifBlank { "恢复默认" })
                 Ui.toast(context, context.getString(R.string.server_switched))
                 onSaved()
                 dismiss()

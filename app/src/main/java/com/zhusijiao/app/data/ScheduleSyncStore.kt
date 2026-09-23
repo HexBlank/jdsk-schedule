@@ -20,7 +20,9 @@ object ScheduleSyncStore {
         val remoteId: String,
         val remoteRevision: Int,
         val dirty: Boolean,
-        val pendingAction: PendingAction? = null
+        val pendingAction: PendingAction? = null,
+        /** 最近一次推送失败的原因（用户可读）；推送成功或重新建立映射后清空。 */
+        val lastError: String? = null
     )
 
     private val lock = Any()
@@ -53,7 +55,12 @@ object ScheduleSyncStore {
     }
 
     fun markPending(record: Record, action: PendingAction) = synchronized(lock) {
-        put(record.copy(dirty = false, pendingAction = action))
+        put(record.copy(dirty = false, pendingAction = action, lastError = null))
+    }
+
+    fun setError(localId: String, message: String?) = synchronized(lock) {
+        val existing = read().firstOrNull { it.localId == localId } ?: return@synchronized
+        if (existing.lastError != message) put(existing.copy(lastError = message))
     }
 
     fun remove(localId: String) = synchronized(lock) {
@@ -84,7 +91,8 @@ object ScheduleSyncStore {
                 remoteRevision = item.optInt("remoteRevision", 1),
                 dirty = item.optBoolean("dirty"),
                 pendingAction = item.optString("pendingAction").takeIf { it.isNotBlank() }
-                    ?.let { runCatching { PendingAction.valueOf(it) }.getOrNull() }
+                    ?.let { runCatching { PendingAction.valueOf(it) }.getOrNull() },
+                lastError = item.optString("lastError").takeIf { it.isNotBlank() }
             )
         }
     }.getOrDefault(emptyList())
@@ -100,6 +108,7 @@ object ScheduleSyncStore {
                 .put("remoteRevision", record.remoteRevision)
                 .put("dirty", record.dirty)
                 .put("pendingAction", record.pendingAction?.name)
+                .put("lastError", record.lastError)
         })
         FileOutputStream(temp).use { output ->
             output.write(json.toString().toByteArray(Charsets.UTF_8))

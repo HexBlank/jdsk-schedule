@@ -211,6 +211,17 @@
     <string name="library_sync_subscriber">发布者更新后自动同步</string>
     <string name="library_sync_local">仅保存在本机</string>
     <string name="library_sync_pending">已保存本机，等待联网同步</string>
+    <string name="library_sync_failed">同步失败，点此查看原因</string>
+    <string name="sync_failed_title">同步失败</string>
+    <string name="sync_copy_log">复制日志</string>
+    <string name="sync_log_copied">日志已复制，可直接粘贴发给开发者</string>
+    <string name="settings_sync_log">复制同步日志</string>
+    <string name="settings_sync_log_sub">课表同步出问题时，复制后发给开发者排查</string>
+    <string name="sync_failed_detail">%1$s\n\n本机数据不受影响，App 每次打开都会自动重试。</string>
+    <string name="schedule_missing_title">课表不存在</string>
+    <string name="schedule_missing_generic">要打开的课表已不在本机，可能已被移除。</string>
+    <string name="schedule_missing_switched">现在显示的是「%1$s」。</string>
+    <string name="join_missing_local">本机没有找到这份课表，请重新输入分享码加入。</string>
     <string name="library_action_update">更新</string>
     <string name="library_action_share">分享</string>
     <string name="library_action_delete">删除</string>

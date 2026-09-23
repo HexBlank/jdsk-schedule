@@ -17,6 +17,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
+import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.PersonalEvent
@@ -129,7 +130,9 @@ class ScheduleFragment : Fragment(), Refreshable {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val schedules = ApiClient.listSchedules()
+                val activeId = Prefs.activeScheduleId
                 if (schedules.isEmpty()) {
+                    if (activeId.isNotBlank()) notifyMissingSchedule(activeId, fallbackName = null)
                     schedule = null
                     events = emptyList()
                     binding.timetable.setSchedule(null)
@@ -140,8 +143,8 @@ class ScheduleFragment : Fragment(), Refreshable {
                     syncRemoteThenReload(syncRemote)
                     return@launch
                 }
-                val activeId = Prefs.activeScheduleId
-                val summary = schedules.find { it.id == activeId } ?: schedules[0]
+                val requested = schedules.find { it.id == activeId }
+                val summary = requested ?: schedules[0]
                 val loadedSchedule = ApiClient.getSchedule(summary.id)
                 events = withContext(Dispatchers.IO) { PersonalEventStore.list(loadedSchedule.id) }
                 // 同一份课表刷新（切后台回前台、同步完成等）时保持用户正在浏览的周次，
@@ -167,6 +170,8 @@ class ScheduleFragment : Fragment(), Refreshable {
                     restoredWeek = null
                 }
                 setState(STATE_CONTENT)
+                // 要打开的课表已经不在本机时必须明说，否则用户只会看到「打开的是别的课表」
+                if (activeId.isNotBlank() && requested == null) notifyMissingSchedule(activeId, loadedSchedule.name)
                 syncRemoteThenReload(syncRemote)
             } catch (e: Exception) {
                 binding.errorMessage.text = e.message ?: getString(R.string.index_load_failed_title)
@@ -227,7 +232,20 @@ class ScheduleFragment : Fragment(), Refreshable {
         syncRunning = true
         val synced = ApiClient.syncSchedules()
         syncRunning = false
-        if (synced && _binding != null) load(silent = true, syncRemote = false)
+        if (_binding == null) return
+        if (!synced) ApiClient.takeNewSyncError()?.let { Ui.toast(requireContext(), it) }
+        // 失败也重载：单条写入失败时远端课表仍可能已拉取，或有订阅课表被清理
+        load(silent = true, syncRemote = false)
+    }
+
+    /** 当前课表指针指向的课表已不在本机：说明原因，以及现在显示的是哪份。 */
+    private fun notifyMissingSchedule(missingId: String, fallbackName: String?) {
+        SyncLog.log("要打开的课表不在本机", "local=$missingId fallback=${fallbackName ?: "-"}")
+        val reason = getString(R.string.schedule_missing_generic)
+        val message = if (fallbackName != null) {
+            reason + "\n\n" + getString(R.string.schedule_missing_switched, fallbackName)
+        } else reason
+        Ui.alert(requireContext(), getString(R.string.schedule_missing_title), message)
     }
 
     private fun showCourse(click: com.zhusijiao.app.ui.common.TimetableView.CourseClick) {

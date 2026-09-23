@@ -20,6 +20,7 @@ import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
 import com.zhusijiao.app.ui.share.ShareActivity
+import com.zhusijiao.app.util.SyncLogClipboard
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.launch
 
@@ -74,7 +75,10 @@ class LibraryFragment : Fragment(), Refreshable {
                     syncRunning = true
                     val synced = ApiClient.syncSchedules()
                     syncRunning = false
-                    if (synced && _binding != null) load(syncRemote = false)
+                    if (_binding == null) return@launch
+                    ApiClient.takeNewSyncError()?.let { Ui.toast(requireContext(), it) }
+                    // 失败时也重绘：卡片上的同步状态可能变成「同步失败」
+                    load(syncRemote = false)
                 }
             } catch (e: Exception) {
                 binding.skeletonList.visibility = View.GONE
@@ -102,8 +106,11 @@ class LibraryFragment : Fragment(), Refreshable {
 
         val shared = ApiClient.isShared(item.id)
         val pending = ApiClient.isSyncPending(item.id)
+        val syncError = ApiClient.syncError(item.id)
         val syncing = if (isOwner) shared && !pending else true
-        card.syncText.text = if (isOwner) {
+        card.syncText.text = if (syncError != null) {
+            getString(R.string.library_sync_failed)
+        } else if (isOwner) {
             when {
                 pending -> getString(R.string.library_sync_pending)
                 !shared -> getString(R.string.library_sync_local)
@@ -111,7 +118,25 @@ class LibraryFragment : Fragment(), Refreshable {
                 else -> getString(R.string.library_sync_none)
             }
         } else getString(R.string.library_sync_subscriber)
-        card.syncDot.setBackgroundResource(if (syncing) R.drawable.sync_dot_green else R.drawable.sync_dot_gray)
+        card.syncDot.setBackgroundResource(
+            when {
+                syncError != null -> R.drawable.sync_dot_error
+                syncing -> R.drawable.sync_dot_green
+                else -> R.drawable.sync_dot_gray
+            }
+        )
+        if (syncError != null) {
+            card.syncText.setTextColor(ContextCompat.getColor(requireContext(), R.color.danger))
+            card.syncText.setOnClickListener {
+                Ui.confirm(
+                    requireContext(),
+                    getString(R.string.sync_failed_title),
+                    getString(R.string.sync_failed_detail, syncError),
+                    confirmText = getString(R.string.sync_copy_log),
+                    cancelText = getString(R.string.common_known)
+                ) { SyncLogClipboard.copy(requireContext()) }
+            }
+        }
 
         card.actionUpdate.visibility = if (isOwner) View.VISIBLE else View.GONE
         card.actionShare.visibility = if (isOwner && !ApiClient.isLocalMode) View.VISIBLE else View.GONE

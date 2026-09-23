@@ -199,6 +199,11 @@ class JoinActivity : BaseActivity() {
         val localId = ScheduleSyncStore.findByRemoteId(id)
             ?.localId?.takeIf { LocalScheduleStore.getScheduleOrNull(it) != null }
             ?: id
+        if (LocalScheduleStore.getScheduleOrNull(localId) == null) {
+            // 不能跳转：课表页找不到它会退回显示别的课表，用户会以为打开的是那一份
+            Ui.alert(this, getString(R.string.schedule_missing_title), getString(R.string.join_missing_local))
+            return
+        }
         Prefs.activeScheduleId = localId
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)

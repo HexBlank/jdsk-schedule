@@ -31,8 +31,13 @@ import kotlin.coroutines.resumeWithException
 class ApiException(
     message: String,
     val networkFailure: Boolean = false,
-    val status: Int = 0
+    val status: Int = 0,
+    /** 排查用的原始信息（请求、状态码、截断后的响应体），只进诊断日志，不给用户看。 */
+    val detail: String? = null
 ) : Exception(message)
+
+/** 本机待同步写入推送失败；message 已是完整的用户可读句子。 */
+private class SyncPushException(message: String) : Exception(message)
 
 /**
  * 本地优先的数据入口。课表始终先写入本机；配置后端只会增加分享和同步能力。
@@ -42,6 +47,10 @@ object ApiClient {
 
     val isLocalMode: Boolean get() = AppConfig.isLocalMode
     @Volatile var lastReadWasOffline: Boolean = false
+        private set
+
+    /** 最近一次同步失败的原因（非网络问题，用户可读）；同步完全成功后清空。 */
+    @Volatile var lastSyncError: String? = null
         private set
 
     /**
@@ -246,9 +255,16 @@ object ApiClient {
                     storeRemote(remote, record?.localId ?: remote.id)
                 }
                 if (pendingError != null) throw pendingError
+                lastSyncError = null
                 true
             } catch (error: Exception) {
                 lastReadWasOffline = error is ApiException && error.networkFailure
+                SyncLog.log("同步失败", "${error.message} | ${errorDetail(error)}")
+                // 网络不通是常态（离线可用），不算需要提示的失败，保留上一次的失败原因。
+                if (!lastReadWasOffline) {
+                    lastSyncError = if (error is SyncPushException) error.message
+                    else "同步失败：${error.message?.takeIf { it.isNotBlank() } ?: "未知错误"}"
+                }
                 false
             }
         }
@@ -259,6 +275,22 @@ object ApiClient {
     fun isSyncPending(id: String): Boolean = ScheduleSyncStore.get(id)?.let {
         it.dirty || it.pendingAction != null
     } == true
+
+    /** 这份本机课表最近一次推送失败的原因；没有失败返回 null。 */
+    fun syncError(id: String): String? = ScheduleSyncStore.get(id)?.lastError
+
+    @Volatile private var reportedSyncError: String? = null
+
+    /**
+     * 最近一次同步失败的原因，同一原因只返回一次：同步在每次进入页面时都会跑，
+     * 失败原因不变就不重复打扰用户（课表库卡片上仍会持续显示）。
+     */
+    fun takeNewSyncError(): String? {
+        val error = lastSyncError ?: run { reportedSyncError = null; return null }
+        if (error == reportedSyncError) return null
+        reportedSyncError = error
+        return error
+    }
 
     // ===== 网络与鉴权 =====
 
@@ -368,19 +400,43 @@ object ApiClient {
                     ScheduleSyncStore.PendingAction.DELETE -> {
                         requestIgnoringNotFound("DELETE", "/api/v1/schedules/${enc(record.remoteId)}")
                         withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
+                        SyncLog.log("已推送删除", "remote=${record.remoteId}")
                     }
                     ScheduleSyncStore.PendingAction.LEAVE -> {
                         requestIgnoringNotFound("DELETE", "/api/v1/schedules/${enc(record.remoteId)}/membership")
                         withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
+                        SyncLog.log("已推送退出", "remote=${record.remoteId}")
                     }
                     null -> if (record.dirty) syncOwner(record.localId, record)
                 }
             } catch (error: Exception) {
                 if (error is ApiException && error.networkFailure) throw error
-                if (firstError == null) firstError = error
+                val reason = describePushError(error, record)
+                withContext(Dispatchers.IO) { ScheduleSyncStore.setError(record.localId, reason) }
+                SyncLog.log(
+                    "推送失败",
+                    "local=${record.localId} remote=${record.remoteId} action=${record.pendingAction ?: "修改"} " +
+                        "rev=${record.remoteRevision} reason=$reason | ${errorDetail(error)}"
+                )
+                if (firstError == null) {
+                    val name = withContext(Dispatchers.IO) { LocalScheduleStore.getScheduleOrNull(record.localId)?.name }
+                    firstError = SyncPushException(if (name != null) "「$name」同步失败：$reason" else "同步失败：$reason")
+                }
             }
         }
         return firstError
+    }
+
+    /** 把推送失败翻译成用户能看懂的原因。服务端文案是面向手动操作写的，自动同步场景需要换个说法。 */
+    private fun describePushError(error: Exception, record: ScheduleSyncStore.Record): String {
+        val status = (error as? ApiException)?.status ?: 0
+        return when {
+            record.pendingAction == null && status == 404 -> "云端已找不到这份课表，本机修改无法上传"
+            record.pendingAction == null && status == 409 -> "云端版本和本机不一致，本机修改暂未上传"
+            status == 401 || status == 403 -> "登录状态失效，请稍后重试"
+            status >= 500 -> "服务器暂时出错，稍后会自动重试"
+            else -> error.message?.takeIf { it.isNotBlank() } ?: "未知错误"
+        }
     }
 
     /**
@@ -396,7 +452,7 @@ object ApiClient {
             LocalScheduleStore.deleteSchedule(record.localId)
             PersonalEventStore.removeSchedule(record.localId)
             ScheduleSyncStore.remove(record.localId)
-            if (Prefs.activeScheduleId == record.localId) Prefs.removeActiveSchedule()
+            SyncLog.log("清理订阅副本", "local=${record.localId} remote=${record.remoteId} name=${local?.name ?: "-"}")
         }
     }
 
@@ -406,8 +462,16 @@ object ApiClient {
             request(method, path)
         } catch (error: ApiException) {
             if (error.status != 404) throw error
+            SyncLog.log("目标已不存在，按成功处理", error.detail.orEmpty())
         }
     }
+
+    /** 诊断日志里的原始错误：接口错误给请求与响应，其他异常给类型和前几帧调用栈。 */
+    private fun errorDetail(error: Throwable): String =
+        (error as? ApiException)?.detail ?: buildString {
+            append(error.javaClass.name).append(": ").append(error.message)
+            error.stackTrace.take(4).forEach { append(" @ ").append(it.toString()) }
+        }
 
     private suspend fun syncOwner(localId: String, record: ScheduleSyncStore.Record): Schedule {
         val local = withContext(Dispatchers.IO) { LocalScheduleStore.getSchedule(localId) }
@@ -597,7 +661,9 @@ object ApiClient {
             return request(method, path, body, true)
         }
         val json = parseOrEmpty(text)
-        if (code !in 200..299) throw ApiException(errorMessage(json, code), status = code)
+        if (code !in 200..299) {
+            throw ApiException(errorMessage(json, code), status = code, detail = "$method $path -> HTTP $code ${SyncLog.clip(text)}")
+        }
         return json
     }
 
@@ -619,7 +685,9 @@ object ApiClient {
         }
         val (code, text) = call("POST", path, body, null)
         val json = parseOrEmpty(text)
-        if (code !in 200..299) throw ApiException(errorMessage(json, code, "登录失败"))
+        if (code !in 200..299) {
+            throw ApiException(errorMessage(json, code, "登录失败"), status = code, detail = "POST $path -> HTTP $code ${SyncLog.clip(text)}")
+        }
         val token = json.optString("token")
         if (token.isEmpty()) throw ApiException("登录失败")
         Prefs.token = token
@@ -633,7 +701,11 @@ object ApiClient {
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     if (continuation.isActive) continuation.resumeWithException(
-                        ApiException("网络连接失败，请检查网络或稍后重试", networkFailure = true)
+                        ApiException(
+                            "网络连接失败，请检查网络或稍后重试",
+                            networkFailure = true,
+                            detail = "$method $path -> ${e.javaClass.simpleName}: ${e.message}"
+                        )
                     )
                 }
 
