@@ -206,9 +206,10 @@ function createScheduleService(db, config = {}) {
     return get(userId, row.id)
   }
 
+  // 退出幂等：成员关系已不存在（发布者删了课表、或早已退出）也视为成功。
+  // 旧版客户端把 404 当作同步失败并无限重试，会卡住后续所有待同步写入。
   function leave(userId, scheduleId) {
-    const result = db.prepare('DELETE FROM schedule_members WHERE user_id = ? AND schedule_id = ?').run(userId, scheduleId)
-    if (!result.changes) throw httpError(404, 'MEMBERSHIP_NOT_FOUND', '未加入该课表')
+    db.prepare('DELETE FROM schedule_members WHERE user_id = ? AND schedule_id = ?').run(userId, scheduleId)
   }
 
   function rotateCode(userId, scheduleId) {
@@ -220,6 +221,8 @@ function createScheduleService(db, config = {}) {
   }
 
   function remove(userId, scheduleId) {
+    // 课表已不存在说明删除目标已达成（幂等，理由同 leave）；存在但不是本人的仍然拒绝。
+    if (!db.prepare('SELECT 1 FROM schedules WHERE id = ?').get(scheduleId)) return
     getOwned(userId, scheduleId)
     db.prepare('DELETE FROM schedules WHERE id = ? AND owner_id = ?').run(scheduleId, userId)
   }

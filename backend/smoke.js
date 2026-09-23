@@ -299,6 +299,16 @@ function check(name, cond, extra) {
   })
   check('服务端解析导入内容', parse.statusCode === 200 && Array.isArray(parse.json().schedule.courses))
 
+  const ghostId = '00000000-0000-4000-8000-000000000000'
+  const leaveGhost = await app.inject({
+    method: 'DELETE', url: `/api/v1/schedules/${ghostId}/membership`, headers: { Authorization: `Bearer ${token2}` }
+  })
+  check('退出已不存在的课表按成功处理（幂等）', leaveGhost.statusCode === 204)
+  const removeGhost = await app.inject({
+    method: 'DELETE', url: `/api/v1/schedules/${ghostId}`, headers: { Authorization: `Bearer ${token}` }
+  })
+  check('删除已不存在的课表按成功处理（幂等）', removeGhost.statusCode === 204)
+
   const me = await app.inject({ method: 'DELETE', url: '/api/v1/me', headers: { Authorization: `Bearer ${token2}` } })
   check('删除本人数据', me.statusCode === 204)
 
