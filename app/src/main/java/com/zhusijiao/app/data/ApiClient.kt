@@ -27,8 +27,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/** 统一的接口异常，message 即用户可读文案。 */
-class ApiException(message: String, val networkFailure: Boolean = false) : Exception(message)
+/** 统一的接口异常，message 即用户可读文案；status 为 HTTP 状态码（非 HTTP 错误为 0）。 */
+class ApiException(
+    message: String,
+    val networkFailure: Boolean = false,
+    val status: Int = 0
+) : Exception(message)
 
 /**
  * 本地优先的数据入口。课表始终先写入本机；配置后端只会增加分享和同步能力。
@@ -95,7 +99,22 @@ object ApiClient {
     suspend fun previewShareCode(code: String): SharePreview {
         requireOnlineSharing()
         val r = request("POST", "/api/v1/share/preview", JSONObject().put("code", code))
-        return SharePreview.fromJson(r.optJSONObject("schedule") ?: JSONObject())
+        val preview = SharePreview.fromJson(r.optJSONObject("schedule") ?: JSONObject())
+        // 服务端认为已加入/已拥有，但本机没有可用副本（例如已在本机移除、退出请求还没同步上去）：
+        // 此时「打开课表」会指向不存在的课表而回退到别的课表，必须按未加入处理，走一次加入把副本落回本机。
+        val present = withContext(Dispatchers.IO) { hasLocalCopy(preview.id) }
+        return if ((preview.joined || preview.owned) && !present) {
+            preview.copy(joined = false, owned = false)
+        } else preview
+    }
+
+    /** 本机是否有指向该远端课表、且没有待删除/待退出的副本。 */
+    private fun hasLocalCopy(remoteId: String): Boolean {
+        val record = ScheduleSyncStore.findByRemoteId(remoteId)
+        if (record != null) {
+            return record.pendingAction == null && LocalScheduleStore.getScheduleOrNull(record.localId) != null
+        }
+        return LocalScheduleStore.getScheduleOrNull(remoteId) != null
     }
 
     suspend fun joinShareCode(code: String): Schedule {
@@ -208,19 +227,25 @@ object ApiClient {
         return syncMutex.withLock {
             lastReadWasOffline = false
             try {
-                processPendingWrites()
+                val pendingError = processPendingWrites()
+                // 必须在拉列表之前取快照：拉取期间新加入的课表不在快照里，不会被误清理。
+                val knownBefore = withContext(Dispatchers.IO) { ScheduleSyncStore.all() }
                 val response = request("GET", "/api/v1/schedules")
                 val array = response.optJSONArray("schedules")
                 val summaries = (0 until (array?.length() ?: 0)).map {
                     Schedule.fromJson(array?.optJSONObject(it) ?: JSONObject())
                 }
-                withContext(Dispatchers.IO) { ScheduleCache.putList(summaries) }
+                withContext(Dispatchers.IO) {
+                    ScheduleCache.putList(summaries)
+                    pruneRemovedSubscriptions(knownBefore, summaries.map { it.id }.toSet())
+                }
                 for (summary in summaries) {
                     val record = withContext(Dispatchers.IO) { ScheduleSyncStore.findByRemoteId(summary.id) }
                     if (record?.dirty == true || record?.pendingAction != null) continue
                     val remote = scheduleFrom(request("GET", "/api/v1/schedules/${enc(summary.id)}"))
                     storeRemote(remote, record?.localId ?: remote.id)
                 }
+                if (pendingError != null) throw pendingError
                 true
             } catch (error: Exception) {
                 lastReadWasOffline = error is ApiException && error.networkFailure
@@ -330,19 +355,57 @@ object ApiClient {
         }
     }
 
-    private suspend fun processPendingWrites() {
+    /**
+     * 逐条推送本机待同步写入。每条记录互不影响：某一条失败（如发布者的课表版本冲突）
+     * 不能卡住其余记录，否则「退出课表」会永远发不出去、订阅的课表也再也刷新不了。
+     * 返回第一条失败的异常，由调用方在拉取完远端数据后再上报。
+     */
+    private suspend fun processPendingWrites(): Exception? {
+        var firstError: Exception? = null
         for (record in withContext(Dispatchers.IO) { ScheduleSyncStore.all() }) {
-            when (record.pendingAction) {
-                ScheduleSyncStore.PendingAction.DELETE -> {
-                    request("DELETE", "/api/v1/schedules/${enc(record.remoteId)}")
-                    withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
+            try {
+                when (record.pendingAction) {
+                    ScheduleSyncStore.PendingAction.DELETE -> {
+                        requestIgnoringNotFound("DELETE", "/api/v1/schedules/${enc(record.remoteId)}")
+                        withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
+                    }
+                    ScheduleSyncStore.PendingAction.LEAVE -> {
+                        requestIgnoringNotFound("DELETE", "/api/v1/schedules/${enc(record.remoteId)}/membership")
+                        withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
+                    }
+                    null -> if (record.dirty) syncOwner(record.localId, record)
                 }
-                ScheduleSyncStore.PendingAction.LEAVE -> {
-                    request("DELETE", "/api/v1/schedules/${enc(record.remoteId)}/membership")
-                    withContext(Dispatchers.IO) { ScheduleSyncStore.remove(record.localId) }
-                }
-                null -> if (record.dirty) syncOwner(record.localId, record)
+            } catch (error: Exception) {
+                if (error is ApiException && error.networkFailure) throw error
+                if (firstError == null) firstError = error
             }
+        }
+        return firstError
+    }
+
+    /**
+     * 清理服务端已不再返回的订阅副本（发布者删了课表或把自己移出）。
+     * 不清理的话副本会一直留在本机，用户再移除时产生一条永远 404 的退出请求。
+     * 只动订阅者副本：发布者的本机课表是权威数据，服务端丢了也不能删。
+     */
+    private fun pruneRemovedSubscriptions(knownBefore: List<ScheduleSyncStore.Record>, remoteIds: Set<String>) {
+        for (record in knownBefore) {
+            if (record.remoteId in remoteIds || record.dirty || record.pendingAction != null) continue
+            val local = LocalScheduleStore.getScheduleOrNull(record.localId)
+            if (local != null && local.isOwner) continue
+            LocalScheduleStore.deleteSchedule(record.localId)
+            PersonalEventStore.removeSchedule(record.localId)
+            ScheduleSyncStore.remove(record.localId)
+            if (Prefs.activeScheduleId == record.localId) Prefs.removeActiveSchedule()
+        }
+    }
+
+    /** 删除/退出类请求：服务端已经不存在（404）说明目标状态已达成，按成功处理。 */
+    private suspend fun requestIgnoringNotFound(method: String, path: String) {
+        try {
+            request(method, path)
+        } catch (error: ApiException) {
+            if (error.status != 404) throw error
         }
     }
 
@@ -474,6 +537,9 @@ object ApiClient {
                     // 必须先查同步映射，否则冷启动会凭远端 id 重复落地一份，
                     // 导致课表库出现两张相同的课表。
                     val linked = ScheduleSyncStore.findByRemoteId(detail.id)
+                    // 本机已删除/退出、等待同步到服务端的课表不能从旧缓存复活，
+                    // 否则 link() 会抹掉待同步的删除/退出动作。
+                    if (linked?.pendingAction != null) continue
                     val localId = linked?.localId ?: detail.id
                     if (LocalScheduleStore.getScheduleOrNull(localId) == null) {
                         LocalScheduleStore.putRemoteSchedule(detail, localId)
@@ -531,7 +597,7 @@ object ApiClient {
             return request(method, path, body, true)
         }
         val json = parseOrEmpty(text)
-        if (code !in 200..299) throw ApiException(errorMessage(json, code))
+        if (code !in 200..299) throw ApiException(errorMessage(json, code), status = code)
         return json
     }
 
