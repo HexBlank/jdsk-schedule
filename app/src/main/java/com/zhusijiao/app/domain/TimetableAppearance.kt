@@ -1,7 +1,7 @@
 package com.zhusijiao.app.domain
 
 /**
- * 课表外观：格子高度、格子留白、文字大小三档偏好，外加「自动铺满一屏」。
+ * 课表外观：格子高度、格子留白、文字大小三档偏好，外加「自动铺满一屏」与「显示已上状态」。
  *
  * 只影响本机显示，不随课表同步、不进服务端模型——同一份课表在不同同学手机上
  * 可以各调各的。数值一律用 750 设计稿单位（rpx），由 [com.zhusijiao.app.ui.common.TimetableView]
@@ -18,7 +18,9 @@ data class TimetableAppearance(
     /** 文字大小档位，0 小、2 大，默认 1（原字号）。 */
     val textLevel: Int = DEFAULT_TEXT_LEVEL,
     /** 开启后行高改为「可视高度 ÷ 节次数」，课表本体不用滚动；此时高度档位不生效。 */
-    val fitScreen: Boolean = false
+    val fitScreen: Boolean = false,
+    /** 开启后已经下课的课（精确到分钟）以灰色「鬼影」样式显示并标「已上」；默认关闭，保持原样。 */
+    val showFinished: Boolean = false
 ) {
 
     val rowHeightRpx: Float get() = ROW_HEIGHTS[rowHeightLevel.coerceIn(ROW_HEIGHTS.indices)]

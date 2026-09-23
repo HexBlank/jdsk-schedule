@@ -10,7 +10,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.TimetableAppearance
 
 /**
- * 课表外观底部面板：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」。
+ * 课表外观底部面板：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」与「显示已上状态」。
  *
  * 交互约定：
  * - 面板只占下半屏且几乎不压暗背景，用户一边点一边能看到上半屏真实课表，所以没有「确定」按钮，
@@ -31,6 +31,7 @@ class AppearanceSheet(
     private val paddingChoice: SegmentedChoiceView
     private val textChoice: SegmentedChoiceView
     private val fitToggle: ToggleView
+    private val finishedToggle: ToggleView
     private val resetButton: TextView
 
     init {
@@ -46,6 +47,7 @@ class AppearanceSheet(
         paddingChoice = findViewById(R.id.paddingChoice)
         textChoice = findViewById(R.id.textChoice)
         fitToggle = findViewById(R.id.fitScreenToggle)
+        finishedToggle = findViewById(R.id.showFinishedToggle)
         resetButton = findViewById(R.id.appearanceReset)
 
         heightChoice.configure(
@@ -78,6 +80,10 @@ class AppearanceSheet(
         }
         findViewById<View>(R.id.fitScreenRow).setOnClickListener { fitToggle.toggle() }
 
+        finishedToggle.setChecked(current.showFinished, animate = false)
+        finishedToggle.onCheckedChange = { checked -> apply(current.copy(showFinished = checked)) }
+        findViewById<View>(R.id.showFinishedRow).setOnClickListener { finishedToggle.toggle() }
+
         resetButton.setOnClickListener { resetToDefault() }
 
         renderFitState()
@@ -98,6 +104,7 @@ class AppearanceSheet(
         paddingChoice.setSelection(target.paddingLevel)
         textChoice.setSelection(target.textLevel)
         fitToggle.setChecked(target.fitScreen, animate = true)
+        finishedToggle.setChecked(target.showFinished, animate = true)
         apply(target)
         renderFitState()
     }
@@ -131,7 +138,7 @@ class AppearanceSheet(
             R.string.appearance_text_3
         )
 
-        /** 设置页「课表外观」行的副标题：一行说清当前三档，如「格子偏高 · 留白宽松 · 文字标准」。 */
+        /** 设置页「课表外观」行的副标题：一行说清当前三档，如「格子偏高 · 留白宽松 · 文字标准」；开了「显示已上」再追加一段。 */
         fun summary(context: Context, value: TimetableAppearance): String {
             val head = if (value.fitScreen) {
                 context.getString(R.string.appearance_summary_fit)
@@ -141,12 +148,17 @@ class AppearanceSheet(
                     context.getString(HEIGHT_LABELS[value.rowHeightLevel])
                 )
             }
-            return context.getString(
+            val summary = context.getString(
                 R.string.appearance_summary,
                 head,
                 context.getString(PADDING_LABELS[value.paddingLevel]),
                 context.getString(TEXT_LABELS[value.textLevel])
             )
+            return if (value.showFinished) {
+                context.getString(R.string.appearance_summary_with_finished, summary)
+            } else {
+                summary
+            }
         }
     }
 }

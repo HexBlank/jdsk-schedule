@@ -32,6 +32,7 @@ object Prefs {
     private const val KEY_TT_PADDING = "timetablePaddingLevel"
     private const val KEY_TT_TEXT = "timetableTextLevel"
     private const val KEY_TT_FIT_SCREEN = "timetableFitScreen"
+    private const val KEY_TT_SHOW_FINISHED = "timetableShowFinished"
     private const val KEY_CUSTOM_CHANNELS = "customUpdateChannels"
     private val HEX_COLOR = Regex("^#[0-9A-F]{6}$")
 
@@ -92,7 +93,7 @@ object Prefs {
         }
 
     /**
-     * 课表外观（格子高度/留白/文字大小、铺满一屏）。
+     * 课表外观（格子高度/留白/文字大小、铺满一屏、显示已上状态）。
      * 纯本机显示偏好，不随课表同步：同一份课表各人可以各调各的。
      */
     var timetableAppearance: TimetableAppearance
@@ -103,7 +104,8 @@ object Prefs {
                 .coerceIn(TimetableAppearance.BLOCK_MARGINS.indices),
             textLevel = sp.getInt(KEY_TT_TEXT, TimetableAppearance.DEFAULT_TEXT_LEVEL)
                 .coerceIn(TimetableAppearance.TEXT_SCALES.indices),
-            fitScreen = sp.getBoolean(KEY_TT_FIT_SCREEN, false)
+            fitScreen = sp.getBoolean(KEY_TT_FIT_SCREEN, false),
+            showFinished = sp.getBoolean(KEY_TT_SHOW_FINISHED, false)
         )
         set(value) {
             sp.edit()
@@ -111,6 +113,7 @@ object Prefs {
                 .putInt(KEY_TT_PADDING, value.paddingLevel)
                 .putInt(KEY_TT_TEXT, value.textLevel)
                 .putBoolean(KEY_TT_FIT_SCREEN, value.fitScreen)
+                .putBoolean(KEY_TT_SHOW_FINISHED, value.showFinished)
                 .apply()
         }
 

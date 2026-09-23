@@ -1,5 +1,7 @@
 package com.zhusijiao.app.domain
 
+import java.util.Calendar
+
 /**
  * 作息与时间换算。纯 Kotlin、不依赖 android.*，可直接用 JVM 单元测试覆盖。
  *
@@ -38,6 +40,22 @@ object ScheduleTime {
     }
 
     fun isValidTime(value: String?): Boolean = minutesOf(value) != null
+
+    /**
+     * 一节课从何时起算「已上」（本机时区的毫秒时间戳）：下课那一分钟过完才算，
+     * 如 07:50–09:30 的课 09:31:00 起为已上，09:30 这一分钟里仍是正常样式。
+     * [dateIso] 为上课当天 "YYYY-MM-DD"，[endTime] 为末节下课时间；任一非法返回 null（不标已上）。
+     */
+    fun finishedAtMillis(dateIso: String?, endTime: String?): Long? {
+        val end = minutesOf(endTime) ?: return null
+        val parts = (dateIso ?: "").split("-").mapNotNull { it.toIntOrNull() }
+        if (parts.size != 3) return null
+        return Calendar.getInstance().apply {
+            clear()
+            set(parts[0], parts[1] - 1, parts[2], end / 60, end % 60, 0)
+            add(Calendar.MINUTE, 1)
+        }.timeInMillis
+    }
 
     fun formatTime(minutes: Int): String {
         val clamped = minutes.coerceIn(0, 24 * 60 - 1)

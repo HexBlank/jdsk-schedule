@@ -183,9 +183,19 @@ class TimetableView @JvmOverloads constructor(
         /** 鬼影块的每一节都被当天真要上的块占满：画出来只会从分栏缝里漏出一道灰边，不画也不响应点击。 */
         var buried = false
 
+        /** 「已上」起算时刻（毫秒），只有当天真要上的课才有；日程与鬼影块恒为 [Long.MAX_VALUE]。 */
+        var finishedAt = Long.MAX_VALUE
+        /** 已经下课（需开「显示已上状态」）：画成鬼影并标「已上」，但仍参与分栏，免得下课那一刻格子跳动。 */
+        var finished = false
+
         /** 「鬼影」块：已调出、整日停课、补课来源日——当天都不上，不参与冲突分栏。 */
         val ghosted: Boolean
             get() = occurrence == Occurrence.MOVED_OUT || holiday != null || madeUpNote != null
+
+        /** 画成灰色鬼影样式：当天不上的，或已经上完的。 */
+        val faded: Boolean get() = ghosted || finished
+
+        val shownBadge: String get() = if (finished) "已上" else badge
     }
 
     // ===== 画笔 =====
@@ -645,12 +655,44 @@ class TimetableView @JvmOverloads constructor(
                 event = event
             )
         }
+        // 「已上」起算时刻：块所在列的日期 + 末节下课时间（补课块在目标日，所以按列取日期）
+        r.blocks.forEach { b ->
+            if (b.event != null || b.ghosted) return@forEach
+            val endTime = sectionsList.find { it.number == b.startSection + b.span - 1 }?.endTime
+            b.finishedAt = ScheduleTime.finishedAtMillis(r.dates.getOrNull(b.col - 1)?.iso, endTime) ?: Long.MAX_VALUE
+        }
+        refreshFinished(r)
         // 鬼影块垫底：绘制、点击命中、无障碍命中都按列表顺序后者优先，
         // 否则排在后面的「已调出」灰块会盖住同一格里当天真正要上的课。
         r.blocks.sortBy { if (it.ghosted) 0 else 1 }
         layoutBlocks(r)
         return r
     }
+
+    /** 按当前时间刷新各块的「已上」状态；有变化返回 true（角标文字变了，调用方需重排）。 */
+    private fun refreshFinished(render: WeekRender, now: Long = System.currentTimeMillis()): Boolean {
+        var changed = false
+        render.blocks.forEach { b ->
+            val finished = appearance.showFinished && now >= b.finishedAt
+            if (finished != b.finished) {
+                b.finished = finished
+                changed = true
+            }
+        }
+        return changed
+    }
+
+    /** 当前页下一节课下课的那一刻重绘一次，课表开着也能按分钟变成「已上」。 */
+    private fun scheduleFinishedTick(render: WeekRender) {
+        removeCallbacks(finishedTick)
+        if (!appearance.showFinished) return
+        val now = System.currentTimeMillis()
+        val next = render.blocks.filter { it.finishedAt != Long.MAX_VALUE && it.finishedAt > now }
+            .minOfOrNull { it.finishedAt } ?: return
+        postDelayed(finishedTick, next - now + FINISHED_TICK_SLACK_MS)
+    }
+
+    private val finishedTick = Runnable { invalidate() }
 
     // ===== 测量与几何 =====
 
@@ -769,8 +811,8 @@ class TimetableView @JvmOverloads constructor(
             val contentWidth = max(1, (b.right - b.left - padH * 2).roundToInt())
             // 分栏块窄到放不下角标（七列时内容宽只剩约 35rpx），一律省掉只留标题；
             // 教师、地点与「调课/补课」状态都在详情抽屉里给全。
-            b.badgeWidth = if (!split && b.badge.isNotEmpty() && !b.compact) {
-                badgePaint.measureText(b.badge) + rpx(16f)
+            b.badgeWidth = if (!split && b.shownBadge.isNotEmpty() && !b.compact) {
+                badgePaint.measureText(b.shownBadge) + rpx(16f)
             } else {
                 0f
             }
@@ -857,12 +899,19 @@ class TimetableView @JvmOverloads constructor(
             val secLeft = pageOffset + if (sec > week) w else -w
             drawPage(canvas, renderFor(sec), secLeft)
         }
-        drawPage(canvas, renderFor(week), pageOffset)
+        val current = renderFor(week)
+        drawPage(canvas, current, pageOffset)
+        scheduleFinishedTick(current)
     }
 
     /** 在 [left, left+width] 区域绘制某一周（裁剪 + 平移），实现相邻周并排连贯滑动。 */
     private fun drawPage(canvas: Canvas, render: WeekRender, left: Float) {
         val w = width.toFloat()
+        // 跨过下课时刻（或刚切换开关）时「已上」角标文字变了，得先重排再画
+        if (refreshFinished(render)) {
+            layoutBlocks(render)
+            if (render.week == week) accessibilityHelper.invalidateRoot()
+        }
         canvas.save()
         canvas.clipRect(left, 0f, left + w, height.toFloat())
         canvas.translate(left, 0f)
@@ -996,10 +1045,11 @@ class TimetableView @JvmOverloads constructor(
             val padTop = blockPadTop(split)
             val padH = blockPadH(split)
             val rect = RectF(b.left, b.top, b.right, b.bottom)
-            fillPaint.color = b.background
+            val foreground = if (b.finished) colSuspendedText else b.foreground
+            fillPaint.color = if (b.finished) colSuspendedBg else b.background
             canvas.drawRoundRect(rect, radius, radius, fillPaint)
-            if (b.occurrence == Occurrence.MOVED_OUT || b.holiday != null || b.madeUpNote != null) {
-                linePaint.color = b.foreground
+            if (b.faded) {
+                linePaint.color = foreground
                 linePaint.strokeWidth = max(1f, rpx(2f))
                 canvas.drawRoundRect(rect, radius, radius, linePaint)
             }
@@ -1008,30 +1058,30 @@ class TimetableView @JvmOverloads constructor(
             canvas.clipRect(rect)
             val contentLeft = b.left + padH
             var y = b.top + padTop
-            if (b.badge.isNotEmpty() && !b.compact && b.badgeWidth > 0f) {
+            if (b.shownBadge.isNotEmpty() && !b.compact && b.badgeWidth > 0f) {
                 val badgeH = badgeHeightPx()
                 fillPaint.color = colBadgeBg
                 val br = RectF(contentLeft, y, contentLeft + b.badgeWidth, y + badgeH)
                 canvas.drawRoundRect(br, rpx(8f), rpx(8f), fillPaint)
-                badgePaint.color = b.foreground
+                badgePaint.color = foreground
                 val fm = badgePaint.fontMetrics
-                canvas.drawText(b.badge, contentLeft + rpx(8f), y + badgeH / 2f - (fm.ascent + fm.descent) / 2f, badgePaint)
+                canvas.drawText(b.shownBadge, contentLeft + rpx(8f), y + badgeH / 2f - (fm.ascent + fm.descent) / 2f, badgePaint)
                 y += badgeH + rpx(6f)
             }
             b.nameLayout?.let {
-                (if (split) splitNamePaint else namePaint).color = b.foreground
+                (if (split) splitNamePaint else namePaint).color = foreground
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
                 y += it.height
             }
             b.teacherLayout?.let {
                 y += if (b.compact) rpx(4f) else rpx(8f)
-                (if (split) splitTeacherPaint else teacherPaint).color = withAlpha(b.foreground, 0.94f)
+                (if (split) splitTeacherPaint else teacherPaint).color = withAlpha(foreground, 0.94f)
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
                 y += it.height
             }
             b.placeLayout?.let {
                 y += rpx(4f)
-                (if (split) splitPlacePaint else placePaint).color = withAlpha(b.foreground, 0.85f)
+                (if (split) splitPlacePaint else placePaint).color = withAlpha(foreground, 0.85f)
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
             }
             canvas.restore()
@@ -1133,6 +1183,13 @@ class TimetableView @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         longPressHandler.removeCallbacks(longPressRunnable)
+        removeCallbacks(finishedTick)
+    }
+
+    /** 息屏或切后台期间定时器可能延后，回到前台时重绘一次，按当前时间补上「已上」。 */
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) invalidate() else removeCallbacks(finishedTick)
     }
 
     override fun performClick(): Boolean {
@@ -1265,7 +1322,7 @@ class TimetableView @JvmOverloads constructor(
                 Occurrence.MOVED_IN -> "，调入课程"
                 Occurrence.MOVED_OUT -> "，已调出"
             }
-        }
+        } + if (block.finished) "，已上" else ""
         val teacher = block.course.teacher.takeIf { it.isNotBlank() }?.let { "，教师$it" }.orEmpty()
         val place = block.course.position.takeIf { it.isNotBlank() }?.let { "，地点$it" }.orEmpty()
         return "${block.course.name}$status，周${listOf("一", "二", "三", "四", "五", "六", "日").getOrElse(block.col - 1) { "" }}，第${block.startSection}到${block.startSection + block.span - 1}节$teacher$place"
@@ -1295,6 +1352,8 @@ class TimetableView @JvmOverloads constructor(
         /** 七列模式下分栏块的额外字号收缩系数；五列分栏只降到七列档，不再乘。 */
         const val SPLIT_DENSE_SCALE = 0.85f
         const val MIN_SECTIONS = 8
+        /** 「已上」定时重绘比下课时刻晚一点点，避免因计时误差提前触发而白跑一次。 */
+        const val FINISHED_TICK_SLACK_MS = 200L
         const val WEEKDAY_COUNT = WeekendDisplay.WEEKDAY_COUNT
         const val FULL_WEEK_COUNT = WeekendDisplay.FULL_WEEK_COUNT
         /** 表头日期虚拟视图 id 的起始偏移（无障碍）。 */

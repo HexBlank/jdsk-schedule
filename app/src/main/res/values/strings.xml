@@ -189,6 +189,9 @@
     <string name="appearance_summary_fit">铺满一屏</string>
     <string name="appearance_summary_height">格子%1$s</string>
     <string name="appearance_summary">%1$s · 留白%2$s · 文字%3$s</string>
+    <string name="appearance_summary_with_finished">%1$s · 显示已上</string>
+    <string name="appearance_show_finished">显示已上状态</string>
+    <string name="appearance_show_finished_sub">下课后（精确到分钟）的课变灰并标「已上」</string>
 
     <!-- 课表库 library -->
     <string name="library_title">课表库</string>
