@@ -225,6 +225,10 @@ function buildApp({ config, db, logger = true } = {}) {
     )
   }))
 
+  app.get('/api/v1/schedules/:id/status', { preHandler: app.authenticate }, async (request) => ({
+    status: schedules.status(request.userRecord.id, request.params.id)
+  }))
+
   app.delete('/api/v1/schedules/:id/membership', { preHandler: app.authenticate }, async (request, reply) => {
     schedules.leave(request.userRecord.id, request.params.id)
     reply.code(204).send()

@@ -300,6 +300,20 @@ function check(name, cond, extra) {
   check('服务端解析导入内容', parse.statusCode === 200 && Array.isArray(parse.json().schedule.courses))
 
   const ghostId = '00000000-0000-4000-8000-000000000000'
+  const statusOf = async (id, tk) => (await app.inject({
+    method: 'GET', url: `/api/v1/schedules/${id}/status`, headers: { Authorization: `Bearer ${tk}` }
+  })).json().status
+  const ownerStatus = await statusOf(scheduleId, token)
+  check('状态接口：发布者', ownerStatus.exists && ownerStatus.owned && ownerStatus.member)
+  const memberStatus = await statusOf(scheduleId, token2)
+  check('状态接口：订阅者', memberStatus.exists && !memberStatus.owned && memberStatus.member)
+  const ghostStatus = await statusOf(ghostId, token2)
+  check('状态接口：课表已删除', ghostStatus.exists === false && ghostStatus.member === false)
+  await app.inject({
+    method: 'DELETE', url: `/api/v1/schedules/${scheduleId}/membership`, headers: { Authorization: `Bearer ${token2}` }
+  })
+  const leftStatus = await statusOf(scheduleId, token2)
+  check('状态接口：已退出但课表仍在', leftStatus.exists === true && leftStatus.member === false)
   const leaveGhost = await app.inject({
     method: 'DELETE', url: `/api/v1/schedules/${ghostId}/membership`, headers: { Authorization: `Bearer ${token2}` }
   })

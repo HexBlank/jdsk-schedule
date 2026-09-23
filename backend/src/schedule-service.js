@@ -212,6 +212,18 @@ function createScheduleService(db, config = {}) {
     db.prepare('DELETE FROM schedule_members WHERE user_id = ? AND schedule_id = ?').run(userId, scheduleId)
   }
 
+  // 课表在服务端的存在性与本人关系。客户端据此区分「发布者已删除」和「自己不在
+  // 成员里了」，不能只凭列表里少了一项就下结论。课表 id 是随机 UUID，暴露存在性无风险。
+  function status(userId, scheduleId) {
+    const row = db.prepare('SELECT owner_id FROM schedules WHERE id = ?').get(scheduleId)
+    if (!row) return { exists: false, owned: false, member: false }
+    const owned = row.owner_id === userId
+    const member = owned || Boolean(
+      db.prepare('SELECT 1 FROM schedule_members WHERE user_id = ? AND schedule_id = ?').get(userId, scheduleId)
+    )
+    return { exists: true, owned, member }
+  }
+
   function rotateCode(userId, scheduleId) {
     getOwned(userId, scheduleId)
     const shareCode = generateUniqueShareCode()
@@ -358,7 +370,7 @@ function createScheduleService(db, config = {}) {
   }
 
   return {
-    list, get, save, preview, join, leave, rotateCode, remove,
+    list, get, save, preview, join, leave, status, rotateCode, remove,
     createAdjustment, updateAdjustment, removeAdjustment,
     createHoliday, removeHoliday, createMakeup, removeMakeup, setCourseColors
   }
