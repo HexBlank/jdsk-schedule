@@ -3,10 +3,12 @@ package com.zhusijiao.app.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.zhusijiao.app.MainApplication
+import com.zhusijiao.app.domain.ClassReminderSettings
 import com.zhusijiao.app.domain.TimetableAppearance
 import com.zhusijiao.app.domain.UpdateChannelOption
 import com.zhusijiao.app.domain.UpdateChannelOptions
 import com.zhusijiao.app.domain.WeekendDisplayMode
+import com.zhusijiao.app.reminder.ClassReminders
 import java.util.UUID
 
 /**
@@ -34,6 +36,11 @@ object Prefs {
     private const val KEY_TT_FIT_SCREEN = "timetableFitScreen"
     private const val KEY_TT_SHOW_FINISHED = "timetableShowFinished"
     private const val KEY_CUSTOM_CHANNELS = "customUpdateChannels"
+    private const val KEY_REMINDER_ENABLED = "classReminderEnabled"
+    private const val KEY_REMINDER_LEAD = "classReminderLeadMinutes"
+    private const val KEY_REMINDER_EVENTS = "classReminderIncludeEvents"
+    private const val KEY_REMINDER_NOTIFIED = "classReminderNotifiedUpTo"
+    private const val KEY_NOTIFICATION_ASKED = "notificationPermissionAsked"
     private val HEX_COLOR = Regex("^#[0-9A-F]{6}$")
 
     private val sp: SharedPreferences by lazy {
@@ -44,9 +51,14 @@ object Prefs {
         get() = sp.getString(KEY_TOKEN, null)
         set(value) = sp.edit().putString(KEY_TOKEN, value).apply()
 
+    /** 当前课表。上课提醒只提醒当前课表，所以切换时要重排提醒。 */
     var activeScheduleId: String
         get() = sp.getString(KEY_ACTIVE, "") ?: ""
-        set(value) = sp.edit().putString(KEY_ACTIVE, value).apply()
+        set(value) {
+            if (value == activeScheduleId) return
+            sp.edit().putString(KEY_ACTIVE, value).apply()
+            ClassReminders.requestSync()
+        }
 
     /** 稳定的匿名设备标识：首次启动生成并持久化，用于向后端换取 JWT。 */
     val deviceId: String
@@ -117,6 +129,34 @@ object Prefs {
                 .apply()
         }
 
+    /** 上课提醒设置（开关、提前量、是否提醒日程），纯本机偏好。改动后立即重排提醒。 */
+    var classReminderSettings: ClassReminderSettings
+        get() = ClassReminderSettings(
+            enabled = sp.getBoolean(KEY_REMINDER_ENABLED, false),
+            leadMinutes = ClassReminderSettings.normalizeLead(
+                sp.getInt(KEY_REMINDER_LEAD, ClassReminderSettings.DEFAULT_LEAD_MINUTES)
+            ),
+            includeEvents = sp.getBoolean(KEY_REMINDER_EVENTS, false)
+        )
+        set(value) {
+            sp.edit()
+                .putBoolean(KEY_REMINDER_ENABLED, value.enabled)
+                .putInt(KEY_REMINDER_LEAD, ClassReminderSettings.normalizeLead(value.leadMinutes))
+                .putBoolean(KEY_REMINDER_EVENTS, value.includeEvents)
+                .apply()
+            ClassReminders.requestSync()
+        }
+
+    /** 已经发过上课提醒的最晚开始时刻（毫秒），防止同一节课被提醒两遍。 */
+    var classReminderNotifiedUpTo: Long
+        get() = sp.getLong(KEY_REMINDER_NOTIFIED, 0L)
+        set(value) = sp.edit().putLong(KEY_REMINDER_NOTIFIED, value).apply()
+
+    /** 是否已经弹过一次系统通知授权框：之后仍未允许时改为引导去系统设置。 */
+    var notificationPermissionAsked: Boolean
+        get() = sp.getBoolean(KEY_NOTIFICATION_ASKED, false)
+        set(value) = sp.edit().putBoolean(KEY_NOTIFICATION_ASKED, value).apply()
+
     /** 用户自己保存的课程颜色，仅保存在本机；实际选给课程的颜色仍随课表同步。 */
     var customCourseColors: List<String>
         get() = (sp.getString(KEY_CUSTOM_COURSE_COLORS, "") ?: "")
@@ -183,12 +223,20 @@ object Prefs {
 
     fun removeToken() = sp.edit().remove(KEY_TOKEN).apply()
 
-    fun removeActiveSchedule() = sp.edit().remove(KEY_ACTIVE).apply()
+    fun removeActiveSchedule() {
+        sp.edit().remove(KEY_ACTIVE).apply()
+        ClassReminders.requestSync()
+    }
 
     fun removeLocalSchedules() = sp.edit().remove(KEY_LOCAL_SCHEDULES).apply()
 
     /** 删除账号/全部数据时连同长期设备凭据一起清除，下次启动生成全新身份。 */
-    fun clearAllIdentityAndData() = sp.edit().clear().commit()
+    fun clearAllIdentityAndData(): Boolean {
+        val cleared = sp.edit().clear().commit()
+        // 提醒设置随之清空（即关闭），把已排好的提醒也撤掉
+        ClassReminders.requestSync()
+        return cleared
+    }
 
     /** 升级安装时清掉旧演示模式状态及其当前课表指针；不会触碰新版本机课表。 */
     fun removeLegacyDemoData() {

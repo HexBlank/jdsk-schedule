@@ -24,10 +24,12 @@ import com.zhusijiao.app.data.UpdateCheck
 import com.zhusijiao.app.databinding.FragmentSettingsBinding
 import com.zhusijiao.app.domain.ServerAddress
 import com.zhusijiao.app.domain.UpdateChannelOptions
+import com.zhusijiao.app.reminder.ReminderPermissions
 import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
+import com.zhusijiao.app.ui.reminder.ClassReminderActivity
 import com.zhusijiao.app.util.SyncLogClipboard
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.launch
@@ -50,6 +52,7 @@ class SettingsFragment : Fragment(), Refreshable {
         super.onViewCreated(view, savedInstanceState)
         binding.header.setTitle(getString(R.string.settings_title))
         bindStatus()
+        bindReminderRow()
         bindAppearanceRow()
         bindUpdateSection()
         bindServerRow()
@@ -103,9 +106,25 @@ class SettingsFragment : Fragment(), Refreshable {
     override fun refresh() {
         if (_binding != null) {
             bindStatus()
+            bindReminderRow()
             bindAppearanceRow()
             bindServerRow()
             bindChannelRow()
+        }
+    }
+
+    /** 「上课提醒」行：副标题摘要开关与提前量，开着却没有通知权限时直接点明；点击进入提醒设置页。 */
+    private fun bindReminderRow() {
+        val settings = Prefs.classReminderSettings
+        binding.reminderSub.text = when {
+            !settings.enabled -> getString(R.string.reminder_settings_sub_off)
+            !ReminderPermissions.notificationsAllowed(requireContext()) ->
+                getString(R.string.reminder_settings_sub_no_notification)
+            settings.includeEvents -> getString(R.string.reminder_settings_sub_on_events, settings.leadMinutes)
+            else -> getString(R.string.reminder_settings_sub_on, settings.leadMinutes)
+        }
+        binding.menuReminder.setOnClickListener {
+            startActivity(Intent(requireContext(), ClassReminderActivity::class.java))
         }
     }
 

@@ -7,6 +7,7 @@ import com.zhusijiao.app.domain.PersonalEventValidator
 import com.zhusijiao.app.domain.ScheduleOccurrences
 import com.zhusijiao.app.domain.TimeSlot
 import com.zhusijiao.app.domain.toPersonalEventList
+import com.zhusijiao.app.reminder.ClassReminders
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -134,6 +135,8 @@ object PersonalEventStore {
             temp.copyTo(target, overwrite = true)
             temp.delete()
         }
+        // 开启了「提醒日程」时，日程增删改要重排上课提醒
+        ClassReminders.requestSync()
     }
 
     private fun now(): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).run {

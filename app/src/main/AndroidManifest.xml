@@ -4,6 +4,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- 上课通知提醒：发通知；准时定时（系统设置里叫「闹钟和提醒」，只用来准时发通知，不设响铃闹钟）；
+         开机后恢复提醒；请求不受电池优化限制，减少提醒被系统推迟或拦截 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -54,6 +61,28 @@
             android:name=".ui.eams.EamsWebActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:exported="false" />
+
+        <activity
+            android:name=".ui.reminder.ClassReminderActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
+
+        <receiver
+            android:name=".reminder.ClassReminderReceiver"
+            android:exported="false" />
+
+        <!-- 只接系统广播；收到后仅按本机数据重排提醒，被其他应用误发也无副作用 -->
+        <receiver
+            android:name=".reminder.ClassReminderRestoreReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

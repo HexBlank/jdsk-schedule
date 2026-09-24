@@ -105,4 +105,33 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
+
+    <!-- 上课提醒权限检查：标题旁的状态角标（已允许/未允许/建议开启），背景和字色由代码按状态设置 -->
+    <style name="ReminderStatusPill">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">6dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingTop">1.5dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:paddingBottom">1.5dp</item>
+        <item name="android:textSize">10.5sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 上课提醒权限检查：行尾的「去开启/去设置」小按钮 -->
+    <style name="ReminderActionButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:minHeight">34dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:background">@drawable/bg_ghost_button</item>
+        <item name="android:textColor">@color/action_ink</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
 </resources>

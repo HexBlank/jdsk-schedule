@@ -37,6 +37,10 @@
     <color name="danger_confirm_alt">#c04f39</color>
     <color name="error_bg">#fdf2f1</color>
 
+    <!-- 提醒/建议（上课提醒权限检查里「建议开启」的状态） -->
+    <color name="warn">#b26205</color>
+    <color name="warn_soft">#fdeedd</color>
+
     <!-- 悬停/按压底 -->
     <color name="hover_bg">#f2f5f4</color>
 

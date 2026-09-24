@@ -25,6 +25,7 @@
 - 课表库：多课表管理、当前课表切换、同步状态、更新/分享/删除（退出）；
 - 导入：教务系统 WebView、本地文件、剪贴板、粘贴源码/JSON；解析后可选择新建或覆盖当前课表，覆盖以最新导入为准并清空旧手动调课；
 - 分享与加入：8 位分享码、加入前摘要、订阅后自动同步、复制/更换分享码、系统分享；
+- 上课提醒：在当前课表每节课开始前 5/10/15/20/30 分钟发通知（普通通知，不是响铃闹钟），调课、停课、补课都按实际安排提醒；同一门课同一教室连着上只提醒第一段；可选同时提醒自己的日程；设置页检测「通知」「闹钟和提醒」「后台运行」三项系统授权并引导开启，可发测试通知；
 - 设置：服务状态、隐私与关于说明、删除本人全部数据；
 - 空白本机模式：后端域名为空时课表仅保存在本机，首次启动为 0 份课表，不注入任何预置课程。
 - 离线优先：无论是否配置数据服务，查看、导入、调课、切换和删除都直接使用本机课表；联网只用于分享码与跨设备同步。
@@ -58,7 +59,8 @@ app/                 原生 Android 应用（Kotlin + XML Views，AppCompat-only
     domain/            模型、日期、配色/周次、EAMS 解析器
     data/              ApiClient（OkHttp）、原子本机存储、离线缓存、Prefs
     ui/common/         AppHeader、BottomNavView、TimetableView、课程详情/调课面板、BaseActivity
-    ui/schedule|library|settings|importer|join|share|eams/   各页面
+    reminder/          上课提醒：排下一次定时、发通知、开机/改时间后重排、系统授权检测
+    ui/schedule|library|settings|importer|join|share|eams|reminder/   各页面
   src/main/assets/eams-export.js   WebView 注入的教务课表导出脚本
 backend/             Fastify + SQLite 后端（匿名设备登录、课表与调课服务）
 backend/public/app/  应用更新分发目录（release.json + APK）

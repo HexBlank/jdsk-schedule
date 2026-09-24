@@ -10,6 +10,7 @@ import com.zhusijiao.app.domain.DayMakeup
 import com.zhusijiao.app.domain.DayMakeupDraft
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleValidator
+import com.zhusijiao.app.reminder.ClassReminders
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -340,6 +341,8 @@ object LocalScheduleStore {
             temp.delete()
         }
         Prefs.removeLocalSchedules()
+        // 导入、调课、停课补课、同步都经这里落盘：统一在此重排上课提醒（异步，不占本锁）
+        ClassReminders.requestSync()
     }
 
     private fun now(): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).run {

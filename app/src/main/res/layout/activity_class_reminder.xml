@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  上课提醒设置页：开关、提前量、是否提醒日程，下面是三项系统授权的检测与引导、测试通知。
+  权限状态在 onResume 里重新检测：用户从系统设置返回后立刻看到最新结果。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <com.zhusijiao.app.ui.common.AppHeader
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/page_padding"
+            android:paddingEnd="@dimen/page_padding"
+            android:paddingBottom="24dp">
+
+            <TextView
+                style="@style/PageSubtitle"
+                android:layout_marginTop="14dp"
+                android:text="@string/reminder_intro" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical">
+
+                <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView -->
+                <LinearLayout
+                    android:id="@+id/enabledRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_menu_row"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="11dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="8dp"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/reminder_title"
+                            android:textColor="@color/ink"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2.5dp"
+                            android:text="@string/reminder_enabled_sub"
+                            android:textColor="@color/sub_8a"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/enabledToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/reminder_title" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:layout_marginStart="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:background="@color/detail_border" />
+
+                <LinearLayout
+                    android:id="@+id/leadSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="11dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="11dp"
+                    android:paddingBottom="11dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/reminder_lead_label"
+                        android:textColor="@color/field_label"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                        android:id="@+id/leadChoice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:layout_marginStart="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:background="@color/detail_border" />
+
+                <LinearLayout
+                    android:id="@+id/eventsRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_menu_row"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="56dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="11dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="8dp"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/reminder_events"
+                            android:textColor="@color/ink"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2.5dp"
+                            android:text="@string/reminder_events_sub"
+                            android:textColor="@color/sub_8a"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/eventsToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/reminder_events" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 下一次提醒 / 为什么不会提醒：让用户不用等到上课就能确认设置生效了 -->
+            <TextView
+                android:id="@+id/nextText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_privacy_note"
+                android:lineSpacingMultiplier="1.35"
+                android:paddingStart="11dp"
+                android:paddingTop="9dp"
+                android:paddingEnd="11dp"
+                android:paddingBottom="9dp"
+                android:textColor="@color/privacy_note_text"
+                android:textSize="12sp" />
+
+            <TextView
+                style="@style/SectionTitle"
+                android:layout_marginTop="18dp"
+                android:text="@string/reminder_perm_section" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/reminder_perm_section_sub"
+                android:textColor="@color/sub_8a"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical">
+
+                <!-- 通知（必需） -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="60dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="11dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="11dp"
+                    android:paddingBottom="10dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="10dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/reminder_perm_notification"
+                                android:textColor="@color/ink"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/notificationStatus"
+                                style="@style/ReminderStatusPill" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:lineSpacingMultiplier="1.35"
+                            android:text="@string/reminder_perm_notification_desc"
+                            android:textColor="@color/sub_8a"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/notificationAction"
+                        style="@style/ReminderActionButton"
+                        android:text="@string/reminder_action_enable" />
+                </LinearLayout>
+
+                <!-- 闹钟和提醒（Android 12 起才有） -->
+                <LinearLayout
+                    android:id="@+id/exactGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="11dp"
+                        android:layout_marginEnd="11dp"
+                        android:background="@color/detail_border" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:minHeight="60dp"
+                        android:orientation="horizontal"
+                        android:paddingStart="11dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="11dp"
+                        android:paddingBottom="10dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingEnd="10dp">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/reminder_perm_exact"
+                                    android:textColor="@color/ink"
+                                    android:textSize="12.5sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/exactStatus"
+                                    style="@style/ReminderStatusPill" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:lineSpacingMultiplier="1.35"
+                                android:text="@string/reminder_perm_exact_desc"
+                                android:textColor="@color/sub_8a"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/exactAction"
+                            style="@style/ReminderActionButton"
+                            android:text="@string/reminder_action_enable" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:layout_marginStart="11dp"
+                    android:layout_marginEnd="11dp"
+                    android:background="@color/detail_border" />
+
+                <!-- 后台运行（建议） -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="60dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="11dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="11dp"
+                    android:paddingBottom="10dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="10dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/reminder_perm_background"
+                                android:textColor="@color/ink"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/backgroundStatus"
+                                style="@style/ReminderStatusPill" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:lineSpacingMultiplier="1.35"
+                            android:text="@string/reminder_perm_background_desc"
+                            android:textColor="@color/sub_8a"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/backgroundAction"
+                        style="@style/ReminderActionButton"
+                        android:text="@string/reminder_action_setup" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/testButton"
+                style="@style/PrimaryButton"
+                android:layout_marginTop="18dp"
+                android:text="@string/reminder_test" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineSpacingMultiplier="1.5"
+                android:text="@string/reminder_test_tip"
+                android:textColor="@color/sub_a8"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/appDetailsLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_menu_row"
+                android:clickable="true"
+                android:focusable="true"
+                android:minHeight="40dp"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="@string/reminder_open_app_details"
+                android:textColor="@color/accent_strong"
+                android:textSize="12.5sp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

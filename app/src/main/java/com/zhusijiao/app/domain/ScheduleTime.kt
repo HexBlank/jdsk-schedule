@@ -46,14 +46,17 @@ object ScheduleTime {
      * 如 07:50–09:30 的课 09:31:00 起为已上，09:30 这一分钟里仍是正常样式。
      * [dateIso] 为上课当天 "YYYY-MM-DD"，[endTime] 为末节下课时间；任一非法返回 null（不标已上）。
      */
-    fun finishedAtMillis(dateIso: String?, endTime: String?): Long? {
-        val end = minutesOf(endTime) ?: return null
+    fun finishedAtMillis(dateIso: String?, endTime: String?): Long? =
+        atMillis(dateIso, endTime)?.let { it + 60_000L }
+
+    /** [dateIso]（"YYYY-MM-DD"）当天 [time]（"HH:mm"）的本机时区毫秒时间戳；任一非法返回 null。 */
+    fun atMillis(dateIso: String?, time: String?): Long? {
+        val minutes = minutesOf(time) ?: return null
         val parts = (dateIso ?: "").split("-").mapNotNull { it.toIntOrNull() }
         if (parts.size != 3) return null
         return Calendar.getInstance().apply {
             clear()
-            set(parts[0], parts[1] - 1, parts[2], end / 60, end % 60, 0)
-            add(Calendar.MINUTE, 1)
+            set(parts[0], parts[1] - 1, parts[2], minutes / 60, minutes % 60, 0)
         }.timeInMillis
     }
 

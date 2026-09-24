@@ -73,11 +73,20 @@ object DateUtils {
      *  按「日历天数差」计算，与当天几点打开无关——
      *  此前按「开学日正午」作锚点，跨周日上午仍会显示上一周，已修复。 */
     fun currentWeek(semesterStart: String?, totalWeeks: Int, nowMillis: Long = System.currentTimeMillis()): Int {
+        val limit = if (totalWeeks > 0) totalWeeks else 20
+        return Math.max(1, Math.min(limit, teachingWeekAt(semesterStart, nowMillis)))
+    }
+
+    /**
+     * 不夹取的教学周：开学前为 0 或负数，学期结束后大于总周数。
+     * [currentWeek] 为了界面总有一周可看会夹到 1..totalWeeks，上课提醒不能用它——
+     * 否则开学前一周会按第 1 周提醒、放假后会一直按最后一周提醒。
+     */
+    fun teachingWeekAt(semesterStart: String?, nowMillis: Long): Int {
         val startMid = midnightOf(weekAnchor(semesterStart))
         val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
         val diffDays = Math.round((midnightOf(now).timeInMillis - startMid.timeInMillis) / 86400000.0)
-        val limit = if (totalWeeks > 0) totalWeeks else 20
-        return Math.max(1, Math.min(limit, Math.floor(diffDays / 7.0).toInt() + 1))
+        return Math.floor(diffDays / 7.0).toInt() + 1
     }
 
     /** 归一到当天 0 点，消除时刻差异；用 round 吸收夏令时带来的 ±1 小时偏移。 */

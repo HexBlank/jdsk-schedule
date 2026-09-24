@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 「建议开启」类状态角标：比「未允许」（红）弱一级 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/warn_soft" />
+    <corners android:radius="100dp" />
+</shape>
