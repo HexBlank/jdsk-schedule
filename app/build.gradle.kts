@@ -23,8 +23,8 @@ android {
         applicationId = "com.zhusijiao.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 30
-        versionName = "1.2.27"
+        versionCode = 31
+        versionName = "1.2.28"
         resourceConfigurations += listOf("zh", "en")
         buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
         buildConfigField("String", "DEV_AUTH_OPENID", "\"${devAuthOpenId.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
