@@ -12,18 +12,24 @@ import kotlin.math.max
  * - 同一天内经由重叠两两相连的块构成一个冲突组，组与组之间互不影响；
  * - 组内先排课、后排日程：课从左往右放进第一个放得下的栏，日程一律排在所有课的右边
  *   （沿用 D18「左课右程」）；同起始节时长的在左；
+ * - 情侣周视图里两个人的块画在同一张表上：组内先按 [Item.owner] 分人，排在左边的人的块
+ *   （课、日程）全部在另一个人的左边，每个人内部仍是「左课右程」；
  * - 组内所有块共用同一个总栏数，各自保持真实的起止节（高度恒等于时间）。
  *
  * 纯函数、不依赖 Android，[com.zhusijiao.app.ui.common.TimetableView] 只负责把栏号换成像素。
  */
 object CellColumns {
 
-    /** 参与分栏的一块：星期、起止节次，以及它是不是日程。 */
+    /**
+     * 参与分栏的一块：星期、起止节次，它是不是日程，以及属于哪个人。
+     * [owner] 只在情侣周视图里有意义：0 是排在左边的人，1 是右边的人；单人课表恒为 0。
+     */
     data class Item(
         val day: Int,
         val startSection: Int,
         val endSection: Int,
-        val isEvent: Boolean = false
+        val isEvent: Boolean = false,
+        val owner: Int = 0
     )
 
     /** 分栏结果：本块所在的栏（0 起，从左到右）与所在冲突组的总栏数（1 表示独占整格）。 */
@@ -70,11 +76,15 @@ object CellColumns {
             columnOf[index] = column
         }
 
+        // 按「人 → 课在前、日程在后」切成若干道，每一道都从前面各道占用的栏之后开始放
         val order = compareBy<Int>({ items[it].startSection }, { -items[it].endSection })
-        val (events, courses) = group.partition { items[it].isEvent }
-        courses.sortedWith(order).forEach { place(it, 0) }
-        val firstEventColumn = columns.size
-        events.sortedWith(order).forEach { place(it, firstEventColumn) }
+        group.groupBy { items[it].owner to items[it].isEvent }
+            .toSortedMap(compareBy<Pair<Int, Boolean>>({ it.first }, { it.second }))
+            .values
+            .forEach { lane ->
+                val firstColumn = columns.size
+                lane.sortedWith(order).forEach { place(it, firstColumn) }
+            }
         group.forEach { result[it] = Slot(columnOf.getValue(it), columns.size) }
     }
 

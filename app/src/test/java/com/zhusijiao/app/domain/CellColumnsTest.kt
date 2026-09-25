@@ -81,4 +81,42 @@ class CellColumnsTest {
         val slots = CellColumns.assign(listOf(event(6, 1, 2), event(6, 5, 6)))
         assertEquals(listOf(slot(0, 1), slot(0, 1)), slots)
     }
+
+    // ===== 情侣周视图：两个人的块画在同一张表上 =====
+
+    private fun left(day: Int, start: Int, end: Int, isEvent: Boolean = false) =
+        CellColumns.Item(day, start, end, isEvent = isEvent, owner = 0)
+    private fun right(day: Int, start: Int, end: Int) = CellColumns.Item(day, start, end, owner = 1)
+
+    @Test
+    fun `情侣同一时段都有课时左右并排且左边的人在左`() {
+        val slots = CellColumns.assign(listOf(right(1, 1, 2), left(1, 1, 2)))
+        assertEquals(listOf(slot(1, 2), slot(0, 2)), slots)
+    }
+
+    @Test
+    fun `情侣各自的课不重叠时都独占整格`() {
+        val slots = CellColumns.assign(listOf(left(1, 1, 2), right(1, 3, 4), right(2, 1, 2)))
+        assertEquals(listOf(slot(0, 1), slot(0, 1), slot(0, 1)), slots)
+    }
+
+    @Test
+    fun `左边的人的课和日程都排在右边的人前面`() {
+        // 我的课、我的日程、TA 的课：日程只在自己这一侧守住「左课右程」
+        val slots = CellColumns.assign(listOf(right(1, 1, 2), left(1, 1, 1, isEvent = true), left(1, 1, 2)))
+        assertEquals(listOf(slot(2, 3), slot(1, 3), slot(0, 3)), slots)
+    }
+
+    @Test
+    fun `右边的人的课即使时间上放得进左栏也不插到左边的人中间`() {
+        // 我的 1–2 与 2–3 占两栏，TA 的 3–3 按时间能放进第 0 栏，但两个人不能混在一起
+        val slots = CellColumns.assign(listOf(left(1, 1, 2), left(1, 2, 3), right(1, 3, 3)))
+        assertEquals(listOf(slot(0, 3), slot(1, 3), slot(2, 3)), slots)
+    }
+
+    @Test
+    fun `只有右边的人有课时从第一栏开始`() {
+        val slots = CellColumns.assign(listOf(right(4, 6, 7), right(4, 6, 7)))
+        assertEquals(listOf(slot(0, 2), slot(1, 2)), slots)
+    }
 }
