@@ -107,4 +107,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
+    // 本地 JVM 单测里 android.jar 的 org.json 只是空壳（调用即抛 not mocked），
+    // 换成真实实现才能测 JSON 解析；只进测试 classpath，不进 APK
+    testImplementation("org.json:json:20240303")
 }
