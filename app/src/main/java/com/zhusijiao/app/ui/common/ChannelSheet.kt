@@ -1,12 +1,10 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.Typeface
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -26,19 +24,11 @@ import kotlin.math.roundToInt
 class ChannelSheet(
     context: Context,
     private val onChanged: () -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : ImeSheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_channel)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
-
-        // 键盘弹出时把整个面板上抬到输入法上方，避免输入框被遮挡
-        Ui.liftAboveIme(findViewById(android.R.id.content))
 
         renderList()
 

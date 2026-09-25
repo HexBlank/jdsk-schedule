@@ -1,13 +1,11 @@
 package com.zhusijiao.app.ui.couple
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -16,6 +14,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.CouplePalette
 import com.zhusijiao.app.domain.CoupleState
 import com.zhusijiao.app.ui.common.ColorPickerSheet
+import com.zhusijiao.app.ui.common.ImeSheetDialog
 
 /**
  * 改名字和颜色：点日视图顶部的名字、周视图左上角的图例，或设置里的「名字和颜色」进入。
@@ -27,7 +26,7 @@ class CoupleProfileSheet(
     private val who: String,
     state: CoupleState,
     private val onSave: (nickname: String, color: String) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : ImeSheetDialog(context) {
 
     private val isMe = who == "me"
     private val member = requireNotNull(if (isMe) state.me else state.partner)
@@ -41,11 +40,6 @@ class CoupleProfileSheet(
 
     init {
         setContentView(R.layout.dialog_couple_profile)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         findViewById<TextView>(R.id.profileTitle).text = context.getString(

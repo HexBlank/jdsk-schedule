@@ -63,7 +63,8 @@ class ImportActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityImportBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        Ui.padBottomNav(binding.root)
+        // 有输入框：键盘弹出时整页底部让出输入法高度，滚动区跟着缩短，输入框不会被挡住
+        Ui.liftAboveIme(binding.root)
 
         val explicitTargetId = intent.getStringExtra(EXTRA_ID).orEmpty()
         requestedTargetId = explicitTargetId.ifBlank { Prefs.activeScheduleId }

@@ -3,6 +3,7 @@
     android:id="@+id/rescheduleScroll"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
     android:fillViewport="true"
     android:overScrollMode="never">
 

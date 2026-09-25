@@ -39,7 +39,8 @@ class JoinActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityJoinBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        Ui.padBottomNav(binding.root)
+        // 有输入框：键盘弹出时整页底部让出输入法高度，滚动区跟着缩短，输入框不会被挡住
+        Ui.liftAboveIme(binding.root)
 
         binding.header.setTitle(getString(R.string.join_title))
         binding.header.setBackVisible(true)

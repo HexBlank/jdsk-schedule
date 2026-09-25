@@ -1,10 +1,7 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.EditText
 import android.widget.TextView
 import com.zhusijiao.app.AppConfig
@@ -24,19 +21,11 @@ import com.zhusijiao.app.util.Ui
 class ServerSheet(
     context: Context,
     private val onSaved: () -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : ImeSheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_server)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
-
-        // 键盘弹出时把整个面板上抬到输入法上方，避免输入框被遮挡
-        Ui.liftAboveIme(findViewById(android.R.id.content))
 
         val input = findViewById<EditText>(R.id.serverInput)
         val error = findViewById<TextView>(R.id.serverError)

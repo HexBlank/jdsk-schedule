@@ -75,35 +75,51 @@ object Ui {
     }
 
     /**
-     * 底部抽屉避让软键盘：把 [view] 整体上抬到输入法上方（微信式「顶上去」），
+     * 整页避让软键盘：[view]（页面根布局）底部留白随输入法逐帧增减，中间的滚动区跟着缩短，
      * 同时始终避让手势/导航条。用于 edge-to-edge 下 adjustResize 不再缩窗的场景
-     * （API 30+ IME 只发 inset 不触发 resize）。
+     * （API 30+ IME 只发 inset 不触发 resize）。底部弹出的面板不要用它，改继承
+     * [com.zhusijiao.app.ui.common.ImeSheetDialog]。
+     *
+     * API 30+ 在键盘动画开始前会先派发一次终点 insets；动画进行中忽略它、只跟 onProgress 走，
+     * 动画结束再按最后一次 insets 落定，避免第一帧先闪到终点再回到起点。
      */
     fun liftAboveIme(view: View) {
         val baseBottom = view.paddingBottom
-        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+        var imeAnimating = false
+        var latest: WindowInsetsCompat? = null
+        fun apply(insets: WindowInsetsCompat) {
             val bottom = maxOf(
                 insets.getInsets(WindowInsetsCompat.Type.ime()).bottom,
                 insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             )
-            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, baseBottom + bottom)
+            if (view.paddingBottom != baseBottom + bottom) {
+                view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, baseBottom + bottom)
+            }
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+            latest = insets
+            if (!imeAnimating) apply(insets)
             insets
         }
         ViewCompat.setWindowInsetsAnimationCallback(
             view,
             object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+                override fun onPrepare(animation: WindowInsetsAnimationCompat) {
+                    if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) imeAnimating = true
+                }
+
                 override fun onProgress(
                     insets: WindowInsetsCompat,
                     runningAnimations: List<WindowInsetsAnimationCompat>
                 ): WindowInsetsCompat {
-                    val bottom = maxOf(
-                        insets.getInsets(WindowInsetsCompat.Type.ime()).bottom,
-                        insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-                    )
-                    view.setPadding(
-                        view.paddingLeft, view.paddingTop, view.paddingRight, baseBottom + bottom
-                    )
+                    if (imeAnimating) apply(insets)
                     return insets
+                }
+
+                override fun onEnd(animation: WindowInsetsAnimationCompat) {
+                    if (animation.typeMask and WindowInsetsCompat.Type.ime() == 0) return
+                    imeAnimating = false
+                    latest?.let(::apply)
                 }
             }
         )

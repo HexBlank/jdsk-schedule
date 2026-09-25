@@ -48,6 +48,15 @@
         <item name="android:backgroundDimAmount">0.12</item>
     </style>
 
+    <!--
+        带输入框的底部面板（ImeSheetDialog）：窗口铺满全屏，遮罩和进出场动画由面板自己画，
+        所以关掉系统压暗和窗口动画，避免与面板自身的动画叠加
+    -->
+    <style name="Theme.Zhusijiao.Sheet.Ime" parent="Theme.Zhusijiao.Sheet">
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
     <style name="SheetAnimation" parent="@android:style/Animation.Dialog">
         <item name="android:windowEnterAnimation">@anim/sheet_up</item>
         <item name="android:windowExitAnimation">@anim/sheet_down</item>

@@ -49,7 +49,8 @@ class CoupleBindActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCoupleBindBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        Ui.padBottomNav(binding.root)
+        // 有输入框：键盘弹出时整页底部让出输入法高度，滚动区跟着缩短，输入框不会被挡住
+        Ui.liftAboveIme(binding.root)
 
         binding.header.setTitle(getString(R.string.couple_bind_title))
         binding.header.setBackVisible(true)
