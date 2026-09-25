@@ -31,6 +31,8 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
 import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.CellColumns
+import com.zhusijiao.app.domain.CoupleDay
+import com.zhusijiao.app.domain.CoupleFreeTime
 import com.zhusijiao.app.domain.Course
 import com.zhusijiao.app.domain.CourseAdjustment
 import com.zhusijiao.app.domain.DayHoliday
@@ -78,7 +80,9 @@ class TimetableView @JvmOverloads constructor(
         val weekSummary: String,
         val holiday: DayHoliday? = null,
         val makeup: DayMakeup? = null,
-        val madeUpNote: String? = null
+        val madeUpNote: String? = null,
+        /** 情侣周视图里 TA 的课（只读）。 */
+        val partner: Boolean = false
     )
 
     /** 点击表头某一天（用于查看/设置停课与补课）。 */
@@ -100,6 +104,30 @@ class TimetableView @JvmOverloads constructor(
 
     enum class Occurrence { NORMAL, MOVED_IN, MOVED_OUT }
 
+    /**
+     * 情侣周视图：在基准课表上叠加另一个人的课，按人上色，同一时段都有课时按人分栏
+     * （谁在左跟随对换设置，见 [CellColumns.Item.owner]）。
+     * 基准课表（[setSchedule] 传入的那份，决定周次与日期）是我的；我还没有课表时基准就是 TA 的，
+     * 此时 [baseIsMine] = false。两个人的开学日期可能不同，TA 的周次按同一个周一换算。
+     */
+    data class CoupleLayer(
+        val partner: Schedule?,
+        val baseIsMine: Boolean,
+        val myName: String,
+        val partnerName: String,
+        val myFill: Int,
+        val myInk: Int,
+        val partnerFill: Int,
+        val partnerInk: Int,
+        /** true：TA 排在左边。 */
+        val swapped: Boolean,
+        /** false：只看 TA。 */
+        val showMine: Boolean,
+        /** 给两个人都没课的节次铺底色。 */
+        val highlightFree: Boolean,
+        val freeColor: Int
+    )
+
     var onCourseClick: ((CourseClick) -> Unit)? = null
 
     /** 点击日程块：查看/编辑/删除。 */
@@ -115,6 +143,7 @@ class TimetableView @JvmOverloads constructor(
 
     private var schedule: Schedule? = null
     private var events: List<PersonalEvent> = emptyList()
+    private var couple: CoupleLayer? = null
     private var paletteMap: Map<String, ScheduleView.Palette> = emptyMap()
     private var week = 1
     private var currentWeekNumber = 1
@@ -152,6 +181,9 @@ class TimetableView @JvmOverloads constructor(
         var monthLabel = ""
         var marks: List<Int> = emptyList()
         val blocks = mutableListOf<Block>()
+        /** 情侣周视图：TA 这一周对应的周次，与两个人都有空的节次段（星期 → 节次）。 */
+        var partnerWeek = 0
+        var freeRuns: List<Pair<Int, IntRange>> = emptyList()
     }
 
     private class Block(
@@ -170,7 +202,9 @@ class TimetableView @JvmOverloads constructor(
         val holiday: DayHoliday? = null,
         val makeup: DayMakeup? = null,
         val madeUpNote: String? = null,
-        val event: PersonalEvent? = null
+        val event: PersonalEvent? = null,
+        /** 情侣周视图里块属于谁：[OWNER_ME] / [OWNER_PARTNER]；单人课表恒为 [OWNER_ME]。 */
+        val owner: Int = OWNER_ME
     ) {
         var left = 0f; var top = 0f; var right = 0f; var bottom = 0f
         var nameLayout: StaticLayout? = null
@@ -358,16 +392,29 @@ class TimetableView @JvmOverloads constructor(
             schedule.courses + schedule.adjustments.map { it.courseSnapshot },
             schedule.courseColors
         )
-        sectionsList = visibleSections(schedule, events)
+        sectionsList = visibleSections(schedule, events).let { mine ->
+            // 情侣周视图按两个人里用到的最多节次显示
+            val partner = couple?.partner?.let { visibleSections(it) }
+            if (partner != null && partner.size > mine.size) partner else mine
+        }
         currentWeekNumber = DateUtils.currentWeek(schedule.semesterStart, schedule.totalWeeks)
         if (jumpToCurrent) week = currentWeekNumber
         week = week.coerceIn(1, max(1, schedule.totalWeeks))
-        dayCount = WeekendDisplay.dayCount(schedule, week, weekendDisplayMode, events)
+        dayCount = dayCountFor(week)
         dense = dayCount > WEEKDAY_COUNT
         renderFor(week)
         requestLayout()
         invalidate()
         notifyWeek()
+    }
+
+    /**
+     * 开关情侣周视图（null 为普通单人课表）。必须在 [setSchedule] 之前调用：
+     * 节次、周末列数、分栏都要按两个人一起算，由随后的 setSchedule 统一重算。
+     */
+    fun setCouple(layer: CoupleLayer?) {
+        couple = layer
+        weekCache.clear()
     }
 
     /** 切换周末显示模式，不改变当前周次。 */
@@ -499,8 +546,8 @@ class TimetableView @JvmOverloads constructor(
 
     /** 自动模式下切周可能在 5/7 列之间变化；列数变化时统一清空与列宽有关的缓存。 */
     private fun applyDayCountForWeek(targetWeek: Int): Boolean {
-        val s = schedule ?: return false
-        val target = WeekendDisplay.dayCount(s, targetWeek, weekendDisplayMode, events)
+        if (schedule == null) return false
+        val target = dayCountFor(targetWeek)
         if (target == dayCount) return false
         dayCount = target
         dense = dayCount > WEEKDAY_COUNT
@@ -514,12 +561,102 @@ class TimetableView @JvmOverloads constructor(
 
     private fun renderFor(w: Int): WeekRender = weekCache.getOrPut(w) { buildRender(w) }
 
+    /** 这一周要画的「我的」课表：普通模式就是基准课表；情侣周视图里只看 TA、或我还没有课表时为 null。 */
+    private fun mineFor(): Schedule? {
+        val layer = couple ?: return schedule
+        return if (layer.baseIsMine && layer.showMine) schedule else null
+    }
+
+    /** 情侣周视图里 TA 的课表与它在基准第 [w] 周对应的周次（按同一个周一换算）；普通模式为 null。 */
+    private fun partnerFor(w: Int): Pair<Schedule, Int>? {
+        val layer = couple ?: return null
+        val base = schedule ?: return null
+        if (!layer.baseIsMine) return base to w
+        val partner = layer.partner ?: return null
+        val monday = DateUtils.datesForWeek(base.semesterStart, w).firstOrNull()?.iso ?: return null
+        return partner to (CoupleDay.weekOf(partner, monday) ?: return null)
+    }
+
+    /** 第 [w] 周显示几列：两个人任何一方周末有安排就展开。 */
+    private fun dayCountFor(w: Int): Int {
+        val mine = mineFor()?.let { WeekendDisplay.dayCount(it, w, weekendDisplayMode, events) } ?: WEEKDAY_COUNT
+        val partner = partnerFor(w)?.let { (p, pw) -> WeekendDisplay.dayCount(p, pw, weekendDisplayMode) } ?: WEEKDAY_COUNT
+        return max(mine, partner)
+    }
+
     private fun buildRender(w: Int): WeekRender {
         val s = schedule ?: return WeekRender(w)
         val r = WeekRender(w)
         val all = DateUtils.datesForWeek(s.semesterStart, w)
         r.dates = all.take(dayCount)
         r.monthLabel = if (r.dates.isNotEmpty()) "${r.dates[0].month}月" else ""
+        val layer = couple
+        // 表头「补/休」角标只标我自己课表的调休；只看 TA 时不标
+        r.marks = if (layer == null || (layer.baseIsMine && layer.showMine)) marksFor(s, w) else List(dayCount) { 0 }
+        val mine = mineFor()
+        if (mine != null) {
+            addScheduleBlocks(r, mine, w, OWNER_ME) { course ->
+                if (layer != null) ScheduleView.Palette(layer.myFill, layer.myInk)
+                else paletteMap[course.name] ?: ScheduleView.COURSE_PALETTES[0]
+            }
+            addEventBlocks(r, w, layer)
+        }
+        val partner = partnerFor(w)
+        if (partner != null && layer != null) {
+            r.partnerWeek = partner.second
+            addScheduleBlocks(r, partner.first, partner.second, OWNER_PARTNER) {
+                ScheduleView.Palette(layer.partnerFill, layer.partnerInk)
+            }
+        }
+        // 「已上」起算时刻：块所在列的日期 + 末节下课时间（补课块在目标日，所以按列取日期）
+        r.blocks.forEach { b ->
+            if (b.event != null || b.ghosted) return@forEach
+            val endTime = sectionsList.find { it.number == b.startSection + b.span - 1 }?.endTime
+            b.finishedAt = ScheduleTime.finishedAtMillis(r.dates.getOrNull(b.col - 1)?.iso, endTime) ?: Long.MAX_VALUE
+        }
+        refreshFinished(r)
+        // 鬼影块垫底：绘制、点击命中、无障碍命中都按列表顺序后者优先，
+        // 否则排在后面的「已调出」灰块会盖住同一格里当天真正要上的课。
+        r.blocks.sortBy { if (it.ghosted) 0 else 1 }
+        // 情侣周视图：两个人都有课表时，给两个人都没课的节次铺底色（停课的课不算占用）
+        if (layer != null && layer.highlightFree && mine != null && partner != null) {
+            r.freeRuns = (1..dayCount).flatMap { day ->
+                val busy = r.blocks
+                    .filter { !it.ghosted && it.col == day }
+                    .flatMap { it.startSection until it.startSection + it.span }
+                    .toSet()
+                CoupleFreeTime.freeSectionRuns(busy, sectionsList.size).map { day to it }
+            }
+        }
+        layoutBlocks(r)
+        return r
+    }
+
+    /** 表头日历角标：补课日、补课来源日（已补）、停课日。 */
+    private fun marksFor(s: Schedule, w: Int): List<Int> {
+        val holidayDays = s.holidays.filter { it.week == w }.map { it.day }.toSet()
+        val madeUpDays = s.makeups.filter { it.sourceWeek == w }.map { it.sourceDay }.toSet()
+        return (1..dayCount).map { day ->
+            when {
+                s.makeups.any { it.targetWeek == w && it.targetDay == day } -> MARK_MAKEUP
+                day in madeUpDays -> MARK_MADE_UP
+                day in holidayDays -> MARK_OFF
+                else -> 0
+            }
+        }
+    }
+
+    /**
+     * 一份课表第 [w] 周的课：正常课（已调出、停课、补课来源日画成鬼影）、调入的课、补课日搬来的课。
+     * 普通课表与情侣周视图的两个人共用，[paletteOf] 决定颜色，[owner] 标明属于谁。
+     */
+    private fun addScheduleBlocks(
+        r: WeekRender,
+        s: Schedule,
+        w: Int,
+        owner: Int,
+        paletteOf: (Course) -> ScheduleView.Palette
+    ) {
         val movedOut = s.adjustments.associateBy { it.courseId to it.sourceWeek }
         val holidayByDay = s.holidays.filter { it.week == w }.associateBy { it.day }
         // 双向关联：来源日（课被移走的那天）也要标出「已补」并指向补课日
@@ -527,17 +664,9 @@ class TimetableView @JvmOverloads constructor(
             .filter { it.sourceWeek == w }
             .sortedWith(compareBy({ it.targetWeek }, { it.targetDay }))
             .associateBy { it.sourceDay }
-        r.marks = (1..dayCount).map { day ->
-            when {
-                s.makeups.any { it.targetWeek == w && it.targetDay == day } -> MARK_MAKEUP
-                madeUpByDay.containsKey(day) -> MARK_MADE_UP
-                holidayByDay.containsKey(day) -> MARK_OFF
-                else -> 0
-            }
-        }
         s.courses.forEach { course ->
             if (!course.weeks.contains(w) || course.day > dayCount) return@forEach
-            val palette = paletteMap[course.name] ?: ScheduleView.COURSE_PALETTES[0]
+            val palette = paletteOf(course)
             val span = course.endSection - course.startSection + 1
             val adjustment = movedOut[course.id to w]
             val holiday = holidayByDay[course.day]
@@ -567,13 +696,14 @@ class TimetableView @JvmOverloads constructor(
                 holiday = holiday.takeIf { madeUp == null },
                 madeUpNote = madeUp?.let {
                     "该日课表已整体调整到 $madeUpDate（周${dayName(it.targetDay)}）补课，当天不上课。"
-                }
+                },
+                owner = owner
             )
         }
         s.adjustments.filter { it.targetWeek == w && it.targetDay <= dayCount }.forEach { adjustment ->
             val base = s.courses.find { it.id == adjustment.courseId }
             val course = adjustment.targetCourse(base)
-            val palette = paletteMap[course.name] ?: ScheduleView.COURSE_PALETTES[0]
+            val palette = paletteOf(course)
             r.blocks += Block(
                 course = course,
                 background = palette.background,
@@ -585,7 +715,8 @@ class TimetableView @JvmOverloads constructor(
                 span = course.endSection - course.startSection + 1,
                 adjustment = adjustment,
                 occurrence = Occurrence.MOVED_IN,
-                orphaned = base == null
+                orphaned = base == null,
+                owner = owner
             )
         }
         // 补课日：在目标日完整补上来源日当天的课（已被手动调离来源日的单课除外）。
@@ -594,26 +725,7 @@ class TimetableView @JvmOverloads constructor(
                 if (!course.weeks.contains(makeup.sourceWeek) || course.day != makeup.sourceDay ||
                     course.day > dayCount || movedOut.containsKey(course.id to makeup.sourceWeek)
                 ) return@forEach
-                val palette = paletteMap[course.name] ?: ScheduleView.COURSE_PALETTES[0]
-                r.blocks += Block(
-                    course = course,
-                    background = palette.background,
-                    foreground = palette.foreground,
-                    badge = "补课",
-                    compact = course.startSection == course.endSection,
-                    col = makeup.targetDay,
-                    startSection = course.startSection,
-                    span = course.endSection - course.startSection + 1,
-                    makeup = makeup
-                )
-            }
-            s.adjustments.filter {
-                it.targetWeek == makeup.sourceWeek && it.targetDay == makeup.sourceDay
-            }.forEach { adjustment ->
-                val base = s.courses.find { it.id == adjustment.courseId }
-                val course = adjustment.targetCourse(base)
-                if (course.day > dayCount) return@forEach
-                val palette = paletteMap[course.name] ?: ScheduleView.COURSE_PALETTES[0]
+                val palette = paletteOf(course)
                 r.blocks += Block(
                     course = course,
                     background = palette.background,
@@ -624,12 +736,39 @@ class TimetableView @JvmOverloads constructor(
                     startSection = course.startSection,
                     span = course.endSection - course.startSection + 1,
                     makeup = makeup,
-                    orphaned = base == null
+                    owner = owner
+                )
+            }
+            s.adjustments.filter {
+                it.targetWeek == makeup.sourceWeek && it.targetDay == makeup.sourceDay
+            }.forEach { adjustment ->
+                val base = s.courses.find { it.id == adjustment.courseId }
+                val course = adjustment.targetCourse(base)
+                if (course.day > dayCount) return@forEach
+                val palette = paletteOf(course)
+                r.blocks += Block(
+                    course = course,
+                    background = palette.background,
+                    foreground = palette.foreground,
+                    badge = "补课",
+                    compact = course.startSection == course.endSection,
+                    col = makeup.targetDay,
+                    startSection = course.startSection,
+                    span = course.endSection - course.startSection + 1,
+                    makeup = makeup,
+                    orphaned = base == null,
+                    owner = owner
                 )
             }
         }
-        // 自定义日程：本机私有安排，与课程重叠时由 assignColumns 左右分栏（左课右程）。
-        // 停课/补课不影响日程——停的是课，社团活动照常，所以这里不做任何鬼影处理。
+    }
+
+    /**
+     * 自定义日程：本机私有安排，与课程重叠时由 assignColumns 左右分栏（左课右程）。
+     * 停课/补课不影响日程——停的是课，社团活动照常，所以这里不做任何鬼影处理。
+     * 情侣周视图里日程用本人颜色的浅色版，和自己的课有关联又一眼分得开。
+     */
+    private fun addEventBlocks(r: WeekRender, w: Int, layer: CoupleLayer?) {
         events.forEach { event ->
             if (!event.occursIn(w) || event.day > dayCount) return@forEach
             val manual = ScheduleView.manualPalette(event.color)
@@ -645,8 +784,14 @@ class TimetableView @JvmOverloads constructor(
                     endSection = event.endSection,
                     weeks = event.weeks
                 ),
-                background = manual?.background ?: colEventBg,
-                foreground = manual?.foreground ?: colEventText,
+                background = when {
+                    layer != null -> blend(layer.myFill, Color.WHITE, 0.55f)
+                    else -> manual?.background ?: colEventBg
+                },
+                foreground = when {
+                    layer != null -> layer.myInk
+                    else -> manual?.foreground ?: colEventText
+                },
                 badge = context.getString(R.string.event_badge),
                 compact = event.span == 1,
                 col = event.day,
@@ -655,18 +800,12 @@ class TimetableView @JvmOverloads constructor(
                 event = event
             )
         }
-        // 「已上」起算时刻：块所在列的日期 + 末节下课时间（补课块在目标日，所以按列取日期）
-        r.blocks.forEach { b ->
-            if (b.event != null || b.ghosted) return@forEach
-            val endTime = sectionsList.find { it.number == b.startSection + b.span - 1 }?.endTime
-            b.finishedAt = ScheduleTime.finishedAtMillis(r.dates.getOrNull(b.col - 1)?.iso, endTime) ?: Long.MAX_VALUE
-        }
-        refreshFinished(r)
-        // 鬼影块垫底：绘制、点击命中、无障碍命中都按列表顺序后者优先，
-        // 否则排在后面的「已调出」灰块会盖住同一格里当天真正要上的课。
-        r.blocks.sortBy { if (it.ghosted) 0 else 1 }
-        layoutBlocks(r)
-        return r
+    }
+
+    private fun blend(color: Int, toward: Int, amount: Float): Int {
+        fun mix(shift: Int) = ((color shr shift and 0xff) * (1f - amount) + (toward shr shift and 0xff) * amount)
+            .roundToInt().coerceIn(0, 255)
+        return (0xff shl 24) or (mix(16) shl 16) or (mix(8) shl 8) or mix(0)
     }
 
     /** 按当前时间刷新各块的「已上」状态；有变化返回 true（角标文字变了，调用方需重排）。 */
@@ -757,7 +896,7 @@ class TimetableView @JvmOverloads constructor(
     private fun assignColumns(blocks: List<Block>) {
         val live = blocks.filterNot { it.ghosted }
         val slots = CellColumns.assign(live.map {
-            CellColumns.Item(it.col, it.startSection, it.startSection + it.span - 1, it.event != null)
+            CellColumns.Item(it.col, it.startSection, it.startSection + it.span - 1, it.event != null, laneOf(it))
         })
         blocks.forEach { it.column = 0; it.columnCount = 1; it.buried = false }
         live.forEachIndexed { i, b ->
@@ -770,6 +909,12 @@ class TimetableView @JvmOverloads constructor(
                 live.any { it.col == ghost.col && section in it.startSection until it.startSection + it.span }
             }
         }
+    }
+
+    /** 情侣周视图的分道：排在左边的人为 0。普通课表恒为 0。 */
+    private fun laneOf(block: Block): Int {
+        val layer = couple ?: return 0
+        return if ((block.owner == OWNER_PARTNER) == layer.swapped) 0 else 1
     }
 
     private fun layoutBlocks(render: WeekRender) {
@@ -917,6 +1062,7 @@ class TimetableView @JvmOverloads constructor(
         canvas.translate(left, 0f)
         drawHeader(canvas, render)
         drawBody(canvas)
+        drawFreeRuns(canvas, render)
         drawBlocks(canvas, render)
         if (render.blocks.isEmpty()) {
             emptyPaint.textSize = rpx(25f)
@@ -1034,6 +1180,24 @@ class TimetableView @JvmOverloads constructor(
         for (i in 1 until dayCount) {
             val x = timeColPx + i * dayColPx
             canvas.drawLine(x, headerHeightPx, x, bottom, linePaint)
+        }
+    }
+
+    /** 情侣周视图「都有空」：两个人都没课的节次铺一层浅底色，画在课程块下面。 */
+    private fun drawFreeRuns(canvas: Canvas, render: WeekRender) {
+        val layer = couple ?: return
+        if (render.freeRuns.isEmpty()) return
+        val margin = blockMarginPx()
+        fillPaint.color = layer.freeColor
+        render.freeRuns.forEach { (day, sections) ->
+            val left = timeColPx + (day - 1) * dayColPx
+            val rect = RectF(
+                left + margin,
+                headerHeightPx + (sections.first - 1) * rowHeightPx + margin,
+                left + dayColPx - margin,
+                headerHeightPx + sections.last * rowHeightPx - margin
+            )
+            canvas.drawRoundRect(rect, rpx(12f), rpx(12f), fillPaint)
         }
     }
 
@@ -1276,13 +1440,15 @@ class TimetableView @JvmOverloads constructor(
         }
         val start = sectionsList.find { it.number == hit.course.startSection }
         val end = sectionsList.find { it.number == hit.course.endSection }
+        // TA 的块按 TA 自己课表的周次说明（两个人的开学日期可能不同）
+        val blockWeek = if (hit.owner == OWNER_PARTNER) render.partnerWeek else week
         // 日期列以块所在列为准（补课块显示在目标日，而 course.day 是来源日）。
         val date = render.dates.getOrNull(hit.col - 1)
         val timeText = if (start != null && end != null) "${start.startTime}–${end.endTime}"
         else context.getString(R.string.detail_time_pending)
         val click = CourseClick(
                 course = hit.course,
-                week = week,
+                week = blockWeek,
                 adjustment = hit.adjustment,
                 occurrence = hit.occurrence,
                 orphaned = hit.orphaned,
@@ -1291,17 +1457,18 @@ class TimetableView @JvmOverloads constructor(
                 timeText = timeText,
                 weekSummary = when {
                     hit.makeup != null -> "补第 ${hit.makeup.sourceWeek} 周周${dayName(hit.makeup.sourceDay)} 的课"
-                    hit.madeUpNote != null -> "第 $week 周 · 已补"
-                    hit.holiday != null -> "第 $week 周 · 停课"
+                    hit.madeUpNote != null -> "第 $blockWeek 周 · 已补"
+                    hit.holiday != null -> "第 $blockWeek 周 · 停课"
                     else -> when (hit.occurrence) {
                         Occurrence.NORMAL -> ScheduleView.formatWeekSummary(hit.course.weeks)
-                        Occurrence.MOVED_IN -> "第 $week 周 · 调入"
-                        Occurrence.MOVED_OUT -> "第 $week 周 · 已调出"
+                        Occurrence.MOVED_IN -> "第 $blockWeek 周 · 调入"
+                        Occurrence.MOVED_OUT -> "第 $blockWeek 周 · 已调出"
                     }
                 },
                 holiday = hit.holiday,
                 makeup = hit.makeup,
-                madeUpNote = hit.madeUpNote
+                madeUpNote = hit.madeUpNote,
+                partner = hit.owner == OWNER_PARTNER
             )
         (sink ?: onCourseClick)?.invoke(click)
     }
@@ -1310,7 +1477,7 @@ class TimetableView @JvmOverloads constructor(
         block.event?.let { event ->
             val time = event.timeText(sectionsList)?.let { "，$it" }.orEmpty()
             val place = event.position.takeIf { it.isNotBlank() }?.let { "，地点$it" }.orEmpty()
-            return "日程${event.title}，周${dayName(block.col)}，" +
+            return ownerPrefix(block) + "日程${event.title}，周${dayName(block.col)}，" +
                 "第${block.startSection}到${block.startSection + block.span - 1}节$time$place"
         }
         val status = when {
@@ -1325,7 +1492,13 @@ class TimetableView @JvmOverloads constructor(
         } + if (block.finished) "，已上" else ""
         val teacher = block.course.teacher.takeIf { it.isNotBlank() }?.let { "，教师$it" }.orEmpty()
         val place = block.course.position.takeIf { it.isNotBlank() }?.let { "，地点$it" }.orEmpty()
-        return "${block.course.name}$status，周${listOf("一", "二", "三", "四", "五", "六", "日").getOrElse(block.col - 1) { "" }}，第${block.startSection}到${block.startSection + block.span - 1}节$teacher$place"
+        return ownerPrefix(block) + "${block.course.name}$status，周${listOf("一", "二", "三", "四", "五", "六", "日").getOrElse(block.col - 1) { "" }}，第${block.startSection}到${block.startSection + block.span - 1}节$teacher$place"
+    }
+
+    /** 情侣周视图的无障碍描述先说是谁的：「小鹿：现代汉语…」。 */
+    private fun ownerPrefix(block: Block): String {
+        val layer = couple ?: return ""
+        return (if (block.owner == OWNER_PARTNER) layer.partnerName else layer.myName) + "："
     }
 
     private fun dayName(day: Int) = listOf("一", "二", "三", "四", "五", "六", "日")
@@ -1362,6 +1535,9 @@ class TimetableView @JvmOverloads constructor(
         const val MARK_OFF = 1
         const val MARK_MAKEUP = 2
         const val MARK_MADE_UP = 3
+        /** Block.owner：情侣周视图里块属于谁。 */
+        const val OWNER_ME = 0
+        const val OWNER_PARTNER = 1
         private val TIME_COLUMN = mapOf(5 to 70f, 7 to 78f)
 
         fun timeColumnRpx(dayCount: Int): Float = TIME_COLUMN[dayCount] ?: TIME_COLUMN[FULL_WEEK_COUNT]!!
