@@ -326,6 +326,115 @@ function check(name, cond, extra) {
   const me = await app.inject({ method: 'DELETE', url: '/api/v1/me', headers: { Authorization: `Bearer ${token2}` } })
   check('删除本人数据', me.statusCode === 204)
 
+  // ===== 情侣课表 =====
+  const login = async (deviceId) => (await app.inject({
+    method: 'POST', url: '/api/v1/auth/device', payload: { deviceId }
+  })).json().token
+  const call = (tk, method, url, body) => app.inject({
+    method, url, headers: { Authorization: `Bearer ${tk}` }, ...(body === undefined ? {} : { payload: body })
+  })
+  const coupleOf = async (tk) => (await call(tk, 'GET', '/api/v1/couple')).json().couple
+  const tA = await login('couple-device-a01')
+  const tB = await login('couple-device-b01')
+  const tC = await login('couple-device-c01')
+
+  const unbound = await coupleOf(tA)
+  check('情侣：初始未绑定', unbound.bound === false && unbound.invite === null)
+
+  const invite1 = await call(tA, 'POST', '/api/v1/couple/invites')
+  const code1 = invite1.json().invite && invite1.json().invite.code
+  check('情侣：生成 8 位邀请码', invite1.statusCode === 201 && /^[2-9A-HJ-NP-Z]{8}$/.test(code1))
+  check('情侣：未绑定时能查到自己的有效邀请码', (await coupleOf(tA)).invite.code === code1)
+
+  const invite2 = await call(tA, 'POST', '/api/v1/couple/invites')
+  const code2 = invite2.json().invite.code
+  const oldCode = await call(tB, 'POST', '/api/v1/couple/accept', { code: code1 })
+  check('情侣：新邀请码替换旧码', code2 !== code1 && oldCode.statusCode === 404)
+
+  const selfAccept = await call(tA, 'POST', '/api/v1/couple/accept', { code: code2 })
+  check('情侣：不能接受自己的邀请码', selfAccept.statusCode === 400)
+  const badFormat = await call(tB, 'POST', '/api/v1/couple/accept', { code: 'abc' })
+  check('情侣：邀请码格式错误被拒绝', badFormat.statusCode === 400)
+
+  const accepted = await call(tB, 'POST', '/api/v1/couple/accept', { code: code2.toLowerCase() })
+  const bView = accepted.json().couple
+  check('情侣：接受邀请后绑定成功（邀请码不区分大小写）', accepted.statusCode === 200 && bView.bound === true)
+  check('情侣：默认颜色发邀请的人蓝、接受的人粉',
+    bView.me.color === '#F4AFC2' && bView.partner.color === '#7FAEE3')
+  check('情侣：刚绑定时对方还没有课表', bView.partner.schedule === null)
+
+  const reused = await call(tC, 'POST', '/api/v1/couple/accept', { code: code2 })
+  check('情侣：邀请码用一次就作废', reused.statusCode === 404)
+  const inviteC = await call(tC, 'POST', '/api/v1/couple/invites')
+  const acceptWhileBound = await call(tA, 'POST', '/api/v1/couple/accept', { code: inviteC.json().invite.code })
+  check('情侣：已绑定的人不能再接受邀请', acceptWhileBound.statusCode === 409)
+  const inviteWhileBound = await call(tA, 'POST', '/api/v1/couple/invites')
+  check('情侣：已绑定的人不能再发邀请', inviteWhileBound.statusCode === 409)
+
+  // B 自己没导入，用的是舍友 C 分享的课表
+  const cSchedule = (await call(tC, 'POST', '/api/v1/schedules', { ...payload, name: '张三的课表' })).json().schedule
+  await call(tB, 'POST', '/api/v1/share/join', { code: cSchedule.shareCode })
+  const reportB = await call(tB, 'PUT', '/api/v1/couple/current-schedule', { scheduleId: cSchedule.id })
+  check('情侣：可以上报加入的舍友课表为当前课表', reportB.statusCode === 200 && reportB.json().couple.me.currentScheduleId === cSchedule.id)
+  const aSeesB = await coupleOf(tA)
+  check('情侣：对方摘要只有课表 id 和版本号', aSeesB.partner.schedule && aSeesB.partner.schedule.id === cSchedule.id &&
+    aSeesB.partner.schedule.name === undefined)
+  const partnerDetail = await call(tA, 'GET', '/api/v1/couple/partner-schedule')
+  const pd = partnerDetail.json().schedule
+  check('情侣：读取对方课表不含分享码和课表原名', partnerDetail.statusCode === 200 && pd.role === 'partner' &&
+    pd.shareCode === undefined && pd.name === '' && pd.courses.length === 1)
+
+  const reportForeign = await call(tA, 'PUT', '/api/v1/couple/current-schedule', { scheduleId: cSchedule.id })
+  check('情侣：不能上报自己没加入的课表', reportForeign.statusCode === 404)
+  const aSchedule = (await call(tA, 'POST', '/api/v1/schedules', payload)).json().schedule
+  await call(tA, 'PUT', '/api/v1/couple/current-schedule', { scheduleId: aSchedule.id })
+  const bSeesA = await coupleOf(tB)
+  check('情侣：上报自己发布的课表', bSeesA.partner.schedule && bSeesA.partner.schedule.id === aSchedule.id &&
+    bSeesA.partner.sameScheduleAsMine === false)
+
+  await call(tB, 'DELETE', `/api/v1/schedules/${cSchedule.id}/membership`)
+  const afterLeave = await coupleOf(tA)
+  const detailAfterLeave = await call(tA, 'GET', '/api/v1/couple/partner-schedule')
+  check('情侣：对方退出舍友课表后立刻读不到', afterLeave.partner.schedule === null && detailAfterLeave.statusCode === 404)
+
+  const renamed = await call(tB, 'PUT', '/api/v1/couple/members/partner', { nickname: '  大熊  ' })
+  check('情侣：可以给对方改名', renamed.statusCode === 200 && renamed.json().couple.partner.nickname === '大熊' &&
+    renamed.json().couple.partner.nicknameUpdatedBy === 'me')
+  const aAfterRename = await coupleOf(tA)
+  check('情侣：被改名的一方看到是对方改的', aAfterRename.me.nickname === '大熊' && aAfterRename.me.nicknameUpdatedBy === 'partner')
+  const recolor = await call(tA, 'PUT', '/api/v1/couple/members/me', { color: '#8fd1bf', nickname: '大熊' })
+  const recolored = recolor.json().couple.me
+  check('情侣：改颜色，值没变的名字不改最后修改人', recolored.color === '#8FD1BF' && recolored.colorUpdatedBy === 'me' &&
+    recolored.nicknameUpdatedBy === 'partner')
+  const emojiName = await call(tA, 'PUT', '/api/v1/couple/members/partner', { nickname: '小鹿🦌小鹿🦌小鹿' })
+  check('情侣：名字按字数计长度（emoji 算一个字）', emojiName.statusCode === 200)
+  const tooLong = await call(tA, 'PUT', '/api/v1/couple/members/partner', { nickname: '一二三四五六七八九' })
+  const badColorValue = await call(tA, 'PUT', '/api/v1/couple/members/partner', { color: 'pink' })
+  const badWho = await call(tA, 'PUT', '/api/v1/couple/members/someone', { color: '#FFFFFF' })
+  const emptyProfile = await call(tA, 'PUT', '/api/v1/couple/members/me', {})
+  check('情侣：名字超长、颜色非法、对象非法、空修改都被拒绝',
+    tooLong.statusCode === 400 && badColorValue.statusCode === 400 && badWho.statusCode === 400 && emptyProfile.statusCode === 400)
+
+  await call(tA, 'DELETE', `/api/v1/schedules/${aSchedule.id}`)
+  check('情侣：对方删除当前课表后摘要为空', (await coupleOf(tB)).partner.schedule === null)
+
+  const unbindB = await call(tB, 'DELETE', '/api/v1/couple')
+  const aAfterUnbind = await coupleOf(tA)
+  const partnerAfterUnbind = await call(tA, 'GET', '/api/v1/couple/partner-schedule')
+  const unbindAgain = await call(tB, 'DELETE', '/api/v1/couple')
+  check('情侣：一方解绑，双方立刻解除', unbindB.statusCode === 204 && aAfterUnbind.bound === false &&
+    partnerAfterUnbind.statusCode === 404)
+  check('情侣：重复解绑按成功处理（幂等）', unbindAgain.statusCode === 204)
+  const renameAfterUnbind = await call(tA, 'PUT', '/api/v1/couple/members/me', { nickname: 'x' })
+  check('情侣：未绑定时不能改名字', renameAfterUnbind.statusCode === 404)
+
+  const rebindCode = (await call(tA, 'POST', '/api/v1/couple/invites')).json().invite.code
+  const rebind = await call(tB, 'POST', '/api/v1/couple/accept', { code: rebindCode })
+  check('情侣：解绑后可重新绑定，名字颜色从默认开始', rebind.statusCode === 200 &&
+    rebind.json().couple.partner.nickname === '' && rebind.json().couple.partner.color === '#7FAEE3')
+  await call(tB, 'DELETE', '/api/v1/me')
+  check('情侣：对方注销后自动变为未绑定', (await coupleOf(tA)).bound === false)
+
   fs.rmSync(appFilesDir, { recursive: true, force: true })
   await app.close()
   console.log(process.exitCode ? '\n存在失败项' : '\n全部通过')

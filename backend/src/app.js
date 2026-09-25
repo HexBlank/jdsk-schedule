@@ -7,6 +7,7 @@ const jwt = require('@fastify/jwt')
 const rateLimit = require('@fastify/rate-limit')
 const { ensureUser, migrateLegacyDeviceUser } = require('./db')
 const { createScheduleService } = require('./schedule-service')
+const { createCoupleService } = require('./couple-service')
 const { createDeviceAuth } = require('./device-auth')
 const { httpError } = require('./validation')
 const parser = require('./eams-parser')
@@ -18,6 +19,7 @@ function buildApp({ config, db, logger = true } = {}) {
     bodyLimit: 2 * 1024 * 1024
   })
   const schedules = createScheduleService(db, config)
+  const couples = createCoupleService(db, schedules)
   const deviceAuth = createDeviceAuth(config)
 
   app.register(helmet, { contentSecurityPolicy: false })
@@ -231,6 +233,44 @@ function buildApp({ config, db, logger = true } = {}) {
 
   app.delete('/api/v1/schedules/:id/membership', { preHandler: app.authenticate }, async (request, reply) => {
     schedules.leave(request.userRecord.id, request.params.id)
+    reply.code(204).send()
+  })
+
+  // ===== 情侣课表 =====
+  app.get('/api/v1/couple', { preHandler: app.authenticate }, async (request) => ({
+    couple: couples.view(request.userRecord.id)
+  }))
+
+  app.post('/api/v1/couple/invites', {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } }
+  }, async (request, reply) => {
+    const invite = couples.createInvite(request.userRecord.id)
+    reply.code(201)
+    return { invite }
+  })
+
+  app.post('/api/v1/couple/accept', {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } }
+  }, async (request) => ({
+    couple: couples.accept(request.userRecord.id, request.body && request.body.code)
+  }))
+
+  app.get('/api/v1/couple/partner-schedule', { preHandler: app.authenticate }, async (request) => ({
+    schedule: couples.partnerSchedule(request.userRecord.id)
+  }))
+
+  app.put('/api/v1/couple/current-schedule', { preHandler: app.authenticate }, async (request) => ({
+    couple: couples.setCurrentSchedule(request.userRecord.id, request.body && request.body.scheduleId)
+  }))
+
+  app.put('/api/v1/couple/members/:who', { preHandler: app.authenticate }, async (request) => ({
+    couple: couples.updateMember(request.userRecord.id, request.params.who, request.body)
+  }))
+
+  app.delete('/api/v1/couple', { preHandler: app.authenticate }, async (request, reply) => {
+    couples.unbind(request.userRecord.id)
     reply.code(204).send()
   })
 

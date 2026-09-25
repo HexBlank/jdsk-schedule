@@ -220,6 +220,45 @@ function normalizeShareCode(value) {
   return code
 }
 
+// 情侣邀请码与分享码同一套字符和长度：猜中别人的邀请码就等于看到陌生人的课表，码空间不能小。
+function normalizeInviteCode(value) {
+  const code = String(value || '').trim().toUpperCase().replace(/\s/g, '')
+  if (!/^[2-9A-HJ-NP-Z]{8}$/.test(code)) {
+    throw httpError(400, 'INVALID_INVITE_CODE', '邀请码格式不正确')
+  }
+  return code
+}
+
+const COUPLE_NICKNAME_MAX = 8
+
+/** 情侣双方的名字和颜色；只校验传了的字段，至少要传一项。 */
+function normalizeCoupleProfile(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw httpError(400, 'INVALID_ARGUMENT', '名字和颜色不能为空')
+  }
+  const result = {}
+  if (input.nickname !== undefined) {
+    if (typeof input.nickname !== 'string') throw httpError(400, 'INVALID_ARGUMENT', '名字格式不正确')
+    const nickname = input.nickname.trim()
+    // 按字符（码点）计长度：中文、emoji 都算一个字，与客户端输入框限制一致
+    if (Array.from(nickname).length > COUPLE_NICKNAME_MAX) {
+      throw httpError(400, 'INVALID_ARGUMENT', `名字不能超过 ${COUPLE_NICKNAME_MAX} 个字`)
+    }
+    if (/[\u0000-\u001f\u007f]/.test(nickname)) throw httpError(400, 'INVALID_ARGUMENT', '名字不能包含控制字符')
+    result.nickname = nickname
+  }
+  if (input.color !== undefined) {
+    if (typeof input.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(input.color.trim())) {
+      throw httpError(400, 'INVALID_ARGUMENT', '颜色值无效')
+    }
+    result.color = input.color.trim().toUpperCase()
+  }
+  if (result.nickname === undefined && result.color === undefined) {
+    throw httpError(400, 'INVALID_ARGUMENT', '名字和颜色至少要改一项')
+  }
+  return result
+}
+
 function randomShareCode(length = 8) {
   let result = ''
   for (let index = 0; index < length; index += 1) {
@@ -235,6 +274,8 @@ module.exports = {
   normalizeMakeup,
   normalizeSchedule,
   normalizeCourseColors,
+  normalizeCoupleProfile,
+  normalizeInviteCode,
   normalizeShareCode,
   randomShareCode,
   stableCourseId

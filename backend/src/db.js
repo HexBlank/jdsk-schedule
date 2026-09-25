@@ -50,6 +50,32 @@ function migrate(db) {
     CREATE INDEX IF NOT EXISTS idx_schedules_owner ON schedules(owner_id);
     CREATE INDEX IF NOT EXISTS idx_schedules_updated ON schedules(updated_at DESC);
     CREATE INDEX IF NOT EXISTS idx_members_schedule ON schedule_members(schedule_id);
+
+    -- 情侣绑定：一对情侣是同一 couple_id 下的两行，user_id 做主键保证一人只绑一对。
+    -- current_schedule_id 是本人的当前课表（自己发布的或加入的），对方据此读取；
+    -- 读取权限不写进 schedule_members，免得对方被算进订阅人数、解绑后还残留成员关系。
+    -- 名字和颜色跟着人走，双方都能改；*_updated_by 记最后修改人，客户端据此提示「TA 改了你的名字」。
+    CREATE TABLE IF NOT EXISTS couple_members (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      couple_id TEXT NOT NULL,
+      current_schedule_id TEXT REFERENCES schedules(id) ON DELETE SET NULL,
+      nickname TEXT NOT NULL DEFAULT '',
+      nickname_updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      color TEXT NOT NULL,
+      color_updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      revision INTEGER NOT NULL DEFAULT 1,
+      joined_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS couple_invites (
+      code TEXT PRIMARY KEY COLLATE NOCASE,
+      inviter_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_couple_members_couple ON couple_members(couple_id);
+    CREATE INDEX IF NOT EXISTS idx_couple_members_schedule ON couple_members(current_schedule_id);
   `)
 }
 

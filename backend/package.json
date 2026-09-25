@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "check": "node --check src/app.js && node --check src/index.js && node --check src/device-auth.js && node --check src/schedule-service.js && node --check src/validation.js",
+    "check": "node --check src/app.js && node --check src/index.js && node --check src/device-auth.js && node --check src/schedule-service.js && node --check src/couple-service.js && node --check src/validation.js",
     "test": "node smoke.js"
   },
   "dependencies": {

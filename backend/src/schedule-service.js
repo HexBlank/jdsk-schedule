@@ -224,6 +224,19 @@ function createScheduleService(db, config = {}) {
     return { exists: true, owned, member }
   }
 
+  // 情侣对方读取：不经 schedule_members，调用方已校验绑定关系和对方对这份课表的访问权。
+  // 不返回分享码、订阅人数和课表原名（可能是舍友起的「张三的课表」，不该让第三方看到）。
+  function readForPartner(scheduleId) {
+    const row = db.prepare(`${withCounts} WHERE s.id = ?`).get(scheduleId)
+    if (!row) throw httpError(404, 'PARTNER_SCHEDULE_UNAVAILABLE', 'TA 当前没有可查看的课表')
+    const result = parseData(row)
+    delete result.shareCode
+    result.name = ''
+    result.subscriberCount = 0
+    result.role = 'partner'
+    return result
+  }
+
   function rotateCode(userId, scheduleId) {
     getOwned(userId, scheduleId)
     const shareCode = generateUniqueShareCode()
@@ -370,7 +383,7 @@ function createScheduleService(db, config = {}) {
   }
 
   return {
-    list, get, save, preview, join, leave, status, rotateCode, remove,
+    list, get, save, preview, join, leave, status, readForPartner, rotateCode, remove,
     createAdjustment, updateAdjustment, removeAdjustment,
     createHoliday, removeHoliday, createMakeup, removeMakeup, setCourseColors
   }
