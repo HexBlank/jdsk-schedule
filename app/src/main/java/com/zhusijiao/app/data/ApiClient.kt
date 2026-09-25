@@ -4,6 +4,7 @@ import android.net.Uri
 import com.zhusijiao.app.AppConfig
 import com.zhusijiao.app.domain.ParsedSchedule
 import com.zhusijiao.app.domain.CoupleInvite
+import com.zhusijiao.app.domain.CoupleNotice
 import com.zhusijiao.app.domain.CoupleState
 import com.zhusijiao.app.domain.CourseAdjustmentDraft
 import com.zhusijiao.app.domain.DayHolidayDraft
@@ -378,6 +379,13 @@ object ApiClient {
             if (who == "me") CoupleStore.effectiveState().me?.let { CoupleStore.markSeen(it.nickname, it.color) }
         }
         syncCoupleNow()
+    }
+
+    /** 「TA 把你的名字改成了…」提示；没有需要提示的修改时为 null。 */
+    fun coupleNoticeText(): String? {
+        if (isLocalMode) return null
+        val snapshot = CoupleStore.snapshot()
+        return CoupleNotice.text(CoupleStore.effectiveState(), snapshot.seenNickname, snapshot.seenColor)
     }
 
     /** 「TA 改了你的名字」提示关掉后调用。 */

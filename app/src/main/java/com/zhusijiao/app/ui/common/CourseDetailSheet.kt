@@ -18,7 +18,9 @@ class CourseDetailSheet(
     data: TimetableView.CourseClick,
     canEdit: Boolean = false,
     onReschedule: (() -> Unit)? = null,
-    onUndo: (() -> Unit)? = null
+    onUndo: (() -> Unit)? = null,
+    /** 只读时的说明；默认是「通过分享码加入的课表」那一句，情侣课表里换成更贴切的话。 */
+    readOnlyNote: String? = null
 ) :
     Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
 
@@ -76,7 +78,10 @@ class CourseDetailSheet(
         }
         // 订阅课表只读：没有调课按钮时，明确告诉用户原因与获取自己副本的方式
         if (!canEdit) {
-            findViewById<TextView>(R.id.sheetReadOnly).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.sheetReadOnly).apply {
+                visibility = View.VISIBLE
+                if (readOnlyNote != null) text = readOnlyNote
+            }
         }
         // 补课块与停课块表示的是「某一天的整体安排」，不支持对单节课再调课
         if (canEdit && !data.orphaned && data.makeup == null && data.holiday == null) {

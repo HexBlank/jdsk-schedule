@@ -28,7 +28,9 @@ class ColorPickerSheet(
     private val autoColor: Int,
     private val currentManual: String?,
     private val onPick: (String) -> Unit,
-    private val onReset: () -> Unit
+    private val onReset: () -> Unit,
+    /** 面板标题，默认「课程颜色」；情侣课表选人的颜色时换掉。 */
+    title: String? = null
 ) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
 
     init {
@@ -41,6 +43,7 @@ class ColorPickerSheet(
         setCanceledOnTouchOutside(true)
 
         findViewById<TextView>(R.id.colorPickerCourse).text = courseName
+        if (title != null) findViewById<TextView>(R.id.colorPickerTitle).text = title
         buildGrid()
         buildCustomGrid()
         buildFollowDefault()

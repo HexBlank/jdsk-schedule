@@ -98,6 +98,8 @@ class LibraryFragment : Fragment(), Refreshable {
         card.cardRoot.setBackgroundResource(if (active) R.drawable.bg_card_active else R.drawable.bg_card)
         card.cardName.text = item.name
         card.activeTag.visibility = if (active) View.VISIBLE else View.GONE
+        // 情侣课表：TA 看到的就是当前课表
+        card.coupleTag.visibility = if (active && ApiClient.coupleState().bound) View.VISIBLE else View.GONE
         card.cardMeta.text = getString(
             R.string.library_meta_format,
             getString(if (isOwner) R.string.library_meta_owner else R.string.library_meta_sync),
@@ -172,7 +174,11 @@ class LibraryFragment : Fragment(), Refreshable {
     }
 
     private fun openSchedule(id: String) {
+        val switched = Prefs.activeScheduleId != id
         Prefs.activeScheduleId = id
+        if (switched && ApiClient.coupleState().bound) {
+            Ui.toast(requireContext(), getString(R.string.library_couple_switch_toast))
+        }
         (activity as? MainActivity)?.openScheduleTab()
     }
 

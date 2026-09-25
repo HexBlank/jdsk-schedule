@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.AppConfig
 import com.zhusijiao.app.R
 import com.zhusijiao.app.databinding.ActivityMainBinding
+import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.AppRelease
 import com.zhusijiao.app.data.AppUpdater
 import com.zhusijiao.app.data.Prefs
@@ -16,18 +17,20 @@ import kotlinx.coroutines.launch
 import com.zhusijiao.app.ui.common.BaseActivity
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.Refreshable
+import com.zhusijiao.app.ui.couple.CoupleFragment
 import com.zhusijiao.app.ui.library.LibraryFragment
 import com.zhusijiao.app.ui.schedule.ScheduleFragment
 import com.zhusijiao.app.ui.settings.SettingsFragment
 
 /**
- * 主界面：承载底部导航的三个页签（课表 / 课表库 / 设置）。
+ * 主界面：承载底部导航的页签（课表 / 我们 / 课表库 / 设置），「我们」只在绑定情侣课表后出现。
  * 页签用 Fragment 显示/隐藏切换而非重建，各自保留滚动位置与已加载数据。
  */
 class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var scheduleFragment: ScheduleFragment
+    private lateinit var coupleFragment: CoupleFragment
     private lateinit var libraryFragment: LibraryFragment
     private lateinit var settingsFragment: SettingsFragment
     private var active: Fragment? = null
@@ -39,6 +42,8 @@ class MainActivity : BaseActivity() {
 
         val fm = supportFragmentManager
         scheduleFragment = (fm.findFragmentByTag(TAG_SCHEDULE) as? ScheduleFragment) ?: ScheduleFragment()
+        val restoredCouple = fm.findFragmentByTag(TAG_COUPLE) as? CoupleFragment
+        coupleFragment = restoredCouple ?: CoupleFragment()
         libraryFragment = (fm.findFragmentByTag(TAG_LIBRARY) as? LibraryFragment) ?: LibraryFragment()
         settingsFragment = (fm.findFragmentByTag(TAG_SETTINGS) as? SettingsFragment) ?: SettingsFragment()
 
@@ -51,8 +56,10 @@ class MainActivity : BaseActivity() {
             fm.beginTransaction()
                 .add(R.id.fragmentContainer, settingsFragment, TAG_SETTINGS)
                 .add(R.id.fragmentContainer, libraryFragment, TAG_LIBRARY)
+                .add(R.id.fragmentContainer, coupleFragment, TAG_COUPLE)
                 .add(R.id.fragmentContainer, scheduleFragment, TAG_SCHEDULE)
                 .hide(settingsFragment)
+                .hide(coupleFragment)
                 .apply {
                     if (initialTab == BottomNavView.Tab.LIBRARY) hide(scheduleFragment)
                     else hide(libraryFragment)
@@ -61,10 +68,15 @@ class MainActivity : BaseActivity() {
             active = if (initialTab == BottomNavView.Tab.LIBRARY) libraryFragment else scheduleFragment
             binding.bottomNav.setCurrent(initialTab)
         } else {
-            active = listOf(scheduleFragment, libraryFragment, settingsFragment)
-                .firstOrNull { !it.isHidden } ?: scheduleFragment
+            // 旧版本恢复的状态里没有「我们」页：补一个隐藏的
+            if (restoredCouple == null) {
+                fm.beginTransaction().add(R.id.fragmentContainer, coupleFragment, TAG_COUPLE).hide(coupleFragment).commit()
+            }
+            active = listOf(scheduleFragment, coupleFragment, libraryFragment, settingsFragment)
+                .firstOrNull { it.isAdded && !it.isHidden } ?: scheduleFragment
             binding.bottomNav.setCurrent(
                 when (active) {
+                    coupleFragment -> BottomNavView.Tab.COUPLE
                     libraryFragment -> BottomNavView.Tab.LIBRARY
                     settingsFragment -> BottomNavView.Tab.SETTINGS
                     else -> BottomNavView.Tab.SCHEDULE
@@ -73,11 +85,14 @@ class MainActivity : BaseActivity() {
         }
 
         binding.bottomNav.onTabSelected = { showTab(it) }
+        syncCoupleTab()
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_OPEN_COUPLE, false)) openCoupleTab()
         maybeCheckUpdateOnLaunch()
     }
 
     override fun onResume() {
         super.onResume()
+        syncCoupleTab()
         (active as? Refreshable)?.refresh()
     }
 
@@ -87,6 +102,28 @@ class MainActivity : BaseActivity() {
         if (intent.getBooleanExtra(EXTRA_OPEN_SCHEDULE, false)) {
             openScheduleTab()
         }
+        if (intent.getBooleanExtra(EXTRA_OPEN_COUPLE, false)) {
+            syncCoupleTab()
+            openCoupleTab()
+        }
+    }
+
+    /**
+     * 「我们」页签跟着绑定状态显示或隐藏；正停在「我们」却已解绑（自己或对方解除）时退回课表页。
+     * 回到前台、绑定/解绑完成后都调一次。
+     */
+    fun syncCoupleTab() {
+        val bound = ApiClient.coupleState().bound
+        binding.bottomNav.setTabVisible(BottomNavView.Tab.COUPLE, bound)
+        if (!bound && active === coupleFragment) openScheduleTab()
+    }
+
+    /** 绑定成功、或设置页「情侣课表」进入时切到「我们」。 */
+    fun openCoupleTab() {
+        if (!ApiClient.coupleState().bound) return
+        binding.bottomNav.setCurrent(BottomNavView.Tab.COUPLE)
+        active = null
+        showTab(BottomNavView.Tab.COUPLE)
     }
 
     /** 供其他页面（如课表库）切到课表页并刷新。 */
@@ -142,12 +179,13 @@ class MainActivity : BaseActivity() {
     private fun showTab(tab: BottomNavView.Tab) {
         val target: Fragment = when (tab) {
             BottomNavView.Tab.SCHEDULE -> scheduleFragment
+            BottomNavView.Tab.COUPLE -> coupleFragment
             BottomNavView.Tab.LIBRARY -> libraryFragment
             BottomNavView.Tab.SETTINGS -> settingsFragment
         }
         if (target === active) return
         val tx = supportFragmentManager.beginTransaction()
-        listOf(scheduleFragment, libraryFragment, settingsFragment).forEach {
+        listOf(scheduleFragment, coupleFragment, libraryFragment, settingsFragment).forEach {
             if (it !== target) tx.hide(it)
         }
         tx.show(target)
@@ -158,7 +196,9 @@ class MainActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_OPEN_SCHEDULE = "open_schedule"
+        const val EXTRA_OPEN_COUPLE = "open_couple"
         private const val TAG_SCHEDULE = "schedule"
+        private const val TAG_COUPLE = "couple"
         private const val TAG_LIBRARY = "library"
         private const val TAG_SETTINGS = "settings"
     }

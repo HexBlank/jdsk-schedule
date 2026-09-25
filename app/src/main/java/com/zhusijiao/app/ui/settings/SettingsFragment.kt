@@ -29,6 +29,7 @@ import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
+import com.zhusijiao.app.ui.couple.CoupleBindActivity
 import com.zhusijiao.app.ui.reminder.ClassReminderActivity
 import com.zhusijiao.app.util.SyncLogClipboard
 import com.zhusijiao.app.util.Ui
@@ -107,6 +108,7 @@ class SettingsFragment : Fragment(), Refreshable {
         if (_binding != null) {
             bindStatus()
             bindReminderRow()
+            bindCoupleRow()
             bindAppearanceRow()
             bindServerRow()
             bindChannelRow()
@@ -125,6 +127,24 @@ class SettingsFragment : Fragment(), Refreshable {
         }
         binding.menuReminder.setOnClickListener {
             startActivity(Intent(requireContext(), ClassReminderActivity::class.java))
+        }
+    }
+
+    /** 「情侣课表」行：已绑定时显示和谁绑定、点击切到「我们」页；未绑定时进入绑定页。 */
+    private fun bindCoupleRow() {
+        val state = ApiClient.coupleState()
+        binding.coupleSub.text = if (state.bound) getString(R.string.settings_couple_sub_bound, state.partnerName)
+        else getString(R.string.settings_couple_sub_unbound)
+        binding.menuCouple.setOnClickListener {
+            when {
+                ApiClient.isLocalMode -> Ui.alert(
+                    requireContext(),
+                    getString(R.string.import_helper_unavailable_title),
+                    getString(R.string.local_sharing_unavailable)
+                )
+                ApiClient.coupleState().bound -> (activity as? MainActivity)?.openCoupleTab()
+                else -> startActivity(Intent(requireContext(), CoupleBindActivity::class.java))
+            }
         }
     }
 

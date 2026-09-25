@@ -67,6 +67,12 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.couple.CoupleBindActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <receiver
             android:name=".reminder.ClassReminderReceiver"
             android:exported="false" />

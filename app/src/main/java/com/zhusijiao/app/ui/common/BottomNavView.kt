@@ -18,6 +18,7 @@ import com.zhusijiao.app.util.Rpx
 /**
  * 底部导航：白底文字标签，当前项绿色文字 + 顶部细线。
  * 新增入口只需在 [Tab] 增加一项，其余（布局、点击、高亮）自动生效。
+ * 「我们」（情侣课表）只在绑定后出现，由宿主用 [setTabVisible] 控制，默认隐藏。
  */
 class BottomNavView @JvmOverloads constructor(
     context: Context,
@@ -27,6 +28,7 @@ class BottomNavView @JvmOverloads constructor(
 
     enum class Tab(val labelRes: Int) {
         SCHEDULE(R.string.nav_schedule),
+        COUPLE(R.string.nav_couple),
         LIBRARY(R.string.nav_library),
         SETTINGS(R.string.nav_settings)
     }
@@ -36,11 +38,13 @@ class BottomNavView @JvmOverloads constructor(
     private var current: Tab = Tab.SCHEDULE
     private val indicators = mutableMapOf<Tab, View>()
     private val labels = mutableMapOf<Tab, TextView>()
+    private val containers = mutableMapOf<Tab, View>()
 
     init {
         orientation = HORIZONTAL
         setBackgroundResource(R.drawable.bg_bottom_nav)
         Tab.entries.forEach { addTab(it) }
+        setTabVisible(Tab.COUPLE, false)
         ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
             val bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, bottom)
@@ -83,6 +87,7 @@ class BottomNavView @JvmOverloads constructor(
         container.addView(indicator)
         container.addView(label)
         addView(container)
+        containers[tab] = container
         indicators[tab] = indicator
         labels[tab] = label
     }
@@ -92,6 +97,11 @@ class BottomNavView @JvmOverloads constructor(
         current = tab
         applyState()
         onTabSelected?.invoke(tab)
+    }
+
+    /** 显示或隐藏某个页签（目前只有「我们」会隐藏）。 */
+    fun setTabVisible(tab: Tab, visible: Boolean) {
+        containers[tab]?.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     /** 由宿主设置当前项（不触发回调）。 */

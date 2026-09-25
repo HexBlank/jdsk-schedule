@@ -104,4 +104,15 @@
 
     <!-- 启动图标背景 -->
     <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- 情侣课表（我们） -->
+    <color name="couple_free_band">#1c2f7d68</color>
+    <color name="couple_free_pill_border">#b7d6cb</color>
+    <color name="couple_free_pill_text">#23654f</color>
+    <color name="couple_now_line">#d9553b</color>
+    <color name="couple_spine">#e2e7e4</color>
+    <color name="couple_hour_line">#e8ecea</color>
+    <color name="couple_hour_text">#8a9490</color>
+    <color name="couple_heart">#e08aa2</color>
+    <color name="couple_segment_bg">#e6ebe8</color>
 </resources>

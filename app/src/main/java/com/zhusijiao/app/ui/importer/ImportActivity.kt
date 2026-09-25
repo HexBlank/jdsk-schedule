@@ -331,8 +331,13 @@ class ImportActivity : BaseActivity() {
             try {
                 val payload = p.copy(name = name, semesterStart = semesterStart, totalWeeks = weeks)
                 val saved = ApiClient.saveSchedule(payload, target?.id, target?.revision)
+                val switched = Prefs.activeScheduleId != saved.id
                 Prefs.activeScheduleId = saved.id
                 Ui.toast(this@ImportActivity, getString(if (target != null) R.string.import_updated else R.string.import_created))
+                // 情侣课表：TA 看到的是当前课表，切换了要让用户知道
+                if (switched && ApiClient.coupleState().bound) {
+                    Ui.toast(this@ImportActivity, getString(R.string.library_couple_switch_toast))
+                }
                 val intent = Intent(this@ImportActivity, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                     putExtra(MainActivity.EXTRA_OPEN_SCHEDULE, true)

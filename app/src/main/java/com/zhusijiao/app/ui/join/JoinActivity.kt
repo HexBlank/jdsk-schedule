@@ -204,7 +204,10 @@ class JoinActivity : BaseActivity() {
             Ui.alert(this, getString(R.string.schedule_missing_title), getString(R.string.join_missing_local))
             return
         }
+        val switched = Prefs.activeScheduleId != localId
         Prefs.activeScheduleId = localId
+        // 情侣课表：TA 看到的是当前课表，切换了要让用户知道
+        if (switched && ApiClient.coupleState().bound) Ui.toast(this, getString(R.string.library_couple_switch_toast))
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra(MainActivity.EXTRA_OPEN_SCHEDULE, true)

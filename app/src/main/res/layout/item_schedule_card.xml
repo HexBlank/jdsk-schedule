@@ -65,6 +65,22 @@
                 android:textColor="@color/tag_text"
                 android:textSize="11sp"
                 android:visibility="gone" />
+
+            <!-- 情侣课表：TA 看到的就是当前课表 -->
+            <TextView
+                android:id="@+id/coupleTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_tag_warn"
+                android:paddingStart="8dp"
+                android:paddingTop="2.5dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2.5dp"
+                android:text="@string/library_couple_visible_tag"
+                android:textColor="@color/warn"
+                android:textSize="11sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView
