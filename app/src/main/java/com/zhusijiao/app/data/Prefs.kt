@@ -41,6 +41,11 @@ object Prefs {
     private const val KEY_REMINDER_EVENTS = "classReminderIncludeEvents"
     private const val KEY_REMINDER_NOTIFIED = "classReminderNotifiedUpTo"
     private const val KEY_NOTIFICATION_ASKED = "notificationPermissionAsked"
+    private const val KEY_COUPLE_SWAP_SIDES = "coupleSwapSides"
+    private const val KEY_COUPLE_ONLY_PARTNER = "coupleOnlyPartner"
+    private const val KEY_COUPLE_NOW_LINE = "coupleShowNowLine"
+    private const val KEY_COUPLE_HIGHLIGHT_FREE = "coupleHighlightFree"
+    private const val KEY_COUPLE_FREE_LABEL = "coupleFreeLabel"
     private val HEX_COLOR = Regex("^#[0-9A-F]{6}$")
 
     private val sp: SharedPreferences by lazy {
@@ -156,6 +161,33 @@ object Prefs {
     var notificationPermissionAsked: Boolean
         get() = sp.getBoolean(KEY_NOTIFICATION_ASKED, false)
         set(value) = sp.edit().putBoolean(KEY_NOTIFICATION_ASKED, value).apply()
+
+    // ===== 情侣课表：只影响本机的显示设置 =====
+
+    /** 左右对换：默认自己在左；同时决定日视图两栏和周视图分栏、图例的顺序。 */
+    var coupleSwapSides: Boolean
+        get() = sp.getBoolean(KEY_COUPLE_SWAP_SIDES, false)
+        set(value) = sp.edit().putBoolean(KEY_COUPLE_SWAP_SIDES, value).apply()
+
+    /** 周视图「只看 TA」。 */
+    var coupleOnlyPartner: Boolean
+        get() = sp.getBoolean(KEY_COUPLE_ONLY_PARTNER, false)
+        set(value) = sp.edit().putBoolean(KEY_COUPLE_ONLY_PARTNER, value).apply()
+
+    /** 日视图的当前时间线，默认开。 */
+    var coupleShowNowLine: Boolean
+        get() = sp.getBoolean(KEY_COUPLE_NOW_LINE, true)
+        set(value) = sp.edit().putBoolean(KEY_COUPLE_NOW_LINE, value).apply()
+
+    /** 高亮两个人都有空的时段（日视图和周视图），默认关：学生空课多，开着满屏都是色块。 */
+    var coupleHighlightFree: Boolean
+        get() = sp.getBoolean(KEY_COUPLE_HIGHLIGHT_FREE, false)
+        set(value) = sp.edit().putBoolean(KEY_COUPLE_HIGHLIGHT_FREE, value).apply()
+
+    /** 日视图中轴上标出「都有空 2小时30分」，默认关。 */
+    var coupleFreeLabel: Boolean
+        get() = sp.getBoolean(KEY_COUPLE_FREE_LABEL, false)
+        set(value) = sp.edit().putBoolean(KEY_COUPLE_FREE_LABEL, value).apply()
 
     /** 用户自己保存的课程颜色，仅保存在本机；实际选给课程的颜色仍随课表同步。 */
     var customCourseColors: List<String>

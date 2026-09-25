@@ -3,6 +3,8 @@ package com.zhusijiao.app.data
 import android.net.Uri
 import com.zhusijiao.app.AppConfig
 import com.zhusijiao.app.domain.ParsedSchedule
+import com.zhusijiao.app.domain.CoupleInvite
+import com.zhusijiao.app.domain.CoupleState
 import com.zhusijiao.app.domain.CourseAdjustmentDraft
 import com.zhusijiao.app.domain.DayHolidayDraft
 import com.zhusijiao.app.domain.DayMakeupDraft
@@ -197,6 +199,7 @@ object ApiClient {
         }
         withContext(Dispatchers.IO) {
             ScheduleSyncStore.clear()
+            CoupleStore.clear()
             ScheduleCache.clear()
             cacheMigrated = true
             Prefs.clearAllIdentityAndData()
@@ -207,6 +210,14 @@ object ApiClient {
     suspend fun prepareShare(localId: String): Schedule = syncMutex.withLock {
         requireOnlineSharing()
         migrateReadOnlyCache()
+        publishLocked(localId)
+    }
+
+    /**
+     * 首次发布本机课表，已发布的先推送本机修改、再拉回最新；调用方必须已持有 [syncMutex]。
+     * 分享页和情侣同步（当前课表只在本机时自动上传，TA 才看得到）共用。
+     */
+    private suspend fun publishLocked(localId: String): Schedule {
         val local = withContext(Dispatchers.IO) { LocalScheduleStore.getSchedule(localId) }
         if (!local.isOwner) throw ApiException("只有课表发布者可以分享")
         var record = withContext(Dispatchers.IO) { ScheduleSyncStore.get(localId) }
@@ -225,11 +236,11 @@ object ApiClient {
             }
             record = withContext(Dispatchers.IO) { ScheduleSyncStore.get(localId) }
             if (local.adjustments.isEmpty() && local.holidays.isEmpty() && local.makeups.isEmpty()) {
-                return@withLock storeRemote(created, localId, expectedLocal = local)
+                return storeRemote(created, localId, expectedLocal = local)
             }
         }
         val linked = requireNotNull(record)
-        if (linked.dirty) syncOwner(localId, linked)
+        return if (linked.dirty) syncOwner(localId, linked)
         else {
             val remote = scheduleFrom(request("GET", "/api/v1/schedules/${enc(linked.remoteId)}"))
             storeRemote(remote, localId)
@@ -258,8 +269,19 @@ object ApiClient {
                 for (summary in summaries) {
                     val record = withContext(Dispatchers.IO) { ScheduleSyncStore.findByRemoteId(summary.id) }
                     if (record?.dirty == true || record?.pendingAction != null) continue
+                    // 版本号没变、本机副本也在：不必每次都把整份课表重拉一遍
+                    val unchanged = record != null && record.remoteRevision == summary.revision &&
+                        withContext(Dispatchers.IO) { LocalScheduleStore.getScheduleOrNull(record.localId) != null }
+                    if (unchanged) continue
                     val remote = scheduleFrom(request("GET", "/api/v1/schedules/${enc(summary.id)}"))
                     storeRemote(remote, record?.localId ?: remote.id)
+                }
+                // 情侣数据出错不影响课表同步本身；网络断了照常按离线处理
+                try {
+                    syncCoupleLocked()
+                } catch (error: Exception) {
+                    if (error is ApiException && error.networkFailure) throw error
+                    SyncLog.log("情侣同步失败", "${error.message} | ${errorDetail(error)}")
                 }
                 if (pendingError != null) throw pendingError
                 lastSyncError = null
@@ -308,6 +330,171 @@ object ApiClient {
         reportedSyncError = error
         return error
     }
+
+    // ===== 情侣课表 =====
+
+    /** 本机记住的绑定状态（叠加了还没推送上去的名字/颜色修改）；本机模式下恒为未绑定。 */
+    fun coupleState(): CoupleState = if (isLocalMode) CoupleState.UNBOUND else CoupleStore.effectiveState()
+
+    /** 对方当前课表的本机缓存（离线也能看）；没有绑定或对方还没有课表时为 null。 */
+    fun partnerSchedule(): Schedule? = if (isLocalMode) null else CoupleStore.snapshot().partnerSchedule
+
+    /** 最近一次成功从服务端拉到情侣状态的时间（毫秒），0 表示从没成功过。 */
+    fun coupleSyncedAt(): Long = CoupleStore.snapshot().syncedAt
+
+    suspend fun createCoupleInvite(): CoupleInvite {
+        requireOnlineSharing()
+        val json = request("POST", "/api/v1/couple/invites").optJSONObject("invite") ?: JSONObject()
+        val invite = CoupleInvite(json.optString("code"), json.optString("expiresAt"))
+        if (invite.code.isBlank()) throw ApiException("邀请码生成失败，请稍后重试")
+        withContext(Dispatchers.IO) { CoupleStore.saveState(CoupleState(bound = false, invite = invite)) }
+        return invite
+    }
+
+    /** 接受邀请：绑定成功后立刻上报当前课表、拉取对方课表（失败也不影响绑定本身）。 */
+    suspend fun acceptCoupleInvite(code: String): CoupleState {
+        requireOnlineSharing()
+        val state = coupleFrom(request("POST", "/api/v1/couple/accept", JSONObject().put("code", code)))
+        withContext(Dispatchers.IO) { CoupleStore.saveState(state) }
+        syncCoupleNow()
+        return coupleState()
+    }
+
+    /** 解绑必须联网：双方要立刻读不到对方，不能只在本机假装解除。 */
+    suspend fun unbindCouple() {
+        requireOnlineSharing()
+        requestIgnoringNotFound("DELETE", "/api/v1/couple")
+        withContext(Dispatchers.IO) { CoupleStore.clear() }
+        SyncLog.log("已解除情侣绑定", "")
+    }
+
+    /**
+     * 改名字或颜色（[who] = "me" / "partner"，双方都能改双方）。本机立即生效，随后尽力推送；
+     * 断网时留作待推送，下次同步再发。改的是自己的，顺带记为「已看过」，不会提示自己。
+     */
+    suspend fun updateCoupleMember(who: String, nickname: String?, color: String?) {
+        withContext(Dispatchers.IO) {
+            CoupleStore.putPendingProfile(who, nickname, color)
+            if (who == "me") CoupleStore.effectiveState().me?.let { CoupleStore.markSeen(it.nickname, it.color) }
+        }
+        syncCoupleNow()
+    }
+
+    /** 「TA 改了你的名字」提示关掉后调用。 */
+    fun markCoupleNoticeSeen() {
+        CoupleStore.effectiveState().me?.let { CoupleStore.markSeen(it.nickname, it.color) }
+    }
+
+    /** 只同步情侣数据：「我们」页定时刷新、改名后推送用。不成功只返回 false。 */
+    suspend fun syncCoupleNow(): Boolean {
+        if (isLocalMode) return false
+        return syncMutex.withLock {
+            try {
+                syncCoupleLocked()
+                true
+            } catch (error: Exception) {
+                SyncLog.log("情侣同步失败", "${error.message} | ${errorDetail(error)}")
+                false
+            }
+        }
+    }
+
+    /**
+     * 情侣同步的全部步骤，调用方必须已持有 [syncMutex]：
+     * 推送名字/颜色修改 → 上报当前课表（只在本机的先自动上传）→ 拉最新状态 → 对方课表版本变了才重拉。
+     * 没绑定也没发出邀请时什么都不做：接受邀请会直接拿到结果，不必每次同步都问服务端。
+     */
+    private suspend fun syncCoupleLocked() {
+        val snapshot = withContext(Dispatchers.IO) { CoupleStore.snapshot() }
+        val known = snapshot.state
+        if (!known.bound && known.invite == null) return
+
+        var latest: CoupleState? = null
+        for ((who, pending) in snapshot.pendingProfiles) {
+            val body = JSONObject()
+            pending.nickname?.let { body.put("nickname", it) }
+            pending.color?.let { body.put("color", it) }
+            try {
+                latest = coupleFrom(request("PUT", "/api/v1/couple/members/${enc(who)}", body))
+                withContext(Dispatchers.IO) { CoupleStore.removePendingProfile(who, pending) }
+            } catch (error: ApiException) {
+                if (error.networkFailure) throw error
+                // 404 已不在绑定里、400 值不合法：重试也不会成功，丢掉这条修改
+                if (error.status == 404 || error.status == 400) {
+                    withContext(Dispatchers.IO) { CoupleStore.removePendingProfile(who, pending) }
+                }
+                SyncLog.log("情侣名字颜色推送失败", "who=$who ${errorDetail(error)}")
+            }
+        }
+
+        if (known.bound) {
+            val target = coupleScheduleTarget()
+            val reported = (latest ?: known).myCurrentScheduleId
+            if (target.resolved && target.remoteId != reported) {
+                try {
+                    latest = coupleFrom(
+                        request(
+                            "PUT",
+                            "/api/v1/couple/current-schedule",
+                            JSONObject().put("scheduleId", target.remoteId ?: JSONObject.NULL)
+                        )
+                    )
+                    SyncLog.log("已上报当前课表给 TA", "remote=${target.remoteId}")
+                } catch (error: ApiException) {
+                    if (error.networkFailure) throw error
+                    SyncLog.log("上报当前课表失败", errorDetail(error))
+                }
+            }
+        }
+
+        val state = latest ?: coupleFrom(request("GET", "/api/v1/couple"))
+        var partner = snapshot.partnerSchedule
+        val ref = state.partnerSchedule
+        if (!state.bound || ref == null) {
+            partner = null
+        } else if (partner == null || partner.id != ref.id || partner.revision != ref.revision) {
+            partner = try {
+                scheduleFrom(request("GET", "/api/v1/couple/partner-schedule"))
+            } catch (error: ApiException) {
+                if (error.networkFailure) throw error
+                SyncLog.log("拉取 TA 的课表失败", errorDetail(error))
+                if (error.status == 404) null else partner
+            }
+        }
+        withContext(Dispatchers.IO) { CoupleStore.saveSynced(state, partner, System.currentTimeMillis()) }
+    }
+
+    private data class CoupleScheduleTarget(val resolved: Boolean, val remoteId: String?)
+
+    /**
+     * TA 应该看到的课表 = 我的当前课表（自己发布的或加入的）在服务端的 id。
+     * 只在本机的课表先自动上传；上传失败时 resolved = false，这次先不上报，下次同步再试。
+     */
+    private suspend fun coupleScheduleTarget(): CoupleScheduleTarget {
+        val activeId = Prefs.activeScheduleId
+        val local = withContext(Dispatchers.IO) {
+            activeId.takeIf { it.isNotBlank() }?.let(LocalScheduleStore::getScheduleOrNull)
+        } ?: return CoupleScheduleTarget(true, null)
+        val record = withContext(Dispatchers.IO) { syncRecordFor(local) }
+        if (record != null) {
+            if (record.pendingAction != null || record.remoteGone != null) return CoupleScheduleTarget(true, null)
+            return CoupleScheduleTarget(true, record.remoteId)
+        }
+        if (!local.isOwner) return CoupleScheduleTarget(false, null)
+        return try {
+            publishLocked(local.id)
+            val linked = withContext(Dispatchers.IO) { ScheduleSyncStore.get(local.id) }
+            SyncLog.log("当前课表只在本机，已自动上传给 TA 看", "local=${local.id} remote=${linked?.remoteId}")
+            CoupleScheduleTarget(linked != null, linked?.remoteId)
+        } catch (error: ApiException) {
+            if (error.networkFailure) throw error
+            SyncLog.log("自动上传当前课表失败", errorDetail(error))
+            CoupleScheduleTarget(false, null)
+        }
+    }
+
+    private fun coupleFrom(response: JSONObject): CoupleState =
+        CoupleState.fromJson(response.optJSONObject("couple") ?: JSONObject())
 
     // ===== 网络与鉴权 =====
 
