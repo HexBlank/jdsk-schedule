@@ -2,16 +2,18 @@ package com.zhusijiao.app.ui.common
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
 
 /**
- * 课程详情底部抽屉：
- * 顶部把手 + 与课程块同色的强调条 + 标题/副标题 + 周次/时间/教室/教师 + 完成按钮。
+ * 课程详情底部抽屉：课程色浅底的头部里，教室用大字、时间和节次紧随其后（最常被问的「在哪上、几点上」）；
+ * 周次、教师两格次要信息；调课、撤销、完成并排放在底部。
  */
 class CourseDetailSheet(
     context: Context,
@@ -33,13 +35,27 @@ class CourseDetailSheet(
         }
         setCanceledOnTouchOutside(true)
 
-        findViewById<TextView>(R.id.sheetTitle).text = data.course.name
-        findViewById<TextView>(R.id.sheetSubtitle).text = "${data.dayName} · ${data.timeText}"
+        // 头部配色：课程色朝白色混出浅底，文字朝墨色加深，浅色课程（如麦黄）上也清楚
+        val color = data.backgroundColor
+        val heroText = BlockStyles.blend(color, ContextCompat.getColor(context, R.color.text_primary), 0.45f)
+        findViewById<View>(R.id.sheetHero).background = GradientDrawable().apply {
+            cornerRadius = context.resources.getDimension(R.dimen.radius_md) + context.resources.displayMetrics.density * 2f
+            setColor(BlockStyles.blend(color, Color.WHITE, 0.88f))
+        }
+        findViewById<TextView>(R.id.sheetTitle).apply {
+            text = data.course.name
+            setTextColor(heroText)
+        }
+        findViewById<TextView>(R.id.sheetRoom).apply {
+            text = data.course.position.ifBlank { context.getString(R.string.detail_room_pending) }
+            setTextColor(BlockStyles.blend(color, ContextCompat.getColor(context, R.color.text_primary), 0.62f))
+        }
+        findViewById<TextView>(R.id.sheetSubtitle).apply {
+            text = "${data.dayName} " +
+                context.getString(R.string.detail_sections, data.course.startSection, data.course.endSection, data.timeText)
+            setTextColor(heroText)
+        }
         findViewById<TextView>(R.id.sheetWeeks).text = data.weekSummary
-        findViewById<TextView>(R.id.sheetTime).text =
-            context.getString(R.string.detail_sections, data.course.startSection, data.course.endSection, data.timeText)
-        findViewById<TextView>(R.id.sheetRoom).text =
-            data.course.position.ifBlank { context.getString(R.string.detail_room_pending) }
         findViewById<TextView>(R.id.sheetTeacher).text =
             data.course.teacher.ifBlank { context.getString(R.string.detail_teacher_empty) }
 
@@ -98,11 +114,6 @@ class CourseDetailSheet(
             }
         }
 
-        findViewById<View>(R.id.sheetAccent).background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = 999f
-            setColor(data.backgroundColor)
-        }
         findViewById<TextView>(R.id.sheetClose).setOnClickListener { dismiss() }
     }
 

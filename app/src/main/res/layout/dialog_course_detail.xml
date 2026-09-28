@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  课程详情抽屉：点开一门课最想知道「在哪上、几点上」，所以教室用大字放在课程色浅底的头部里，
+  时间和节次紧跟其后；周次、教师降为两格次要信息；操作按钮并排放在底部。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -7,146 +11,112 @@
     android:paddingStart="18dp"
     android:paddingTop="8dp"
     android:paddingEnd="18dp"
-    android:paddingBottom="14dp">
+    android:paddingBottom="16dp">
 
     <View
         android:layout_width="38dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="13dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/bg_sheet_handle" />
 
+    <!-- 头部：课程色浅底，背景与文字色由代码按课程色生成 -->
+    <LinearLayout
+        android:id="@+id/sheetHero"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/sheetTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_small"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/sheetRoom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="@dimen/text_display"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/sheetSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="@dimen/text_hint" />
+    </LinearLayout>
+
+    <!-- 次要信息：周次、教师两格 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingBottom="14dp">
-
-        <View
-            android:id="@+id/sheetAccent"
-            android:layout_width="4dp"
-            android:layout_height="42dp"
-            android:layout_marginEnd="11dp" />
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:background="@drawable/bg_detail_cell"
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="9dp">
 
             <TextView
-                android:id="@+id/sheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/detail_weeks"
+                android:textColor="@color/detail_label"
+                android:textSize="@dimen/text_caption" />
+
+            <TextView
+                android:id="@+id/sheetWeeks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/heading_ink"
-                android:textSize="@dimen/text_title"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_small"
                 android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_detail_cell"
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="9dp">
 
             <TextView
-                android:id="@+id/sheetSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/detail_teacher"
+                android:textColor="@color/detail_label"
+                android:textSize="@dimen/text_caption" />
+
+            <TextView
+                android:id="@+id/sheetTeacher"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/sub_8a"
-                android:textSize="@dimen/text_hint" />
+                android:layout_marginTop="2dp"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_small"
+                android:textStyle="bold" />
         </LinearLayout>
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/detail_border" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="11dp"
-        android:paddingBottom="11dp">
-
-        <TextView
-            android:layout_width="52dp"
-            android:layout_height="wrap_content"
-            android:text="@string/detail_weeks"
-            android:textColor="@color/detail_label"
-            android:textSize="@dimen/text_small" />
-
-        <TextView
-            android:id="@+id/sheetWeeks"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/body_ink"
-            android:textSize="@dimen/text_body" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="4dp"
-        android:paddingBottom="11dp">
-
-        <TextView
-            android:layout_width="52dp"
-            android:layout_height="wrap_content"
-            android:text="@string/detail_time"
-            android:textColor="@color/detail_label"
-            android:textSize="@dimen/text_small" />
-
-        <TextView
-            android:id="@+id/sheetTime"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/body_ink"
-            android:textSize="@dimen/text_body" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="4dp"
-        android:paddingBottom="11dp">
-
-        <TextView
-            android:layout_width="52dp"
-            android:layout_height="wrap_content"
-            android:text="@string/detail_room"
-            android:textColor="@color/detail_label"
-            android:textSize="@dimen/text_small" />
-
-        <TextView
-            android:id="@+id/sheetRoom"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/body_ink"
-            android:textSize="@dimen/text_body" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="4dp"
-        android:paddingBottom="6dp">
-
-        <TextView
-            android:layout_width="52dp"
-            android:layout_height="wrap_content"
-            android:text="@string/detail_teacher"
-            android:textColor="@color/detail_label"
-            android:textSize="@dimen/text_small" />
-
-        <TextView
-            android:id="@+id/sheetTeacher"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/body_ink"
-            android:textSize="@dimen/text_body" />
     </LinearLayout>
 
     <TextView
@@ -154,7 +124,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@color/tt_section_bg"
+        android:background="@drawable/bg_detail_cell"
         android:padding="11dp"
         android:textColor="@color/body_ink"
         android:textSize="@dimen/text_small"
@@ -165,52 +135,58 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@color/tt_section_bg"
+        android:background="@drawable/bg_detail_cell"
         android:padding="11dp"
         android:text="@string/detail_read_only_hint"
         android:textColor="@color/sub_8a"
         android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/sheetReschedule"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/bg_close_button"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="@string/reschedule_action"
-        android:textColor="@color/sheet_close_text"
-        android:textSize="@dimen/text_subtitle"
-        android:textStyle="bold"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/sheetUndo"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="@string/reschedule_undo"
-        android:textColor="@color/sub_8a"
-        android:textSize="@dimen/text_subtitle"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/sheetClose"
+    <!-- 操作并排：撤销调课（有调课时）· 调课 · 完成 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:paddingTop="13dp"
-        android:paddingBottom="13dp"
-        android:text="@string/detail_done"
-        android:textColor="@color/sub_8a"
-        android:textSize="@dimen/text_subtitle"
-        android:textStyle="bold" />
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/sheetUndo"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_ghost_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/reschedule_undo"
+            android:textColor="@color/action_ink"
+            android:textSize="@dimen/text_body"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/sheetReschedule"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_close_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/reschedule_action"
+            android:textColor="@color/sheet_close_text"
+            android:textSize="@dimen/text_body"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/sheetClose"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="@string/detail_done"
+            android:textSize="@dimen/text_body" />
+    </LinearLayout>
 </LinearLayout>
