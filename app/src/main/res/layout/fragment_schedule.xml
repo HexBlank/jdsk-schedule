@@ -134,6 +134,59 @@
             android:visibility="gone" />
     </FrameLayout>
 
+    <!-- 下一节课提示条：只在本周、今天还有课时出现，点开是那节课的详情 -->
+    <LinearLayout
+        android:id="@+id/nextClassBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_next_class"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="38dp"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/nextClassDot"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/nextClassLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:textColor="@color/accent_strong"
+            android:textSize="@dimen/text_hint"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/nextClassTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/title_ink"
+            android:textSize="@dimen/text_hint" />
+
+        <TextView
+            android:id="@+id/nextClassTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/accent_strong"
+            android:textSize="@dimen/text_hint"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <!-- 内容区：课表可竖向滚动，加载/空/错误态覆盖其上。
          始终可见，「铺满一屏」用它的高度算行高（scroll 在空/加载态是 gone，量不到） -->
     <FrameLayout

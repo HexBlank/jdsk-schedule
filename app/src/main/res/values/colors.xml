@@ -9,6 +9,7 @@
     <color name="accent">#2f7d68</color>
     <color name="accent_strong">#287760</color>
     <color name="accent_soft">#e4f0ec</color>
+    <color name="accent_soft_pressed">#d3e7e0</color>
     <color name="line">#e9edeb</color>
 
     <!-- 文字灰阶只用五级，按用途命名 -->

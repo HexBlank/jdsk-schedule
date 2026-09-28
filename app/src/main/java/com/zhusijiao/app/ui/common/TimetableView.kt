@@ -479,6 +479,29 @@ class TimetableView @JvmOverloads constructor(
         }
     }
 
+    /**
+     * 打开本页第 [day] 列上某节课或日程的详情，与直接点那个块一样；课表页的「下一节课」提示条用它。
+     * 同名的块有多个时按开始时间 [startTime] 挑；找不到返回 false。
+     */
+    fun openBlockAt(day: Int, title: String, isEvent: Boolean, startTime: String): Boolean {
+        if (schedule == null) return false
+        val render = renderFor(week)
+        val candidates = render.blocks.filter { b ->
+            !b.buried && b.col == day && b.holiday == null && b.madeUpNote == null &&
+                b.occurrence != Occurrence.MOVED_OUT &&
+                if (isEvent) b.event?.title?.trim() == title else b.event == null && b.course.name.trim() == title
+        }
+        val hit = candidates.firstOrNull { blockStartTime(it) == startTime } ?: candidates.firstOrNull() ?: return false
+        openBlock(render, hit)
+        return true
+    }
+
+    private fun blockStartTime(b: Block): String? {
+        b.event?.startTime?.let { return it }
+        val section = b.event?.startSection ?: b.course.startSection
+        return sectionsList.find { it.number == section }?.startTime
+    }
+
     fun goToWeek(target: Int) {
         val s = schedule ?: return
         val clamped = target.coerceIn(1, max(1, s.totalWeeks))

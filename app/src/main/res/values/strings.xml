@@ -28,6 +28,14 @@
     <string name="index_week_title">第 %1$d 周</string>
     <string name="index_current_week">本周</string>
     <string name="index_back_current_week">回本周</string>
+    <string name="next_class_ongoing">正在上</string>
+    <string name="next_class_upcoming">下一节</string>
+    <string name="next_class_title_format">%1$s · %2$s</string>
+    <string name="next_class_ends_at">%1$s 下课</string>
+    <string name="next_class_event_ends_at">%1$s 结束</string>
+    <string name="next_class_in_minutes">%1$d 分钟后</string>
+    <string name="next_class_now">马上开始</string>
+    <string name="next_class_starts_at">%1$s 开始</string>
     <string name="index_week_empty">本周没有课程</string>
     <string name="index_unofficial_note">非官方工具 · 课程安排以教务系统为准</string>
     <string name="index_prev_week">上一周</string>

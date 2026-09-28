@@ -22,9 +22,12 @@ import com.zhusijiao.app.data.ScheduleSyncStore
 import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
+import com.zhusijiao.app.domain.NextClass
 import com.zhusijiao.app.domain.PersonalEvent
+import com.zhusijiao.app.domain.ReminderOccurrence
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
+import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimetableAppearance
 import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.AppearanceSheet
@@ -89,6 +92,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.nextWeek.setOnClickListener { binding.timetable.nextWeek() }
         binding.weekCenter.setOnClickListener { showWeekPicker() }
         binding.backToCurrentWeek.setOnClickListener { binding.timetable.goToWeek(currentWeekNumber) }
+        binding.nextClassBar.setOnClickListener { openNextClass() }
         binding.emptyImport.setOnClickListener {
             startActivity(Intent(requireContext(), ImportActivity::class.java))
         }
@@ -115,6 +119,7 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.root.removeCallbacks(nextClassTick)
         holidaySheet?.dismiss()
         holidaySheet = null
         _binding = null
@@ -196,6 +201,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.loading.visibility = if (state == STATE_LOADING) View.VISIBLE else View.GONE
         binding.emptyState.visibility = if (state == STATE_EMPTY) View.VISIBLE else View.GONE
         binding.errorState.visibility = if (state == STATE_ERROR) View.VISIBLE else View.GONE
+        updateNextClass()
     }
 
     private fun updateWeekBar(week: Int, isFirst: Boolean, isLast: Boolean) {
@@ -205,6 +211,57 @@ class ScheduleFragment : Fragment(), Refreshable {
         tint(binding.prevIcon, if (isFirst) R.color.tt_chevron_off else R.color.tt_chevron)
         tint(binding.nextIcon, if (isLast) R.color.tt_chevron_off else R.color.tt_chevron)
         binding.backToCurrentWeek.visibility = if (week != currentWeekNumber) View.VISIBLE else View.GONE
+        updateNextClass()
+    }
+
+    // ===== 下一节课提示条 =====
+
+    private var nextClass: NextClass.Info? = null
+    private val nextClassTick = Runnable { updateNextClass() }
+
+    /** 只在看本周、今天还有没下课的课时显示；每到整分钟刷新一次倒计时。 */
+    private fun updateNextClass() {
+        val b = _binding ?: return
+        b.root.removeCallbacks(nextClassTick)
+        val s = schedule
+        val now = System.currentTimeMillis()
+        val info = if (s != null && b.scroll.visibility == View.VISIBLE && currentWeek == currentWeekNumber) {
+            NextClass.find(s, events, now)?.takeIf { it.week == currentWeekNumber }
+        } else null
+        nextClass = info
+        if (info == null) {
+            b.nextClassBar.visibility = View.GONE
+            return
+        }
+        val item = info.item
+        b.nextClassLabel.text = getString(if (info.ongoing) R.string.next_class_ongoing else R.string.next_class_upcoming)
+        b.nextClassTitle.text = if (item.position.isNotBlank()) {
+            getString(R.string.next_class_title_format, item.title, item.position)
+        } else item.title
+        b.nextClassTime.text = when {
+            info.ongoing -> getString(if (item.isEvent) R.string.next_class_event_ends_at else R.string.next_class_ends_at, item.endTime)
+            info.minutesUntil <= 0 -> getString(R.string.next_class_now)
+            info.minutesUntil <= 60 -> getString(R.string.next_class_in_minutes, info.minutesUntil)
+            else -> getString(R.string.next_class_starts_at, item.startTime)
+        }
+        b.nextClassDot.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(nextClassColor(s!!, item))
+        }
+        b.nextClassBar.visibility = View.VISIBLE
+        b.root.postDelayed(nextClassTick, 60_000L - now % 60_000L + 500L)
+    }
+
+    private fun nextClassColor(s: Schedule, item: ReminderOccurrence): Int {
+        if (item.isEvent) return ContextCompat.getColor(requireContext(), R.color.accent)
+        val palette = ScheduleView.buildCoursePaletteMap(s.courses + s.adjustments.map { it.courseSnapshot }, s.courseColors)
+        return palette[item.title]?.background ?: ContextCompat.getColor(requireContext(), R.color.accent)
+    }
+
+    private fun openNextClass() {
+        val info = nextClass ?: return
+        val item = info.item
+        binding.timetable.openBlockAt(info.day, item.title, item.isEvent, item.startTime)
     }
 
     private fun tint(view: ImageView, colorRes: Int) {
