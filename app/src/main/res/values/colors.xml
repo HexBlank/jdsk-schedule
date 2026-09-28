@@ -122,4 +122,10 @@
     <color name="couple_hour_text">#8a9490</color>
     <color name="couple_heart">#e08aa2</color>
     <color name="couple_segment_bg">#e6ebe8</color>
+
+    <!-- 自家轻提示（AppToast） -->
+    <color name="toast_bg">#F01D2421</color>
+    <color name="toast_action">#86C8BC</color>
+    <color name="toast_success">#3D9A7C</color>
+    <color name="toast_error">#D9553B</color>
 </resources>

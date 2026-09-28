@@ -13,6 +13,6 @@ object SyncLogClipboard {
         val text = runCatching { SyncLog.export() }.getOrElse { "导出日志失败：${it.javaClass.name}: ${it.message}" }
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.sync_copy_log), text))
-        Ui.toast(context, context.getString(R.string.sync_log_copied))
+        Ui.toastSuccess(context, context.getString(R.string.sync_log_copied))
     }
 }

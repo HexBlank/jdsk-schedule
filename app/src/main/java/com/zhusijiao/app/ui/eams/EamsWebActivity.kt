@@ -158,7 +158,7 @@ class EamsWebActivity : BaseActivity() {
      */
     private fun manualRun() {
         if (!hostAllowed(binding.webView.url.orEmpty())) {
-            Ui.toast(this, getString(R.string.eams_untrusted_page))
+            Ui.toastError(this, getString(R.string.eams_untrusted_page))
             return
         }
         binding.webView.evaluateJavascript("!!(window.ZSJExport && window.ZSJExport.run)") { ready ->
@@ -295,7 +295,7 @@ class EamsWebActivity : BaseActivity() {
             runOnUiThread {
                 if (!currentPageTrusted()) return@runOnUiThread
                 if (message == "start") {
-                    Ui.toast(this@EamsWebActivity, getString(R.string.eams_parsing))
+                    Ui.toastLoading(this@EamsWebActivity, getString(R.string.eams_parsing))
                     startWatchdog()
                 }
             }

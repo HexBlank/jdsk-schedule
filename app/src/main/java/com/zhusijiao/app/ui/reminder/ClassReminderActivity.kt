@@ -224,7 +224,7 @@ class ClassReminderActivity : BaseActivity() {
     private fun openSettings(intent: Intent) {
         if (tryStart(intent)) return
         if (tryStart(ReminderPermissions.appDetailsIntent(this))) return
-        Ui.toast(this, getString(R.string.reminder_open_settings_failed))
+        Ui.toastError(this, getString(R.string.reminder_open_settings_failed))
     }
 
     private fun tryStart(intent: Intent): Boolean = try {
@@ -243,7 +243,7 @@ class ClassReminderActivity : BaseActivity() {
         }
         lifecycleScope.launch {
             withContext(Dispatchers.IO) { ClassReminders.sendTest(applicationContext) }
-            Ui.toast(this@ClassReminderActivity, getString(R.string.reminder_test_sent))
+            Ui.toastSuccess(this@ClassReminderActivity, getString(R.string.reminder_test_sent))
         }
     }
 }

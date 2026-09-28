@@ -531,7 +531,7 @@ class CoupleFragment : Fragment(), Refreshable {
                 if (_binding == null) return@launch
                 readLocal()
                 render()
-                Ui.toast(requireContext(), getString(R.string.couple_profile_saved))
+                Ui.toastSuccess(requireContext(), getString(R.string.couple_profile_saved))
             }
         }.show()
     }
@@ -563,7 +563,7 @@ class CoupleFragment : Fragment(), Refreshable {
                     Ui.toast(requireContext(), getString(R.string.couple_unbound_toast))
                     (activity as? MainActivity)?.syncCoupleTab()
                 } catch (error: Exception) {
-                    Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                    Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
                 }
             }
         }
@@ -630,7 +630,7 @@ class CoupleFragment : Fragment(), Refreshable {
                     viewLifecycleOwner.lifecycleScope.launch {
                         withContext(Dispatchers.IO) { PersonalEventStore.delete(schedule.id, event.id) }
                         load(sync = false)
-                        Ui.toast(requireContext(), getString(R.string.event_deleted))
+                        Ui.toastSuccess(requireContext(), getString(R.string.event_deleted))
                     }
                 }
             }

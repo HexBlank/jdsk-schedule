@@ -95,7 +95,7 @@ object AppUpdater {
         runCatching {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.downloadUrl)))
         }.onFailure {
-            Ui.toast(context, context.getString(com.zhusijiao.app.R.string.update_open_failed))
+            Ui.toastError(context, context.getString(com.zhusijiao.app.R.string.update_open_failed))
         }
     }
 }

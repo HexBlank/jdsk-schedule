@@ -2,21 +2,37 @@ package com.zhusijiao.app.util
 
 import android.content.Context
 import android.view.View
-import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import com.zhusijiao.app.R
 import com.zhusijiao.app.ui.common.AppDialog
+import com.zhusijiao.app.ui.common.AppToast
 
 /**
- * UI 辅助：统一的 toast 与弹窗入口，以及状态栏/导航栏安全区避让。
+ * UI 辅助：统一的轻提示与弹窗入口，以及状态栏/导航栏安全区避让。
  * 弹窗统一使用自定义 [AppDialog]（不使用系统 AlertDialog），保证全站视觉一致。
  */
 object Ui {
 
+    /** 普通轻提示。所有提示都走自家 [AppToast]，样式不受手机厂商影响。 */
     fun toast(context: Context, message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        AppToast.show(context, message)
+    }
+
+    /** 成功：带绿色对勾；[action] 非空时右侧带一个文字按钮（如「撤销」）。 */
+    fun toastSuccess(context: Context, message: String, action: AppToast.Action? = null) {
+        AppToast.show(context, message, AppToast.Kind.SUCCESS, action)
+    }
+
+    /** 失败或校验不通过：带红色感叹号，比普通提示多停一会儿。 */
+    fun toastError(context: Context, message: String) {
+        AppToast.show(context, message, AppToast.Kind.ERROR)
+    }
+
+    /** 进行中：带转圈，一直显示到被下一条提示替换。 */
+    fun toastLoading(context: Context, message: String) {
+        AppToast.show(context, message, AppToast.Kind.LOADING)
     }
 
     /** 单按钮提示。 */

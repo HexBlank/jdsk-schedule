@@ -96,6 +96,21 @@ object PersonalEventStore {
         write(all)
     }
 
+    /**
+     * 撤销删除：把刚删掉的日程原样放回（id、创建时间都不变）。
+     * 这段时间里同一时段又新建了日程时抛 [ApiException]，不覆盖用户的新安排。
+     */
+    fun restore(scheduleId: String, event: PersonalEvent) = synchronized(lock) {
+        val all = read().toMutableMap()
+        val events = all[scheduleId].orEmpty()
+        if (events.any { it.id == event.id }) return@synchronized
+        ScheduleOccurrences.overlappingEvent(events, PersonalEventDraft.from(event), null)?.let {
+            throw ApiException("这个时段已经有日程「${it.title}」了")
+        }
+        all[scheduleId] = events + event
+        write(all)
+    }
+
     /** 课表被删除或退出时清理它名下的日程。 */
     fun removeSchedule(scheduleId: String) = synchronized(lock) {
         val all = read().toMutableMap()

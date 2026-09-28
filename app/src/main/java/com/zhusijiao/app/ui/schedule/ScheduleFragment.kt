@@ -25,6 +25,7 @@ import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.TimetableAppearance
+import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
@@ -235,7 +236,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         val synced = ApiClient.syncSchedules()
         syncRunning = false
         if (_binding == null) return
-        if (!synced) ApiClient.takeNewSyncError()?.let { Ui.toast(requireContext(), it) }
+        if (!synced) ApiClient.takeNewSyncError()?.let { Ui.toastError(requireContext(), it) }
         // 失败也重载：单条写入失败时远端课表仍可能已拉取，或有订阅课表被清理
         load(silent = true, syncRemote = false)
     }
@@ -262,12 +263,12 @@ class ScheduleFragment : Fragment(), Refreshable {
                 try {
                     ApiClient.leaveSchedule(current.id)
                     if (Prefs.activeScheduleId == current.id) Prefs.removeActiveSchedule()
-                    Ui.toast(requireContext(), getString(R.string.gone_removed))
+                    Ui.toastSuccess(requireContext(), getString(R.string.gone_removed))
                     load(silent = true, syncRemote = false)
                 } catch (e: Exception) {
                     SyncLog.log("移除课表失败", "local=${current.id} ${e.javaClass.name}: ${e.message}")
                     promptedGone.remove(current.id)
-                    Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
+                    Ui.toastError(requireContext(), e.message ?: getString(R.string.common_load_failed))
                 }
             }
         }
@@ -297,9 +298,19 @@ class ScheduleFragment : Fragment(), Refreshable {
                                 current.id, draft, click.adjustment?.id, current.revision
                             )
                             applyUpdatedSchedule(updated)
-                            Ui.toast(requireContext(), getString(R.string.reschedule_saved))
+                            // 新建的调课可以一键撤销；修改已有调课不提供（撤销要还原的是上一次的草稿，容易误解）
+                            val created = if (click.adjustment == null) {
+                                updated.adjustments.firstOrNull { new -> current.adjustments.none { it.id == new.id } }
+                            } else null
+                            Ui.toastSuccess(
+                                requireContext(),
+                                getString(R.string.reschedule_saved),
+                                created?.let { adjustment ->
+                                    AppToast.Action(getString(R.string.common_undo)) { undoAdjustment(adjustment.id) }
+                                }
+                            )
                         } catch (error: Exception) {
-                            Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                            Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
                         }
                     }
                 }.show()
@@ -316,14 +327,29 @@ class ScheduleFragment : Fragment(), Refreshable {
                         try {
                             val updated = ApiClient.deleteAdjustment(current.id, adjustment.id, current.revision)
                             applyUpdatedSchedule(updated)
-                            Ui.toast(requireContext(), getString(R.string.reschedule_undone))
+                            Ui.toastSuccess(requireContext(), getString(R.string.reschedule_undone))
                         } catch (error: Exception) {
-                            Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                            Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
                         }
                     }
                 }
             }
         ).show()
+    }
+
+    /** 轻提示里的「撤销」：删掉刚新建的那条调课。 */
+    private fun undoAdjustment(adjustmentId: String) {
+        if (_binding == null) return
+        val latest = schedule ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val updated = ApiClient.deleteAdjustment(latest.id, adjustmentId, latest.revision)
+                applyUpdatedSchedule(updated)
+                Ui.toastSuccess(requireContext(), getString(R.string.reschedule_undone))
+            } catch (error: Exception) {
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
     }
 
     private fun applyUpdatedSchedule(updated: Schedule) {
@@ -390,16 +416,38 @@ class ScheduleFragment : Fragment(), Refreshable {
         val current = schedule ?: return
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                withContext(Dispatchers.IO) { PersonalEventStore.delete(current.id, eventId) }
+                val removed = withContext(Dispatchers.IO) {
+                    PersonalEventStore.get(current.id, eventId).also { PersonalEventStore.delete(current.id, eventId) }
+                }
                 reloadEvents(current.id)
-                Ui.toast(requireContext(), getString(R.string.event_deleted))
+                Ui.toastSuccess(
+                    requireContext(),
+                    getString(R.string.event_deleted),
+                    removed?.let { event ->
+                        AppToast.Action(getString(R.string.common_undo)) { restoreEvent(current.id, event) }
+                    }
+                )
             } catch (error: Exception) {
-                Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
             }
         }
     }
 
     /** 日程改动后就地重绘：课表本身没变，不必走整页 load。 */
+    /** 轻提示里的「撤销」：把刚删掉的日程放回去。 */
+    private fun restoreEvent(scheduleId: String, event: PersonalEvent) {
+        if (_binding == null) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) { PersonalEventStore.restore(scheduleId, event) }
+                reloadEvents(scheduleId)
+                Ui.toastSuccess(requireContext(), getString(R.string.event_restored))
+            } catch (error: Exception) {
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
+    }
+
     private suspend fun reloadEvents(scheduleId: String) {
         val loaded = withContext(Dispatchers.IO) { PersonalEventStore.list(scheduleId) }
         if (_binding == null) return
@@ -538,7 +586,7 @@ class ScheduleFragment : Fragment(), Refreshable {
     private fun showCourseColorSheet(click: TimetableView.CourseClick) {
         val current = schedule ?: return
         if (!current.isOwner) {
-            Ui.toast(requireContext(), getString(R.string.course_colors_owner_only))
+            Ui.toastError(requireContext(), getString(R.string.course_colors_owner_only))
             return
         }
         ColorPickerSheet(
@@ -551,15 +599,22 @@ class ScheduleFragment : Fragment(), Refreshable {
         ).show()
     }
 
-    private fun persistColors(colors: Map<String, String>) {
+    /** 保存手动配色；[undoable] 为 true 时轻提示带「撤销」，恢复成改之前的颜色（撤销本身不再带撤销）。 */
+    private fun persistColors(colors: Map<String, String>, undoable: Boolean = true) {
+        if (_binding == null) return
         val current = schedule ?: return
+        val previous = current.courseColors
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val updated = ApiClient.setCourseColors(current.id, colors, current.revision)
                 applyUpdatedSchedule(updated)
-                Ui.toast(requireContext(), getString(R.string.course_colors_updated))
+                Ui.toastSuccess(
+                    requireContext(),
+                    getString(if (undoable) R.string.course_colors_updated else R.string.course_colors_restored),
+                    if (undoable) AppToast.Action(getString(R.string.common_undo)) { persistColors(previous, undoable = false) } else null
+                )
             } catch (error: Exception) {
-                Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
             }
         }
     }
@@ -570,9 +625,9 @@ class ScheduleFragment : Fragment(), Refreshable {
                 val updated = block()
                 applyUpdatedSchedule(updated)
                 holidaySheet?.applySchedule(updated)
-                Ui.toast(requireContext(), successMessage(updated))
+                Ui.toastSuccess(requireContext(), successMessage(updated))
             } catch (error: Exception) {
-                Ui.toast(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
             }
         }
     }

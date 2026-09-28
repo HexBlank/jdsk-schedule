@@ -51,7 +51,7 @@ class ChannelSheet(
             showAddForm(false)
             renderList()
             onChanged()
-            Ui.toast(context, context.getString(R.string.channel_switched))
+            Ui.toastSuccess(context, context.getString(R.string.channel_switched))
         }
     }
 
@@ -91,7 +91,7 @@ class ChannelSheet(
                     Prefs.updateChannelId = option.id
                     renderList()
                     onChanged()
-                    Ui.toast(context, context.getString(R.string.channel_switched))
+                    Ui.toastSuccess(context, context.getString(R.string.channel_switched))
                 }
             }
         }

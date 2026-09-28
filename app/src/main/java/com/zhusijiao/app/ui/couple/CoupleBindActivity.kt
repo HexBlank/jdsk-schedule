@@ -109,7 +109,7 @@ class CoupleBindActivity : BaseActivity() {
                 showInvite(ApiClient.createCoupleInvite())
                 startWaiting()
             } catch (error: Exception) {
-                Ui.toast(this@CoupleBindActivity, error.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(this@CoupleBindActivity, error.message ?: getString(R.string.common_load_failed))
             } finally {
                 busy = false
             }
@@ -174,7 +174,7 @@ class CoupleBindActivity : BaseActivity() {
         val value = invite ?: return
         (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
             .setPrimaryClip(ClipData.newPlainText("coupleInvite", value.code))
-        Ui.toast(this, getString(R.string.couple_invite_copied))
+        Ui.toastSuccess(this, getString(R.string.couple_invite_copied))
     }
 
     private fun shareInvite() {
@@ -235,7 +235,7 @@ class CoupleBindActivity : BaseActivity() {
         val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty()
         val normalized = normalizeCode(text)
         if (normalized.isEmpty()) {
-            Ui.toast(this, getString(R.string.couple_paste_empty))
+            Ui.toastError(this, getString(R.string.couple_paste_empty))
             return
         }
         applyCode(normalized)
@@ -267,7 +267,7 @@ class CoupleBindActivity : BaseActivity() {
 
     private fun onBound() {
         waitJob?.cancel()
-        Ui.toast(this, getString(R.string.couple_bound_toast))
+        Ui.toastSuccess(this, getString(R.string.couple_bound_toast))
         startActivity(
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)

@@ -106,7 +106,7 @@ class RescheduleSheet(
                 ScheduleValidator.validateAdjustment(schedule, draft, adjustment?.id)
             }.exceptionOrNull()
             if (base != null) {
-                Ui.toast(context, base.message ?: context.getString(R.string.reschedule_invalid))
+                Ui.toastError(context, base.message ?: context.getString(R.string.reschedule_invalid))
                 return@setOnClickListener
             }
             val conflicts = ScheduleValidator.conflicts(schedule, draft, adjustment?.id)

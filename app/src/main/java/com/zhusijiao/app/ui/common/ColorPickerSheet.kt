@@ -81,7 +81,7 @@ class ColorPickerSheet(
                     onLongClick = {
                         Prefs.removeCustomCourseColor(hex)
                         buildCustomGrid()
-                        Ui.toast(context, context.getString(R.string.color_picker_removed))
+                        Ui.toastSuccess(context, context.getString(R.string.color_picker_removed))
                     }
                 ) {
                     onPick(hex)

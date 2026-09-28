@@ -53,7 +53,7 @@ class ServerSheet(
                 ScheduleSyncStore.clear()
                 CoupleStore.clear()
                 SyncLog.log("切换数据服务，清空同步映射", newOverride.ifBlank { "恢复默认" })
-                Ui.toast(context, context.getString(R.string.server_switched))
+                Ui.toastSuccess(context, context.getString(R.string.server_switched))
                 onSaved()
                 dismiss()
             }

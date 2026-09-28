@@ -94,7 +94,7 @@ class ShareActivity : BaseActivity() {
         val code = schedule?.shareCode ?: return
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         cm.setPrimaryClip(ClipData.newPlainText("shareCode", code))
-        Ui.toast(this, getString(R.string.share_copied))
+        Ui.toastSuccess(this, getString(R.string.share_copied))
     }
 
     private fun rotateCode() {
@@ -109,9 +109,9 @@ class ShareActivity : BaseActivity() {
                     val newCode = ApiClient.rotateShareCode(scheduleId)
                     schedule = schedule?.copy(shareCode = newCode)
                     renderCodeChars(newCode)
-                    Ui.toast(this@ShareActivity, getString(R.string.share_rotated))
+                    Ui.toastSuccess(this@ShareActivity, getString(R.string.share_rotated))
                 } catch (e: Exception) {
-                    Ui.toast(this@ShareActivity, e.message ?: getString(R.string.common_load_failed))
+                    Ui.toastError(this@ShareActivity, e.message ?: getString(R.string.common_load_failed))
                 }
             }
         }

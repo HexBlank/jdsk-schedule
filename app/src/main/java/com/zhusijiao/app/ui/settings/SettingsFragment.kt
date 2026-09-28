@@ -89,10 +89,10 @@ class SettingsFragment : Fragment(), Refreshable {
                             clearFormData()
                             clearHttpAuthUsernamePassword()
                         }
-                        Ui.toast(requireContext(), getString(R.string.settings_delete_done))
+                        Ui.toastSuccess(requireContext(), getString(R.string.settings_delete_done))
                         (activity as? MainActivity)?.openLibraryTab()
                     } catch (e: Exception) {
-                        Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
+                        Ui.toastError(requireContext(), e.message ?: getString(R.string.common_load_failed))
                     }
                 }
             }
@@ -216,17 +216,17 @@ class SettingsFragment : Fragment(), Refreshable {
             )
             return
         }
-        Ui.toast(requireContext(), getString(R.string.update_checking))
+        Ui.toastLoading(requireContext(), getString(R.string.update_checking))
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = AppUpdater.fetch()) {
                 is UpdateCheck.Found ->
                     if (AppUpdater.isNewer(result.release)) {
                         (activity as? MainActivity)?.showUpdateDialog(result.release, recordDismiss = false)
                     } else {
-                        Ui.toast(requireContext(), getString(R.string.update_latest_already))
+                        Ui.toastSuccess(requireContext(), getString(R.string.update_latest_already))
                     }
-                UpdateCheck.NoRelease -> Ui.toast(requireContext(), getString(R.string.update_latest_already))
-                UpdateCheck.Failed -> Ui.toast(requireContext(), getString(R.string.update_check_failed))
+                UpdateCheck.NoRelease -> Ui.toastSuccess(requireContext(), getString(R.string.update_latest_already))
+                UpdateCheck.Failed -> Ui.toastError(requireContext(), getString(R.string.update_check_failed))
             }
         }
     }
@@ -236,7 +236,7 @@ class SettingsFragment : Fragment(), Refreshable {
         val groupNumber = getString(R.string.settings_qq_group_number)
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("QQ群号", groupNumber))
-        Ui.toast(requireContext(), getString(R.string.settings_qq_group_copied, groupNumber))
+        Ui.toastSuccess(requireContext(), getString(R.string.settings_qq_group_copied, groupNumber))
     }
 
     /** 用系统浏览器打开开源项目仓库主页。 */
@@ -245,7 +245,7 @@ class SettingsFragment : Fragment(), Refreshable {
         try {
             startActivity(intent)
         } catch (_: ActivityNotFoundException) {
-            Ui.toast(requireContext(), getString(R.string.settings_open_source_failed))
+            Ui.toastError(requireContext(), getString(R.string.settings_open_source_failed))
         }
     }
 

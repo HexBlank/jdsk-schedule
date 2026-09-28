@@ -81,7 +81,7 @@ class EventEditorActivity : BaseActivity() {
             }
             val target = loaded.first
             if (target == null) {
-                Ui.toast(this@EventEditorActivity, getString(R.string.common_load_failed))
+                Ui.toastError(this@EventEditorActivity, getString(R.string.common_load_failed))
                 finish()
                 return@launch
             }
@@ -359,17 +359,17 @@ class EventEditorActivity : BaseActivity() {
         val current = schedule ?: return
         val raw = draft()
         if (raw == null) {
-            Ui.toast(this, getString(R.string.event_no_section))
+            Ui.toastError(this, getString(R.string.event_no_section))
             return
         }
         val normalized = try {
             PersonalEventValidator.normalize(raw, totalWeeks, slots)
         } catch (error: IllegalArgumentException) {
-            Ui.toast(this, error.message ?: getString(R.string.common_load_failed))
+            Ui.toastError(this, error.message ?: getString(R.string.common_load_failed))
             return
         }
         ScheduleOccurrences.overlappingEvent(events, normalized, editing?.id)?.let { existing ->
-            Ui.toast(this, getString(R.string.event_overlap_exists, existing.title))
+            Ui.toastError(this, getString(R.string.event_overlap_exists, existing.title))
             return
         }
         val conflicts = ScheduleOccurrences.conflictsForEvent(current, normalized)
@@ -405,11 +405,11 @@ class EventEditorActivity : BaseActivity() {
                         slots = slots
                     )
                 }
-                Ui.toast(this@EventEditorActivity, getString(R.string.event_saved))
+                Ui.toastSuccess(this@EventEditorActivity, getString(R.string.event_saved))
                 setResult(RESULT_OK)
                 finish()
             } catch (error: Exception) {
-                Ui.toast(
+                Ui.toastError(
                     this@EventEditorActivity,
                     error.message ?: getString(R.string.common_load_failed)
                 )

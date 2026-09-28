@@ -78,13 +78,13 @@ class LibraryFragment : Fragment(), Refreshable {
                     val synced = ApiClient.syncSchedules()
                     syncRunning = false
                     if (_binding == null) return@launch
-                    ApiClient.takeNewSyncError()?.let { Ui.toast(requireContext(), it) }
+                    ApiClient.takeNewSyncError()?.let { Ui.toastError(requireContext(), it) }
                     // 失败时也重绘：卡片上的同步状态可能变成「同步失败」
                     load(syncRemote = false)
                 }
             } catch (e: Exception) {
                 binding.skeletonList.visibility = View.GONE
-                Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(requireContext(), e.message ?: getString(R.string.common_load_failed))
             }
         }
     }
@@ -217,10 +217,10 @@ class LibraryFragment : Fragment(), Refreshable {
                 if (isOwner) ApiClient.deleteSchedule(item.id) else ApiClient.leaveSchedule(item.id)
                 if (Prefs.activeScheduleId == item.id) Prefs.removeActiveSchedule()
                 load()
-                Ui.toast(requireContext(), successMessage)
+                Ui.toastSuccess(requireContext(), successMessage)
             } catch (e: Exception) {
                 SyncLog.log("移除课表失败", "local=${item.id} ${e.javaClass.name}: ${e.message}")
-                Ui.toast(requireContext(), e.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(requireContext(), e.message ?: getString(R.string.common_load_failed))
             }
         }
     }

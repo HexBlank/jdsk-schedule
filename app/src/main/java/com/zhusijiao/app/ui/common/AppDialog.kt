@@ -22,6 +22,12 @@ class AppDialog(context: Context) : Dialog(context, R.style.Theme_Zhusijiao_Moda
     private var onPositive: (() -> Unit)? = null
     private var onNegative: (() -> Unit)? = null
 
+    override fun show() {
+        // 弹窗出现说明「进行中」已经有了结果，收起转圈提示
+        AppToast.dismissLoading()
+        super.show()
+    }
+
     init {
         setContentView(R.layout.dialog_app_modal)
         titleView = findViewById(R.id.modalTitle)

@@ -130,12 +130,12 @@ class JoinActivity : BaseActivity() {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val text = cm.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
         applyCode(text)
-        if (code.length >= 6) doPreview() else Ui.toast(this, getString(R.string.join_clip_empty))
+        if (code.length >= 6) doPreview() else Ui.toastError(this, getString(R.string.join_clip_empty))
     }
 
     private fun doPreview() {
         if (code.length < 6) {
-            Ui.toast(this, getString(R.string.join_need_full))
+            Ui.toastError(this, getString(R.string.join_need_full))
             return
         }
         binding.errorNote.visibility = View.GONE
@@ -186,10 +186,10 @@ class JoinActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 val schedule = ApiClient.joinShareCode(code)
-                Ui.toast(this@JoinActivity, getString(R.string.join_success))
+                Ui.toastSuccess(this@JoinActivity, getString(R.string.join_success))
                 openSchedule(schedule.id)
             } catch (e: Exception) {
-                Ui.toast(this@JoinActivity, e.message ?: getString(R.string.common_load_failed))
+                Ui.toastError(this@JoinActivity, e.message ?: getString(R.string.common_load_failed))
             }
         }
     }

@@ -429,14 +429,14 @@ class HolidaySheet(
     private fun submitHolidays(days: Int) {
         val drafts = plannedHolidays(days).map { DayHolidayDraft(it.week, it.day) }
         if (drafts.isEmpty()) {
-            Ui.toast(context, context.getString(R.string.holiday_nothing_added))
+            Ui.toastError(context, context.getString(R.string.holiday_nothing_added))
             return
         }
         var state = schedule
         for (draft in drafts) {
             val error = runCatching { ScheduleValidator.validateHoliday(state, draft) }.exceptionOrNull()
             if (error != null) {
-                Ui.toast(context, error.message ?: context.getString(R.string.holiday_invalid))
+                Ui.toastError(context, error.message ?: context.getString(R.string.holiday_invalid))
                 return
             }
             state = state.copy(
@@ -452,7 +452,7 @@ class HolidaySheet(
         val source = calendar.itemAt(makeupSource) ?: return
         val target = calendar.itemAt(makeupTarget)
         if (target == null) {
-            Ui.toast(context, context.getString(R.string.holiday_makeup_need_target))
+            Ui.toastError(context, context.getString(R.string.holiday_makeup_need_target))
             return
         }
         val draft = DayMakeupDraft(
@@ -463,7 +463,7 @@ class HolidaySheet(
         )
         val error = runCatching { ScheduleValidator.validateMakeup(schedule, draft) }.exceptionOrNull()
         if (error != null) {
-            Ui.toast(context, error.message ?: context.getString(R.string.holiday_invalid))
+            Ui.toastError(context, error.message ?: context.getString(R.string.holiday_invalid))
             return
         }
         selected = target.index

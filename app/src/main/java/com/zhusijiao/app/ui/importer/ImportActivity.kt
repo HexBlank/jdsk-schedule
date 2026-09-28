@@ -46,7 +46,7 @@ class ImportActivity : BaseActivity() {
             val json = result.data?.getStringExtra(EamsWebActivity.EXTRA_JSON)
             if (json.isNullOrBlank()) {
                 // 走到这里说明教务页宣称成功却没带回内容，给一句话，别让页面看着像没点过
-                Ui.toast(this, getString(R.string.import_eams_empty))
+                Ui.toastError(this, getString(R.string.import_eams_empty))
             } else {
                 binding.sourceInput.setText(json)
                 showFileInfo(getString(R.string.import_source_eams), json.length)
@@ -124,7 +124,7 @@ class ImportActivity : BaseActivity() {
             } catch (e: Exception) {
                 binding.overwriteMode.visibility = View.GONE
                 binding.overwriteWarning.visibility = View.GONE
-                if (showError) Ui.toast(this@ImportActivity, e.message ?: getString(R.string.import_original_failed))
+                if (showError) Ui.toastError(this@ImportActivity, e.message ?: getString(R.string.import_original_failed))
             } finally {
                 targetLookupPending = false
                 updateSaveButton()
@@ -135,7 +135,7 @@ class ImportActivity : BaseActivity() {
     private fun handleFile(uri: Uri) {
         val text = readUri(uri)
         if (text == null) {
-            Ui.toast(this, getString(R.string.import_read_failed))
+            Ui.toastError(this, getString(R.string.import_read_failed))
             return
         }
         binding.sourceInput.setText(text)
@@ -148,7 +148,7 @@ class ImportActivity : BaseActivity() {
             contentResolver.openInputStream(uri)?.use { input ->
                 val bytes = input.readBytes()
                 if (bytes.size > MAX_BYTES) {
-                    Ui.toast(this, getString(R.string.import_file_too_large))
+                    Ui.toastError(this, getString(R.string.import_file_too_large))
                     null
                 } else String(bytes, Charsets.UTF_8)
             }
@@ -165,7 +165,7 @@ class ImportActivity : BaseActivity() {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val text = cm.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
         if (text.isBlank()) {
-            Ui.toast(this, getString(R.string.import_clip_empty))
+            Ui.toastError(this, getString(R.string.import_clip_empty))
             return
         }
         binding.sourceInput.setText(text)
@@ -186,13 +186,13 @@ class ImportActivity : BaseActivity() {
         }
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         cm.setPrimaryClip(ClipData.newPlainText("helper", AppConfig.helperScriptUrl))
-        Ui.toast(this, getString(R.string.import_helper_copied))
+        Ui.toastSuccess(this, getString(R.string.import_helper_copied))
     }
 
     private fun parseSource() {
         val source = binding.sourceInput.text.toString()
         if (source.isBlank()) {
-            Ui.toast(this, getString(R.string.import_need_source))
+            Ui.toastError(this, getString(R.string.import_need_source))
             return
         }
         binding.parseBtn.isEnabled = false
@@ -202,7 +202,7 @@ class ImportActivity : BaseActivity() {
                 val result = withContext(Dispatchers.Default) { EamsParser.parseImportContent(source) }
                 parsed = result
                 renderResult(result)
-                Ui.toast(this@ImportActivity, getString(R.string.import_parsed_count, result.courses.size))
+                Ui.toastSuccess(this@ImportActivity, getString(R.string.import_parsed_count, result.courses.size))
             } catch (e: Exception) {
                 parsed = null
                 binding.resultSection.visibility = View.GONE
@@ -300,16 +300,16 @@ class ImportActivity : BaseActivity() {
     private fun save() {
         val p = parsed
         if (p == null) {
-            Ui.toast(this, getString(R.string.import_need_parse))
+            Ui.toastError(this, getString(R.string.import_need_parse))
             return
         }
         val name = binding.nameInput.text.toString().trim()
         if (name.isEmpty()) {
-            Ui.toast(this, getString(R.string.import_need_name))
+            Ui.toastError(this, getString(R.string.import_need_name))
             return
         }
         if (!Regex("^\\d{4}-\\d{2}-\\d{2}$").matches(semesterStart)) {
-            Ui.toast(this, getString(R.string.import_need_date))
+            Ui.toastError(this, getString(R.string.import_need_date))
             return
         }
         val weeks = binding.weeksInput.text.toString().toIntOrNull() ?: 20
@@ -334,10 +334,11 @@ class ImportActivity : BaseActivity() {
                 val saved = ApiClient.saveSchedule(payload, target?.id, target?.revision)
                 val switched = Prefs.activeScheduleId != saved.id
                 Prefs.activeScheduleId = saved.id
-                Ui.toast(this@ImportActivity, getString(if (target != null) R.string.import_updated else R.string.import_created))
-                // 情侣课表：TA 看到的是当前课表，切换了要让用户知道
+                // 情侣课表：TA 看到的是当前课表，切换了要让用户知道（轻提示同时只显示一条，所以二选一）
                 if (switched && ApiClient.coupleState().bound) {
-                    Ui.toast(this@ImportActivity, getString(R.string.library_couple_switch_toast))
+                    Ui.toastSuccess(this@ImportActivity, getString(R.string.library_couple_switch_toast))
+                } else {
+                    Ui.toastSuccess(this@ImportActivity, getString(if (target != null) R.string.import_updated else R.string.import_created))
                 }
                 val intent = Intent(this@ImportActivity, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)

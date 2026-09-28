@@ -80,6 +80,9 @@
     <string name="reschedule_undo_title">撤销这次调课？</string>
     <string name="reschedule_undo_content">课程将恢复到原来的周次和节次。</string>
     <string name="reschedule_undone">已恢复原安排</string>
+    <string name="common_undo">撤销</string>
+    <string name="event_restored">日程已恢复</string>
+    <string name="course_colors_restored">已恢复原来的颜色</string>
     <string name="reschedule_orphaned">原课程在最近一次重新导入后已不存在。为避免丢失，本次调课仍按快照显示；可撤销后重新选择课程调课。</string>
 
     <!-- 停课与补课（假期调休）：日历直选，不再让用户心算「第几周周几」 -->
