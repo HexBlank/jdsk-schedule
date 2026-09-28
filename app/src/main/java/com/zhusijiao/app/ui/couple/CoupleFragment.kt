@@ -2,6 +2,7 @@ package com.zhusijiao.app.ui.couple
 
 import android.content.Intent
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
@@ -64,6 +65,9 @@ class CoupleFragment : Fragment(), Refreshable {
 
     /** 日视图正在看的日期（YYYY-MM-DD）；null 表示今天，跨过零点也跟着走。 */
     private var selectedDate: String? = null
+
+    /** 心形已经为哪一天跳过（两个人都空闲时每天只跳一次）。 */
+    private var heartBeatDate: String? = null
 
     private var state: CoupleState = CoupleState.UNBOUND
     private var mySchedule: Schedule? = null
@@ -259,13 +263,18 @@ class CoupleFragment : Fragment(), Refreshable {
             )
         )
         val statuses = mapOf(
-            "me" to if (mySchedule == null) getString(R.string.couple_no_my_schedule)
-            else CoupleDay.statusText(myPlan, isToday, now),
-            "partner" to if (partnerSchedule == null) getString(R.string.couple_no_partner_schedule)
-            else CoupleDay.statusText(partnerPlan, isToday, now)
+            "me" to if (mySchedule == null) CoupleDay.Status(CoupleDay.StatusKind.NEUTRAL, getString(R.string.couple_no_my_schedule))
+            else CoupleDay.status(myPlan, isToday, now),
+            "partner" to if (partnerSchedule == null) CoupleDay.Status(CoupleDay.StatusKind.NEUTRAL, getString(R.string.couple_no_partner_schedule))
+            else CoupleDay.status(partnerPlan, isToday, now)
         )
-        renderPerson(leftWho(), binding.leftName, binding.leftSwatch, binding.leftStatus, binding.leftPerson, statuses)
-        renderPerson(rightWho(), binding.rightName, binding.rightSwatch, binding.rightStatus, binding.rightPerson, statuses)
+        renderPerson(leftWho(), binding.leftAvatar, binding.leftStatusDot, binding.leftName, binding.leftStatus, binding.leftPerson, statuses)
+        renderPerson(rightWho(), binding.rightAvatar, binding.rightStatusDot, binding.rightName, binding.rightStatus, binding.rightPerson, statuses)
+        // 两个人现在都空闲：心形跳一下（每天最多一次，每分钟的刷新不会反复跳）
+        if (isToday && statuses.values.all { it.kind == CoupleDay.StatusKind.FREE } && heartBeatDate != date) {
+            heartBeatDate = date
+            beatHeart()
+        }
 
         val bothKnown = mySchedule != null && partnerSchedule != null
         val gaps = if (bothKnown) CoupleDay.freeGaps(myPlan, partnerPlan, dayStart, dayEnd) else emptyList()
@@ -299,19 +308,59 @@ class CoupleFragment : Fragment(), Refreshable {
         renderNotice()
     }
 
+    /**
+     * 双人卡片的一侧：头像是名字首字加个人色，右下角状态点；状态做成带色胶囊——
+     * 上课中偏红、空闲偏绿、看别的日子或没有课表时中性灰，「TA 现在方便吗」不用读字就能回答。
+     */
     private fun renderPerson(
         who: String,
+        avatar: TextView,
+        dot: View,
         nameView: TextView,
-        swatch: View,
         statusView: TextView,
         container: View,
-        statuses: Map<String, String>
+        statuses: Map<String, CoupleDay.Status>
     ) {
         val name = nameOf(who)
+        val colors = colorsOf(who)
+        val status = statuses.getValue(who)
         nameView.text = name
-        swatch.showSwatch(colorsOf(who).fill)
-        statusView.text = statuses[who].orEmpty()
-        container.contentDescription = getString(R.string.couple_edit_desc, name) + "。" + statuses[who].orEmpty()
+        avatar.text = if (name.isEmpty()) "" else String(Character.toChars(name.codePointAt(0)))
+        avatar.setTextColor(colors.ink)
+        avatar.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(colors.fill)
+        }
+        val (chipBg, chipText, dotColor) = when (status.kind) {
+            CoupleDay.StatusKind.IN_CLASS -> Triple(R.color.couple_status_busy_bg, R.color.danger, R.color.couple_now_line)
+            CoupleDay.StatusKind.FREE -> Triple(R.color.accent_soft, R.color.couple_free_pill_text, R.color.sync_dot)
+            CoupleDay.StatusKind.NEUTRAL -> Triple(R.color.skeleton, R.color.sub_6c, R.color.sync_dot_idle)
+        }
+        val ctx = requireContext()
+        statusView.text = status.text
+        statusView.setTextColor(ContextCompat.getColor(ctx, chipText))
+        statusView.background = GradientDrawable().apply {
+            cornerRadius = resources.displayMetrics.density * 100f
+            setColor(ContextCompat.getColor(ctx, chipBg))
+        }
+        dot.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(ContextCompat.getColor(ctx, dotColor))
+            setStroke((resources.displayMetrics.density * 2f).toInt(), ContextCompat.getColor(ctx, R.color.surface))
+        }
+        container.contentDescription = getString(R.string.couple_edit_desc, name) + "。" + status.text
+    }
+
+    private fun beatHeart() {
+        val heart = binding.coupleHeart
+        heart.animate().cancel()
+        heart.animate().scaleX(1.25f).scaleY(1.25f).setDuration(140L).withEndAction {
+            heart.animate().scaleX(1f).scaleY(1f).setDuration(140L).withEndAction {
+                heart.animate().scaleX(1.15f).scaleY(1.15f).setDuration(120L).withEndAction {
+                    heart.animate().scaleX(1f).scaleY(1f).setDuration(160L).start()
+                }.start()
+            }.start()
+        }.start()
     }
 
     /** 本周七天：选中日深色底，今天字是主题绿。 */

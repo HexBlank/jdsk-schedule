@@ -106,6 +106,19 @@ class CoupleDayTest {
     }
 
     @Test
+    fun `状态种类：上课中偏红、空闲偏绿、看别的日子或没课表是中性`() {
+        val plan = CoupleDay.plan(schedule(listOf(course("现代汉语", 5, 3, 4), course("心理学", 5, 6, 7))), emptyList(), friday)!!
+        assertEquals(CoupleDay.StatusKind.IN_CLASS, CoupleDay.status(plan, isToday = true, nowMinutes = t("10:20")).kind)
+        assertEquals(CoupleDay.StatusKind.FREE, CoupleDay.status(plan, isToday = true, nowMinutes = t("12:00")).kind)
+        assertEquals(CoupleDay.StatusKind.FREE, CoupleDay.status(plan, isToday = true, nowMinutes = t("20:00")).kind)
+        assertEquals(CoupleDay.StatusKind.NEUTRAL, CoupleDay.status(plan, isToday = false, nowMinutes = 0).kind)
+        assertEquals(CoupleDay.StatusKind.NEUTRAL, CoupleDay.status(null, isToday = true, nowMinutes = 0).kind)
+        val empty = CoupleDay.plan(schedule(emptyList()), emptyList(), friday)
+        assertEquals(CoupleDay.StatusKind.FREE, CoupleDay.status(empty, isToday = true, nowMinutes = 0).kind)
+        assertEquals(CoupleDay.StatusKind.NEUTRAL, CoupleDay.status(empty, isToday = false, nowMinutes = 0).kind)
+    }
+
+    @Test
     fun `其他日子显示几门课和时间范围`() {
         val plan = CoupleDay.plan(
             schedule(listOf(course("高等数学", 5, 1, 2), course("高等数学", 5, 6, 7), course("体育", 5, 8, 9))),

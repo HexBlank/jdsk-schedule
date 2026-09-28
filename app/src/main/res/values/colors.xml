@@ -124,6 +124,8 @@
     <color name="couple_hour_text">#8a9490</color>
     <color name="couple_heart">#e08aa2</color>
     <color name="couple_segment_bg">#e6ebe8</color>
+    <!-- 「我们」页状态胶囊：上课中 -->
+    <color name="couple_status_busy_bg">#fbe4df</color>
 
     <!-- 自家轻提示（AppToast） -->
     <color name="toast_bg">#F01D2421</color>

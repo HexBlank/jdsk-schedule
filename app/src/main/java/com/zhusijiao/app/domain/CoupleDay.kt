@@ -114,24 +114,36 @@ object CoupleDay {
      * 名字下面那一行状态。今天看实时：上课中 / 空闲并预告下一节 / 都上完了；
      * 其他日子看概况：几门课、从几点到几点。[nowMinutes] 只在 [isToday] 时有意义。
      */
-    fun statusText(plan: Plan?, isToday: Boolean, nowMinutes: Int): String {
+    fun statusText(plan: Plan?, isToday: Boolean, nowMinutes: Int): String = status(plan, isToday, nowMinutes).text
+
+    /** 状态种类：「我们」页按它给状态胶囊上色——上课中偏红、空闲偏绿，其余（看别的日子、没有课表）中性灰。 */
+    enum class StatusKind { IN_CLASS, FREE, NEUTRAL }
+
+    data class Status(val kind: StatusKind, val text: String)
+
+    /** 一个人这一天的状态：看今天时回答「现在方便吗」，看别的日子时概括这天的课。 */
+    fun status(plan: Plan?, isToday: Boolean, nowMinutes: Int): Status {
         val dayWord = if (isToday) "今天" else "这天"
-        if (plan == null) return "还没有课表"
+        val free = if (isToday) StatusKind.FREE else StatusKind.NEUTRAL
+        if (plan == null) return Status(StatusKind.NEUTRAL, "还没有课表")
         val courses = plan.items.filter { it.kind == Kind.COURSE && !it.suspended }
-        if (courses.isEmpty()) return if (plan.holiday) "${dayWord}停课" else "${dayWord}没课"
+        if (courses.isEmpty()) return Status(free, if (plan.holiday) "${dayWord}停课" else "${dayWord}没课")
         if (isToday) {
             courses.firstOrNull { it.startMinutes <= nowMinutes && nowMinutes < it.endMinutes }?.let {
-                return "上课中 · ${ScheduleTime.formatTime(it.endMinutes)} 下课"
+                return Status(StatusKind.IN_CLASS, "上课中 · ${ScheduleTime.formatTime(it.endMinutes)} 下课")
             }
             courses.filter { it.startMinutes > nowMinutes }.minByOrNull { it.startMinutes }?.let {
-                return "空闲 · ${ScheduleTime.formatTime(it.startMinutes)} ${it.title}"
+                return Status(StatusKind.FREE, "空闲 · ${ScheduleTime.formatTime(it.startMinutes)} ${it.title}")
             }
-            return "今天的课都上完了"
+            return Status(StatusKind.FREE, "今天的课都上完了")
         }
         val count = courses.map { it.title }.distinct().size
         val first = courses.minOf { it.startMinutes }
         val last = courses.maxOf { it.endMinutes }
-        return "$count 门课 · ${ScheduleTime.formatTime(first)}–${ScheduleTime.formatTime(last)}"
+        return Status(
+            StatusKind.NEUTRAL,
+            "$count 门课 · ${ScheduleTime.formatTime(first)}–${ScheduleTime.formatTime(last)}"
+        )
     }
 
     /** 两个人这一天的「都有空」：我的课和日程、TA 的课都算占用，停课的不算。 */
