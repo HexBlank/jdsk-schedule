@@ -150,6 +150,7 @@
     <string name="holiday_invalid">调休设置无效</string>
     <string name="detail_suspended_notice">这一天已停课（假期调休），本节课不上了。</string>
     <string name="detail_makeup_notice">补课：本节是第 %1$d 周周%2$s 的课，调整到这一天上了。</string>
+    <string name="color_picker_preview_hint">%1$s · 点选即预览，点「完成」保存</string>
     <string name="color_picker_title">课程颜色</string>
     <string name="color_picker_follow_default">跟随默认配色</string>
     <string name="color_picker_presets">预设颜色</string>

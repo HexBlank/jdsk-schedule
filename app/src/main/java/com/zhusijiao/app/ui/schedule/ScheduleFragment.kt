@@ -612,11 +612,30 @@ class ScheduleFragment : Fragment(), Refreshable {
             autoColor = click.backgroundColor,
             currentManual = current.courseColors[click.course.name],
             onPick = { hex -> persistColors(current.courseColors + (click.course.name to hex)) },
-            onReset = { persistColors(current.courseColors - click.course.name) }
+            onReset = { persistColors(current.courseColors - click.course.name) },
+            // 点色块只在课表上试色、不写入；点「完成」才保存，直接关掉则恢复
+            onPreview = { hex ->
+                val colors = if (hex == null) current.courseColors - click.course.name
+                else current.courseColors + (click.course.name to hex)
+                previewSchedule(current.copy(courseColors = colors))
+            },
+            onPreviewCancel = { previewSchedule(schedule ?: current) }
         ).show()
     }
 
     /** 保存手动配色；[undoable] 为 true 时轻提示带「撤销」，恢复成改之前的颜色（撤销本身不再带撤销）。 */
+    /** 只刷新课表显示，不改 [schedule]、不写入存储（选色预览用）。 */
+    private fun previewSchedule(preview: Schedule) {
+        if (_binding == null) return
+        binding.timetable.setSchedule(
+            preview,
+            events = events,
+            jumpToCurrent = false,
+            weekendMode = Prefs.weekendDisplayMode
+        )
+        binding.timetable.goToWeek(currentWeek)
+    }
+
     private fun persistColors(colors: Map<String, String>, undoable: Boolean = true) {
         if (_binding == null) return
         val current = schedule ?: return
@@ -631,6 +650,8 @@ class ScheduleFragment : Fragment(), Refreshable {
                     if (undoable) AppToast.Action(getString(R.string.common_undo)) { persistColors(previous, undoable = false) } else null
                 )
             } catch (error: Exception) {
+                // 课表上可能还是预览的颜色，保存失败要恢复成实际的样子
+                previewSchedule(current)
                 Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
             }
         }

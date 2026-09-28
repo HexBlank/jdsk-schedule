@@ -21,6 +21,10 @@ import kotlin.math.roundToInt
 /**
  * 手动课程选色面板：展示高区分预设色、用户保存色与可触摸 HSV 调色板。
  * 选中手动色后该课程不再走哈希配色；重置则回到自动配色。仅发布者可用。
+ *
+ * 传入 [onPreview] 时是「预览模式」：面板只轻微压暗背景，点色块时上方课表里的这门课即时变色，
+ * 点「完成」才保存（[onPick] / [onReset]）；没点完成就关掉面板时调 [onPreviewCancel] 恢复原样。
+ * 不传时保持原来的「点一下就保存并关闭」。
  */
 class ColorPickerSheet(
     context: Context,
@@ -30,8 +34,17 @@ class ColorPickerSheet(
     private val onPick: (String) -> Unit,
     private val onReset: () -> Unit,
     /** 面板标题，默认「课程颜色」；情侣课表选人的颜色时换掉。 */
-    title: String? = null
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+    title: String? = null,
+    /** 预览：参数为要试的手动色，null 表示试「跟随自动配色」。 */
+    private val onPreview: ((String?) -> Unit)? = null,
+    private val onPreviewCancel: (() -> Unit)? = null
+) : Dialog(context, if (onPreview != null) R.style.Theme_Zhusijiao_Sheet_Clear else R.style.Theme_Zhusijiao_Sheet) {
+
+    private val previewMode = onPreview != null
+
+    /** 预览模式下当前选中的手动色；null 为跟随自动配色。 */
+    private var selectedHex: String? = currentManual
+    private var committed = false
 
     init {
         setContentView(R.layout.dialog_course_color)
@@ -42,12 +55,46 @@ class ColorPickerSheet(
         }
         setCanceledOnTouchOutside(true)
 
-        findViewById<TextView>(R.id.colorPickerCourse).text = courseName
+        findViewById<TextView>(R.id.colorPickerCourse).text =
+            if (previewMode) context.getString(R.string.color_picker_preview_hint, courseName) else courseName
         if (title != null) findViewById<TextView>(R.id.colorPickerTitle).text = title
         buildGrid()
         buildCustomGrid()
         buildFollowDefault()
         configureCustomEditor()
+        if (previewMode) {
+            findViewById<TextView>(R.id.colorPickerDone).apply {
+                visibility = View.VISIBLE
+                setOnClickListener { commit() }
+            }
+            setOnDismissListener {
+                if (!committed && !selectedHex.equals(currentManual, ignoreCase = true)) onPreviewCancel?.invoke()
+            }
+        }
+    }
+
+    /** 点色块：预览模式下只试色并移动选中环；否则直接保存并关闭。 */
+    private fun choose(hex: String?) {
+        if (!previewMode) {
+            if (hex == null) onReset() else onPick(hex)
+            dismiss()
+            return
+        }
+        if (hex.equals(selectedHex, ignoreCase = true)) return
+        selectedHex = hex
+        onPreview?.invoke(hex)
+        buildGrid()
+        buildCustomGrid()
+        buildFollowDefault()
+    }
+
+    private fun commit() {
+        committed = true
+        val hex = selectedHex
+        if (!hex.equals(currentManual, ignoreCase = true)) {
+            if (hex == null) onReset() else onPick(hex)
+        }
+        dismiss()
     }
 
     private fun buildGrid() {
@@ -59,11 +106,8 @@ class ColorPickerSheet(
                 swatchCell(
                     color = palette.background,
                     description = hex,
-                    selected = currentManual.equals(hex, ignoreCase = true)
-                ) {
-                    onPick(hex)
-                    dismiss()
-                }
+                    selected = selectedHex.equals(hex, ignoreCase = true)
+                ) { choose(hex) }
             )
         }
     }
@@ -77,16 +121,13 @@ class ColorPickerSheet(
                 swatchCell(
                     color = color,
                     description = context.getString(R.string.color_picker_saved_description, hex),
-                    selected = currentManual.equals(hex, ignoreCase = true),
+                    selected = selectedHex.equals(hex, ignoreCase = true),
                     onLongClick = {
                         Prefs.removeCustomCourseColor(hex)
                         buildCustomGrid()
                         Ui.toastSuccess(context, context.getString(R.string.color_picker_removed))
                     }
-                ) {
-                    onPick(hex)
-                    dismiss()
-                }
+                ) { choose(hex) }
             )
         }
         grid.visibility = if (grid.childCount == 0) View.GONE else View.VISIBLE
@@ -99,20 +140,26 @@ class ColorPickerSheet(
         onLongClick: (() -> Unit)? = null,
         onClick: () -> Unit
     ): View {
+        // 圆形色块，和方形的课程块区分开；选中时外面一圈墨色细环，中间留白缝
         val cell = FrameLayout(context)
-        val drawable = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp(10f).toFloat()
+        if (selected) {
+            cell.addView(
+                View(context).apply {
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setStroke(dp(2f), ContextCompat.getColor(context, R.color.heading_ink))
+                    }
+                },
+                FrameLayout.LayoutParams(dp(44f), dp(44f), Gravity.CENTER)
+            )
+        }
+        val swatch = View(context)
+        swatch.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
             setColor(color)
             setStroke(dp(1f), 0x14000000)
         }
-        if (selected) drawable.setStroke(dp(2f), ContextCompat.getColor(context, R.color.heading_ink))
-        val swatch = View(context)
-        swatch.background = drawable
-        cell.addView(
-            swatch,
-            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
-        )
+        cell.addView(swatch, FrameLayout.LayoutParams(dp(if (selected) 34f else 38f), dp(if (selected) 34f else 38f), Gravity.CENTER))
         if (selected) {
             val foreground = ScheduleView.manualPalette(String.format("#%06X", color and 0xFFFFFF))?.foreground
                 ?: Color.WHITE
@@ -126,6 +173,7 @@ class ColorPickerSheet(
                 },
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
             )
+            cell.isSelected = true
         }
         cell.isClickable = true
         cell.isFocusable = true
@@ -155,11 +203,8 @@ class ColorPickerSheet(
             setColor(autoColor)
         }
         findViewById<TextView>(R.id.followDefaultCheck).visibility =
-            if (currentManual == null) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.followDefault).setOnClickListener {
-            onReset()
-            dismiss()
-        }
+            if (selectedHex == null) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.followDefault).setOnClickListener { choose(null) }
     }
 
     private fun configureCustomEditor() {
