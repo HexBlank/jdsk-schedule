@@ -22,7 +22,7 @@
     <string name="index_loading">正在加载课表…</string>
     <string name="index_load_failed_title">课表加载失败</string>
     <string name="index_empty_title">还没有课表</string>
-    <string name="index_empty_desc">导入教务系统课表，或通过分享码加入同学的课表。</string>
+    <string name="index_empty_desc">登录教务系统一键导入，或者输入同学给你的 8 位分享码。</string>
     <string name="index_import">导入课表</string>
     <string name="index_use_code">使用分享码</string>
     <string name="index_week_title">第 %1$d 周</string>
