@@ -97,6 +97,7 @@ class LibraryFragment : Fragment(), Refreshable {
 
         card.cardRoot.setBackgroundResource(if (active) R.drawable.bg_card_active else R.drawable.bg_card)
         card.cardName.text = item.name
+        card.cardThumb.setSchedule(item)
         card.activeTag.visibility = if (active) View.VISIBLE else View.GONE
         // 情侣课表：TA 看到的就是当前课表
         card.coupleTag.visibility = if (active && ApiClient.coupleState().bound) View.VISIBLE else View.GONE
