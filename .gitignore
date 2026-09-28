@@ -49,3 +49,7 @@ keystore/README.md
 *.log
 *.tmp
 *.swp
+
+# 宣传片：字体与中间产物不进版本库
+promo/fonts/
+promo/out/
