@@ -27,6 +27,7 @@
     <string name="index_use_code">使用分享码</string>
     <string name="index_week_title">第 %1$d 周</string>
     <string name="index_current_week">本周</string>
+    <string name="index_back_current_week">回本周</string>
     <string name="index_week_empty">本周没有课程</string>
     <string name="index_unofficial_note">非官方工具 · 课程安排以教务系统为准</string>
     <string name="index_prev_week">上一周</string>
@@ -162,7 +163,6 @@
     <string name="course_colors_owner_only">课程颜色由发布者统一设置</string>
     <string name="week_picker_weekend_section">周末显示</string>
     <string name="week_picker_auto_weekend">当周周六日有课时才显示</string>
-    <string name="header_holiday_action">调休</string>
 
     <!-- 课表外观：格子高度/留白/文字大小，纯本机显示偏好 -->
     <string name="appearance_title">课表外观</string>

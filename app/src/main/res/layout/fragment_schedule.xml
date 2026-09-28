@@ -11,11 +11,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <!-- 周次栏：两侧快捷翻周，中间点击选择周次 -->
-    <LinearLayout
+    <!-- 周次栏：两侧快捷翻周，中间点击选择周次；翻到别的周时右侧出现「回本周」 -->
+    <FrameLayout
         android:id="@+id/weekBar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="56dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingStart="14dp"
@@ -108,6 +112,27 @@
                 android:src="@drawable/ic_chevron_next" />
         </FrameLayout>
     </LinearLayout>
+
+        <!-- 与「我们」页的「回今天」同款胶囊 -->
+        <TextView
+            android:id="@+id/backToCurrentWeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="14dp"
+            android:background="@drawable/bg_tag"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="32dp"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/index_back_current_week"
+            android:textColor="@color/accent_strong"
+            android:textSize="@dimen/text_hint"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <!-- 内容区：课表可竖向滚动，加载/空/错误态覆盖其上。
          始终可见，「铺满一屏」用它的高度算行高（scroll 在空/加载态是 gone，量不到） -->

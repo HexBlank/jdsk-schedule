@@ -1,14 +1,15 @@
 package com.zhusijiao.app.ui.schedule
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
+import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
-import android.util.TypedValue
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -87,6 +88,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.prevWeek.setOnClickListener { binding.timetable.previousWeek() }
         binding.nextWeek.setOnClickListener { binding.timetable.nextWeek() }
         binding.weekCenter.setOnClickListener { showWeekPicker() }
+        binding.backToCurrentWeek.setOnClickListener { binding.timetable.goToWeek(currentWeekNumber) }
         binding.emptyImport.setOnClickListener {
             startActivity(Intent(requireContext(), ImportActivity::class.java))
         }
@@ -198,6 +200,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.weekCaption.text = captionForWeek(week)
         tint(binding.prevIcon, if (isFirst) R.color.tt_chevron_off else R.color.tt_chevron)
         tint(binding.nextIcon, if (isLast) R.color.tt_chevron_off else R.color.tt_chevron)
+        binding.backToCurrentWeek.visibility = if (week != currentWeekNumber) View.VISIBLE else View.GONE
     }
 
     private fun tint(view: ImageView, colorRes: Int) {
@@ -470,41 +473,39 @@ class ScheduleFragment : Fragment(), Refreshable {
     private fun updateHeaderActions() {
         val header = binding.header
         header.clearActions()
-        header.addAction(appearanceAction())
-        if (schedule?.isOwner != true) return
-        val action = TextView(requireContext()).apply {
-            text = getString(R.string.header_holiday_action)
-            textSize = 13f
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.sub_6c))
-            val borderless = TypedValue()
-            context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, borderless, true)
-            setBackgroundResource(borderless.resourceId)
-            gravity = Gravity.CENTER
-            setPadding(Rpx.dp(10f), Rpx.dp(6f), Rpx.dp(10f), Rpx.dp(6f))
-            minWidth = Rpx.dp(40f)
-            minimumHeight = Rpx.dp(40f)
-            isClickable = true
-            isFocusable = true
-            contentDescription = getString(R.string.holiday_title)
-            setOnClickListener { showHolidaySheet(currentWeek, defaultHolidayDay()) }
+        // 调休（仅发布者）在左、外观在右；两个都是同尺寸的圆形浅底图标按钮，标题两侧对称
+        if (schedule?.isOwner == true) {
+            header.addAction(
+                headerIconButton(R.drawable.ic_holiday, getString(R.string.holiday_title)) {
+                    showHolidaySheet(currentWeek, defaultHolidayDay())
+                }
+            )
         }
-        header.addAction(action)
+        header.addAction(headerIconButton(R.drawable.ic_appearance, getString(R.string.appearance_action)) { showAppearanceSheet() })
     }
 
-    private fun appearanceAction(): View = AppCompatImageView(requireContext()).apply {
-        setImageResource(R.drawable.ic_appearance)
-        val borderless = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, borderless, true)
-        setBackgroundResource(borderless.resourceId)
-        val pad = Rpx.dp(12f)
-        setPadding(pad, pad, pad, pad)
-        minimumWidth = Rpx.dp(44f)
-        minimumHeight = Rpx.dp(44f)
-        isClickable = true
-        isFocusable = true
-        contentDescription = getString(R.string.appearance_action)
-        setOnClickListener { showAppearanceSheet() }
-    }
+    /** 页头图标按钮：44dp 触摸区，里面画一个 34dp 的圆形浅底，按下有水波纹。 */
+    private fun headerIconButton(iconRes: Int, description: String, onClick: () -> Unit): View =
+        AppCompatImageView(requireContext()).apply {
+            setImageResource(iconRes)
+            val inset = Rpx.dp(5f)
+            val circle = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(ContextCompat.getColor(context, R.color.hover_bg))
+            }
+            background = RippleDrawable(
+                ColorStateList.valueOf(ContextCompat.getColor(context, R.color.line)),
+                InsetDrawable(circle, inset),
+                InsetDrawable(GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(0xff000000.toInt()) }, inset)
+            )
+            val pad = Rpx.dp(12f)
+            setPadding(pad, pad, pad, pad)
+            layoutParams = ViewGroup.MarginLayoutParams(Rpx.dp(44f), Rpx.dp(44f))
+            isClickable = true
+            isFocusable = true
+            contentDescription = description
+            setOnClickListener { onClick() }
+        }
 
     /** 供设置页「课表外观」跳转过来时直接弹面板；视图未就绪则记下待办。 */
     fun requestAppearanceSheet() {
