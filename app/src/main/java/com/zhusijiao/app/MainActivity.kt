@@ -35,10 +35,20 @@ class MainActivity : BaseActivity() {
     private lateinit var settingsFragment: SettingsFragment
     private var active: Fragment? = null
 
+    /** 首次安装时安装时间与最近更新时间相同；不同说明是从旧版本升级上来的。 */
+    private fun wasUpdatedFromOlderVersion(): Boolean = try {
+        @Suppress("DEPRECATION")
+        val info = packageManager.getPackageInfo(packageName, 0)
+        info.firstInstallTime != info.lastUpdateTime
+    } catch (e: Exception) {
+        false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        Prefs.initStateStyleTip(upgradedFromOlder = wasUpdatedFromOlderVersion())
 
         val fm = supportFragmentManager
         scheduleFragment = (fm.findFragmentByTag(TAG_SCHEDULE) as? ScheduleFragment) ?: ScheduleFragment()

@@ -175,6 +175,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 // 要打开的课表已经不在本机时必须明说，否则用户只会看到「打开的是别的课表」
                 if (activeId.isNotBlank() && requested == null) notifyMissingSchedule(activeId, loadedSchedule.name)
                 else maybePromptGone(loadedSchedule)
+                maybeShowStateStyleTip()
                 syncRemoteThenReload(syncRemote)
             } catch (e: Exception) {
                 binding.errorMessage.text = e.message ?: getString(R.string.index_load_failed_title)
@@ -518,12 +519,27 @@ class ScheduleFragment : Fragment(), Refreshable {
      * 课表外观面板：改一下即时生效并写入本机偏好。
      * 行高变化后按新旧行高比例换算滚动位置，用户正在看的节次不会因为变高变矮而跳走。
      */
-    private fun showAppearanceSheet() {
+    private fun showAppearanceSheet(focusStateStyle: Boolean = false) {
         if (_binding == null) return
-        AppearanceSheet(requireContext(), Prefs.timetableAppearance) { value ->
+        AppearanceSheet(requireContext(), Prefs.timetableAppearance, focusStateStyle) { value ->
             Prefs.timetableAppearance = value
             applyAppearance(value)
         }.show()
+    }
+
+    /**
+     * 升级后第一次看到停课、调课或日程时，提示一次「换了新样式」，带「改回」直接打开外观面板的对应分组。
+     * 全新安装的用户从没见过旧样式，不提示（见 [Prefs.initStateStyleTip]）。
+     */
+    private fun maybeShowStateStyleTip() {
+        if (!Prefs.stateStyleTipPending || _binding == null) return
+        if (!binding.timetable.currentWeekHasStateBlocks()) return
+        Prefs.markStateStyleTipShown()
+        AppToast.show(
+            requireContext(),
+            getString(R.string.state_style_tip),
+            action = AppToast.Action(getString(R.string.state_style_tip_action)) { showAppearanceSheet(focusStateStyle = true) }
+        )
     }
 
     private fun applyAppearance(value: TimetableAppearance) {

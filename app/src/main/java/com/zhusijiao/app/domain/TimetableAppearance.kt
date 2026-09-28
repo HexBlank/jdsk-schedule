@@ -1,7 +1,7 @@
 package com.zhusijiao.app.domain
 
 /**
- * 课表外观：格子高度、格子留白、文字大小三档偏好，外加「自动铺满一屏」与「显示已上状态」。
+ * 课表外观：格子高度、格子留白、文字大小三档偏好，外加「自动铺满一屏」「显示已上状态」与停课、日程的样式。
  *
  * 只影响本机显示，不随课表同步、不进服务端模型——同一份课表在不同同学手机上
  * 可以各调各的。数值一律用 750 设计稿单位（rpx），由 [com.zhusijiao.app.ui.common.TimetableView]
@@ -20,8 +20,15 @@ data class TimetableAppearance(
     /** 开启后行高改为「可视高度 ÷ 节次数」，课表本体不用滚动；此时高度档位不生效。 */
     val fitScreen: Boolean = false,
     /** 开启后已经下课的课（精确到分钟）以灰色「鬼影」样式显示并标「已上」；默认关闭，保持原样。 */
-    val showFinished: Boolean = false
+    val showFinished: Boolean = false,
+    /**
+     * 停课与日程的样式：[STATE_STYLE_MODERN] 新版（停课空心虚线加删除线、日程浅底实线），
+     * [STATE_STYLE_CLASSIC] 经典（1.2.29 及之前：停课灰底、日程深色实心）。周课表与情侣日视图共用。
+     */
+    val stateStyle: Int = STATE_STYLE_MODERN
 ) {
+
+    val modernStateStyle: Boolean get() = stateStyle != STATE_STYLE_CLASSIC
 
     val rowHeightRpx: Float get() = ROW_HEIGHTS[rowHeightLevel.coerceIn(ROW_HEIGHTS.indices)]
 
@@ -41,6 +48,9 @@ data class TimetableAppearance(
 
         /** 小 / 标准 / 大：课程名、教师、教室、角标字号的统一缩放系数。 */
         val TEXT_SCALES = listOf(0.9f, 1f, 1.12f)
+
+        const val STATE_STYLE_MODERN = 0
+        const val STATE_STYLE_CLASSIC = 1
 
         const val DEFAULT_ROW_HEIGHT_LEVEL = 2
         const val DEFAULT_PADDING_LEVEL = 1

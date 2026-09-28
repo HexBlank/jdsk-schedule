@@ -24,6 +24,7 @@ import com.zhusijiao.app.domain.CellColumns
 import com.zhusijiao.app.domain.CoupleDay
 import com.zhusijiao.app.domain.CoupleFreeTime
 import com.zhusijiao.app.domain.ScheduleTime
+import com.zhusijiao.app.domain.TimetableAppearance
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -73,7 +74,9 @@ class CoupleDayView @JvmOverloads constructor(
         val showFinished: Boolean,
         /** 两边都没有安排时画在中间的提示；null 表示不画。 */
         val emptyTitle: String? = null,
-        val emptyDesc: String? = null
+        val emptyDesc: String? = null,
+        /** 停课与日程的样式，跟随课表外观（见 [TimetableAppearance.stateStyle]）。 */
+        val stateStyle: Int = TimetableAppearance.STATE_STYLE_MODERN
     )
 
     var onItemClick: ((side: Int, item: CoupleDay.Item) -> Unit)? = null
@@ -330,17 +333,36 @@ class CoupleDayView @JvmOverloads constructor(
             else -> null
         }
 
-        val faded = item.suspended || finished
+        // 新版：停课画成空心虚线加删除线、日程画成浅底实线，与周课表一致；经典：停课整块变淡、日程虚线框
+        val modern = m.stateStyle != TimetableAppearance.STATE_STYLE_CLASSIC
+        val ghost = modern && item.suspended
+        val faded = finished || (item.suspended && !modern)
         val saved = if (faded) canvas.saveLayerAlpha(rect.left - dp(4f), rect.top - dp(4f), rect.right + dp(4f), rect.bottom + dp(4f), if (item.suspended) 110 else 128) else -1
 
-        if (isEvent) {
-            fillPaint.color = colSurface
-            canvas.drawRoundRect(rect, blockRadius, blockRadius, fillPaint)
-            dashPaint.color = column.ring
-            canvas.drawRoundRect(rect, blockRadius, blockRadius, dashPaint)
-        } else {
-            fillPaint.color = column.fill
-            canvas.drawRoundRect(rect, blockRadius, blockRadius, fillPaint)
+        when {
+            ghost -> {
+                fillPaint.color = colSurface
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, fillPaint)
+                dashPaint.color = BlockStyles.ghostStroke(column.ring)
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, dashPaint)
+            }
+            isEvent && modern -> {
+                fillPaint.color = BlockStyles.eventFill(column.ring)
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, fillPaint)
+                strokePaint.color = BlockStyles.eventStroke(column.ring)
+                strokePaint.strokeWidth = dp(1.5f)
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, strokePaint)
+            }
+            isEvent -> {
+                fillPaint.color = colSurface
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, fillPaint)
+                dashPaint.color = column.ring
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, dashPaint)
+            }
+            else -> {
+                fillPaint.color = column.fill
+                canvas.drawRoundRect(rect, blockRadius, blockRadius, fillPaint)
+            }
         }
         if (current) {
             strokePaint.color = column.ring
@@ -352,7 +374,11 @@ class CoupleDayView @JvmOverloads constructor(
             )
         }
 
-        val textColor = if (isEvent) colInk else column.ink
+        val textColor = when {
+            ghost -> BlockStyles.ghostText(column.ring)
+            isEvent && !modern -> colInk
+            else -> column.ink
+        }
         val split = slot.columnCount > 1
         val padX = dp(if (split) 5f else 8f)
         val available = rect.width() - padX * 2
@@ -365,7 +391,9 @@ class CoupleDayView @JvmOverloads constructor(
             namePaint.textSize = sp(12f)
             subPaint.textSize = sp(10f)
             val y1 = rect.top + dp(3f) - namePaint.ascent()
+            namePaint.isStrikeThruText = ghost
             drawLine(canvas, item.title, namePaint, rect.left + padX, y1, available)
+            namePaint.isStrikeThruText = false
             val sub = if (isEvent) "$time · ${item.position}" else item.position
             val y2 = y1 + namePaint.descent() - subPaint.ascent()
             if (sub.isNotBlank() && y2 + subPaint.descent() <= rect.bottom) {
@@ -375,7 +403,9 @@ class CoupleDayView @JvmOverloads constructor(
             namePaint.textSize = sp(13f)
             subPaint.textSize = sp(11f)
             var y = rect.top + dp(6f) - namePaint.ascent()
+            namePaint.isStrikeThruText = ghost
             drawLine(canvas, item.title, namePaint, rect.left + padX, y, available)
+            namePaint.isStrikeThruText = false
             if (item.position.isNotBlank()) {
                 y += namePaint.descent() - subPaint.ascent() + dp(1f)
                 if (y + subPaint.descent() <= rect.bottom) drawLine(canvas, item.position, subPaint, rect.left + padX, y, available)
@@ -387,7 +417,7 @@ class CoupleDayView @JvmOverloads constructor(
                 if (badge != null && !split) {
                     val badgeWidth = badgePaint.measureText(badge) + dp(10f)
                     timeWidth -= badgeWidth + dp(4f)
-                    drawBadge(canvas, badge, rect.right - padX - badgeWidth, y, badgeWidth, current, column, isEvent)
+                    drawBadge(canvas, badge, rect.right - padX - badgeWidth, y, badgeWidth, current, column, isEvent, modern, ghost)
                 }
                 drawLine(canvas, time, subPaint, rect.left + padX, y, timeWidth)
             }
@@ -414,17 +444,24 @@ class CoupleDayView @JvmOverloads constructor(
         width: Float,
         current: Boolean,
         column: Column,
-        isEvent: Boolean
+        isEvent: Boolean,
+        modern: Boolean,
+        ghost: Boolean
     ) {
         val top = baseline + badgePaint.ascent() - dp(1.5f)
         val bottom = baseline + badgePaint.descent() + dp(1.5f)
         fillPaint.color = when {
             current -> colSurface
+            ghost || (isEvent && modern) -> BlockStyles.badgeFill(column.ring)
             isEvent -> colLine
             else -> 0x8cffffff.toInt()
         }
         canvas.drawRoundRect(RectF(left, top, left + width, bottom), dp(6f), dp(6f), fillPaint)
-        badgePaint.color = if (isEvent) colInk else column.ink
+        badgePaint.color = when {
+            ghost -> BlockStyles.ghostText(column.ring)
+            isEvent && !modern -> colInk
+            else -> column.ink
+        }
         canvas.drawText(text, left + dp(5f), baseline, badgePaint)
     }
 

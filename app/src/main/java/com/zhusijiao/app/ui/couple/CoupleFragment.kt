@@ -283,7 +283,8 @@ class CoupleFragment : Fragment(), Refreshable {
                 showNowLine = Prefs.coupleShowNowLine,
                 showFinished = Prefs.timetableAppearance.showFinished,
                 emptyTitle = if (bothEmpty) getString(R.string.couple_both_empty_title) else null,
-                emptyDesc = if (bothEmpty) getString(R.string.couple_both_empty_desc) else null
+                emptyDesc = if (bothEmpty) getString(R.string.couple_both_empty_desc) else null,
+                stateStyle = Prefs.timetableAppearance.stateStyle
             )
         )
 

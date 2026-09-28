@@ -6,6 +6,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Rect
@@ -204,7 +205,9 @@ class TimetableView @JvmOverloads constructor(
         val madeUpNote: String? = null,
         val event: PersonalEvent? = null,
         /** 情侣周视图里块属于谁：[OWNER_ME] / [OWNER_PARTNER]；单人课表恒为 [OWNER_ME]。 */
-        val owner: Int = OWNER_ME
+        val owner: Int = OWNER_ME,
+        /** 「是哪一门」的身份色：新版状态样式里停课块、日程块都按它上色（见 [BlockStyles]）。 */
+        val tone: Int = background
     ) {
         var left = 0f; var top = 0f; var right = 0f; var bottom = 0f
         var nameLayout: StaticLayout? = null
@@ -457,6 +460,14 @@ class TimetableView @JvmOverloads constructor(
         invalidate()
     }
 
+    /** 当前这一周有没有样式受「停课与日程的样式」影响的块（停课、已调出、调入、补课、日程）。 */
+    fun currentWeekHasStateBlocks(): Boolean {
+        if (schedule == null) return false
+        return renderFor(week).blocks.any {
+            it.ghosted || it.event != null || it.occurrence == Occurrence.MOVED_IN || it.makeup != null
+        }
+    }
+
     fun goToWeek(target: Int) {
         val s = schedule ?: return
         val clamped = target.coerceIn(1, max(1, s.totalWeeks))
@@ -678,8 +689,9 @@ class TimetableView @JvmOverloads constructor(
             val madeUpDate = madeUp?.let { madeUpDateText(s, it) }
             r.blocks += Block(
                 course = course,
-                background = if (ghosted) colSuspendedBg else palette.background,
-                foreground = if (ghosted) colSuspendedText else palette.foreground,
+                // 停课、已调出、已补的块也保留课程色：新版样式按课程色画虚线，经典样式在绘制时换成灰色
+                background = palette.background,
+                foreground = palette.foreground,
                 badge = when {
                     adjustment != null -> "已调出"
                     madeUp != null -> "已补"
@@ -799,7 +811,8 @@ class TimetableView @JvmOverloads constructor(
                 col = event.day,
                 startSection = event.startSection,
                 span = event.span,
-                event = event
+                event = event,
+                tone = manual?.background ?: layer?.myFill ?: BlockStyles.DEFAULT_EVENT_COLOR
             )
         }
     }
@@ -1267,13 +1280,39 @@ class TimetableView @JvmOverloads constructor(
             val padTop = blockPadTop(split)
             val padH = blockPadH(split)
             val rect = RectF(b.left, b.top, b.right, b.bottom)
-            val foreground = if (b.finished) colSuspendedText else b.foreground
-            fillPaint.color = if (b.finished) colSuspendedBg else b.background
+            val style = blockStyleOf(b)
+            val foreground = when (style) {
+                STYLE_GREY -> colSuspendedText
+                STYLE_GHOST -> BlockStyles.ghostText(b.tone)
+                STYLE_EVENT -> BlockStyles.eventText(b.tone)
+                else -> b.foreground
+            }
+            fillPaint.color = when (style) {
+                STYLE_GREY -> colSuspendedBg
+                STYLE_GHOST -> Color.WHITE
+                STYLE_EVENT -> BlockStyles.eventFill(b.tone)
+                else -> b.background
+            }
             canvas.drawRoundRect(rect, radius, radius, fillPaint)
-            if (b.faded) {
-                linePaint.color = foreground
-                linePaint.strokeWidth = max(1f, rpx(2f))
-                canvas.drawRoundRect(rect, radius, radius, linePaint)
+            when (style) {
+                STYLE_GREY -> {
+                    linePaint.color = foreground
+                    linePaint.strokeWidth = max(1f, rpx(2f))
+                    canvas.drawRoundRect(rect, radius, radius, linePaint)
+                }
+                STYLE_GHOST -> {
+                    // 空心虚线：这里原本有一节课，今天是个空位
+                    linePaint.color = BlockStyles.ghostStroke(b.tone)
+                    linePaint.strokeWidth = max(1f, rpx(3f))
+                    linePaint.pathEffect = ghostDash
+                    canvas.drawRoundRect(inset(rect, linePaint.strokeWidth / 2f), radius, radius, linePaint)
+                    linePaint.pathEffect = null
+                }
+                STYLE_EVENT -> {
+                    linePaint.color = BlockStyles.eventStroke(b.tone)
+                    linePaint.strokeWidth = max(1f, rpx(3f))
+                    canvas.drawRoundRect(inset(rect, linePaint.strokeWidth / 2f), radius, radius, linePaint)
+                }
             }
 
             canvas.save()
@@ -1282,7 +1321,7 @@ class TimetableView @JvmOverloads constructor(
             var y = b.top + padTop
             if (b.shownBadge.isNotEmpty() && !b.compact && b.badgeWidth > 0f) {
                 val badgeH = badgeHeightPx()
-                fillPaint.color = colBadgeBg
+                fillPaint.color = if (style == STYLE_GHOST || style == STYLE_EVENT) BlockStyles.badgeFill(b.tone) else colBadgeBg
                 val br = RectF(contentLeft, y, contentLeft + b.badgeWidth, y + badgeH)
                 canvas.drawRoundRect(br, rpx(8f), rpx(8f), fillPaint)
                 badgePaint.color = foreground
@@ -1291,8 +1330,12 @@ class TimetableView @JvmOverloads constructor(
                 y += badgeH + rpx(6f)
             }
             b.nameLayout?.let {
-                (if (split) splitNamePaint else namePaint).color = foreground
+                val paint = if (split) splitNamePaint else namePaint
+                paint.color = foreground
+                // 删除线只划课程名；「→ 周四 6–7 节」这类去向说明是有用信息，不划
+                paint.isStrikeThruText = style == STYLE_GHOST
                 canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
+                paint.isStrikeThruText = false
                 y += it.height
             }
             b.teacherLayout?.let {
@@ -1309,6 +1352,24 @@ class TimetableView @JvmOverloads constructor(
             canvas.restore()
         }
     }
+
+    /**
+     * 块的画法：[STYLE_GREY] 灰底（已上，或经典样式下今天不上的课）；[STYLE_GHOST] 新版今天不上：空心虚线；
+     * [STYLE_EVENT] 新版日程：浅底实线；[STYLE_SOLID] 实心（要上的课，经典样式下的日程）。
+     */
+    private fun blockStyleOf(b: Block): Int {
+        val modern = appearance.modernStateStyle
+        return when {
+            b.finished -> STYLE_GREY
+            b.ghosted -> if (modern) STYLE_GHOST else STYLE_GREY
+            b.event != null && modern -> STYLE_EVENT
+            else -> STYLE_SOLID
+        }
+    }
+
+    private val ghostDash by lazy { DashPathEffect(floatArrayOf(rpx(8f), rpx(6f)), 0f) }
+
+    private fun inset(r: RectF, by: Float) = RectF(r.left + by, r.top + by, r.right - by, r.bottom - by)
 
     private fun withAlpha(color: Int, alpha: Float): Int =
         Color.argb((alpha * 255).roundToInt(), Color.red(color), Color.green(color), Color.blue(color))
@@ -1497,7 +1558,7 @@ class TimetableView @JvmOverloads constructor(
                     event = event,
                     week = week,
                     dayName = if (date != null) "周${date.name}" else context.getString(R.string.detail_day_fallback),
-                    backgroundColor = hit.background
+                    backgroundColor = if (appearance.modernStateStyle) hit.tone else hit.background
                 )
             )
             return
@@ -1600,6 +1661,11 @@ class TimetableView @JvmOverloads constructor(
         const val MARK_MAKEUP = 2
         const val MARK_MADE_UP = 3
         /** Block.owner：情侣周视图里块属于谁。 */
+        private const val STYLE_SOLID = 0
+        private const val STYLE_GREY = 1
+        private const val STYLE_GHOST = 2
+        private const val STYLE_EVENT = 3
+
         const val OWNER_ME = 0
         const val OWNER_PARTNER = 1
         private val TIME_COLUMN = mapOf(5 to 70f, 7 to 78f)

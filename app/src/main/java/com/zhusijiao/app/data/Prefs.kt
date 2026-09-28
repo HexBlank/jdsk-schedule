@@ -35,6 +35,10 @@ object Prefs {
     private const val KEY_TT_TEXT = "timetableTextLevel"
     private const val KEY_TT_FIT_SCREEN = "timetableFitScreen"
     private const val KEY_TT_SHOW_FINISHED = "timetableShowFinished"
+    private const val KEY_TT_STATE_STYLE = "timetableStateStyle"
+    private const val KEY_STATE_STYLE_TIP = "stateStyleTip"
+    private const val TIP_PENDING = "pending"
+    private const val TIP_DONE = "done"
     private const val KEY_CUSTOM_CHANNELS = "customUpdateChannels"
     private const val KEY_REMINDER_ENABLED = "classReminderEnabled"
     private const val KEY_REMINDER_LEAD = "classReminderLeadMinutes"
@@ -122,7 +126,10 @@ object Prefs {
             textLevel = sp.getInt(KEY_TT_TEXT, TimetableAppearance.DEFAULT_TEXT_LEVEL)
                 .coerceIn(TimetableAppearance.TEXT_SCALES.indices),
             fitScreen = sp.getBoolean(KEY_TT_FIT_SCREEN, false),
-            showFinished = sp.getBoolean(KEY_TT_SHOW_FINISHED, false)
+            showFinished = sp.getBoolean(KEY_TT_SHOW_FINISHED, false),
+            stateStyle = if (sp.getInt(KEY_TT_STATE_STYLE, TimetableAppearance.STATE_STYLE_MODERN) ==
+                TimetableAppearance.STATE_STYLE_CLASSIC
+            ) TimetableAppearance.STATE_STYLE_CLASSIC else TimetableAppearance.STATE_STYLE_MODERN
         )
         set(value) {
             sp.edit()
@@ -131,8 +138,24 @@ object Prefs {
                 .putInt(KEY_TT_TEXT, value.textLevel)
                 .putBoolean(KEY_TT_FIT_SCREEN, value.fitScreen)
                 .putBoolean(KEY_TT_SHOW_FINISHED, value.showFinished)
+                .putInt(KEY_TT_STATE_STYLE, value.stateStyle)
                 .apply()
         }
+
+    /**
+     * 「停课和日程换了新样式」一次性提示的状态：从旧版本升级上来的用户才提示，全新安装不提示。
+     * 第一次启动带这项功能的版本时由 [initStateStyleTip] 定下来，之后不再改判。
+     */
+    fun initStateStyleTip(upgradedFromOlder: Boolean) {
+        if (sp.contains(KEY_STATE_STYLE_TIP)) return
+        sp.edit().putString(KEY_STATE_STYLE_TIP, if (upgradedFromOlder) TIP_PENDING else TIP_DONE).apply()
+    }
+
+    val stateStyleTipPending: Boolean get() = sp.getString(KEY_STATE_STYLE_TIP, null) == TIP_PENDING
+
+    fun markStateStyleTipShown() {
+        sp.edit().putString(KEY_STATE_STYLE_TIP, TIP_DONE).apply()
+    }
 
     /** 上课提醒设置（开关、提前量、是否提醒日程），纯本机偏好。改动后立即重排提醒。 */
     var classReminderSettings: ClassReminderSettings

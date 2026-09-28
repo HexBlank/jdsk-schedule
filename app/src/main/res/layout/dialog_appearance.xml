@@ -62,6 +62,7 @@
 
     <!-- 小屏或系统大字体下内容仍可能超出，这里限高可滚，保证三排档位都够得着 -->
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
+        android:id="@+id/appearanceScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -180,6 +181,17 @@
                 android:layout_marginTop="13dp"
                 android:background="@color/detail_border" />
 
+            <!-- 「状态显示」分组：已上状态与停课、日程的样式 -->
+            <TextView
+                android:id="@+id/stateGroupTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/appearance_group_state"
+                android:textColor="@color/accent"
+                android:textSize="@dimen/text_caption"
+                android:textStyle="bold" />
+
             <!-- 与「自动铺满一屏」同款：整行放大触摸区，焦点/无障碍在行内 ToggleView -->
             <LinearLayout
                 android:id="@+id/showFinishedRow"
@@ -225,6 +237,113 @@
                     android:layout_height="32dp"
                     android:contentDescription="@string/appearance_show_finished" />
             </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/appearance_state_style"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <!-- 二选一的预览卡片：看图选，而不是一个说不清的「使用旧样式」开关 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/stateStyleModern"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <com.zhusijiao.app.ui.common.StateStylePreviewView
+                        android:id="@+id/stateStyleModernPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:importantForAccessibility="no"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:id="@+id/stateStyleModernRadio"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="7dp"
+                            android:text="@string/appearance_state_modern"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_small"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/stateStyleClassic"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <com.zhusijiao.app.ui.common.StateStylePreviewView
+                        android:id="@+id/stateStyleClassicPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:importantForAccessibility="no" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:importantForAccessibility="no"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:id="@+id/stateStyleClassicRadio"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="7dp"
+                            android:text="@string/appearance_state_classic"
+                            android:textColor="@color/text_primary"
+                            android:textSize="@dimen/text_small"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/appearance_state_hint"
+                android:textColor="@color/sub_a8"
+                android:textSize="@dimen/text_caption" />
         </LinearLayout>
     </com.zhusijiao.app.ui.common.MaxHeightScrollView>
 </LinearLayout>

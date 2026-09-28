@@ -2,15 +2,18 @@ package com.zhusijiao.app.ui.common
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.TimetableAppearance
 
 /**
- * 课表外观底部面板：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」与「显示已上状态」。
+ * 课表外观底部面板：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」，
+ * 以及「状态显示」分组：「显示已上状态」和停课、日程的样式（新版 / 经典，带预览的卡片二选一）。
  *
  * 交互约定：
  * - 面板只占下半屏且几乎不压暗背景，用户一边点一边能看到上半屏真实课表，所以没有「确定」按钮，
@@ -22,6 +25,8 @@ import com.zhusijiao.app.domain.TimetableAppearance
 class AppearanceSheet(
     context: Context,
     initial: TimetableAppearance,
+    /** 打开后直接滚到「状态显示」分组（从「换了新样式」提示的「改回」进来时）。 */
+    private val focusStateStyle: Boolean = false,
     private val onChanged: (TimetableAppearance) -> Unit
 ) : Dialog(context, R.style.Theme_Zhusijiao_Sheet_Clear) {
 
@@ -33,6 +38,10 @@ class AppearanceSheet(
     private val fitToggle: ToggleView
     private val finishedToggle: ToggleView
     private val resetButton: TextView
+    private val modernCard: View
+    private val classicCard: View
+    private val modernRadio: View
+    private val classicRadio: View
 
     init {
         setContentView(R.layout.dialog_appearance)
@@ -84,10 +93,61 @@ class AppearanceSheet(
         finishedToggle.onCheckedChange = { checked -> apply(current.copy(showFinished = checked)) }
         findViewById<View>(R.id.showFinishedRow).setOnClickListener { finishedToggle.toggle() }
 
+        modernCard = findViewById(R.id.stateStyleModern)
+        classicCard = findViewById(R.id.stateStyleClassic)
+        modernRadio = findViewById(R.id.stateStyleModernRadio)
+        classicRadio = findViewById(R.id.stateStyleClassicRadio)
+        findViewById<StateStylePreviewView>(R.id.stateStyleModernPreview).stateStyle = TimetableAppearance.STATE_STYLE_MODERN
+        findViewById<StateStylePreviewView>(R.id.stateStyleClassicPreview).stateStyle = TimetableAppearance.STATE_STYLE_CLASSIC
+        modernCard.contentDescription = context.getString(R.string.appearance_state_modern_desc)
+        classicCard.contentDescription = context.getString(R.string.appearance_state_classic_desc)
+        modernCard.setOnClickListener { selectStateStyle(TimetableAppearance.STATE_STYLE_MODERN) }
+        classicCard.setOnClickListener { selectStateStyle(TimetableAppearance.STATE_STYLE_CLASSIC) }
+
         resetButton.setOnClickListener { resetToDefault() }
 
         renderFitState()
+        renderStateStyle()
         renderResetState()
+
+        if (focusStateStyle) {
+            val scroll = findViewById<MaxHeightScrollView>(R.id.appearanceScroll)
+            val group = findViewById<View>(R.id.stateGroupTitle)
+            scroll.post { scroll.smoothScrollTo(0, group.top) }
+        }
+    }
+
+    private fun selectStateStyle(style: Int) {
+        apply(current.copy(stateStyle = style))
+        renderStateStyle()
+    }
+
+    /** 选中的卡片：主色描边加浅主色底，单选圆点实心；未选中：浅灰描边。 */
+    private fun renderStateStyle() {
+        val density = context.resources.displayMetrics.density
+        fun card(selected: Boolean) = GradientDrawable().apply {
+            cornerRadius = 12f * density
+            setColor(ContextCompat.getColor(context, if (selected) R.color.code_cell_active_bg else R.color.surface))
+            setStroke(
+                ((if (selected) 1.5f else 1f) * density).toInt().coerceAtLeast(1),
+                ContextCompat.getColor(context, if (selected) R.color.accent else R.color.line)
+            )
+        }
+        fun radio(selected: Boolean) = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(ContextCompat.getColor(context, R.color.surface))
+            setStroke(
+                ((if (selected) 4.5f else 1.5f) * density).toInt(),
+                ContextCompat.getColor(context, if (selected) R.color.accent else R.color.toggle_track_off)
+            )
+        }
+        val modern = current.modernStateStyle
+        modernCard.background = card(modern)
+        classicCard.background = card(!modern)
+        modernRadio.background = radio(modern)
+        classicRadio.background = radio(!modern)
+        modernCard.isSelected = modern
+        classicCard.isSelected = !modern
     }
 
     private fun apply(next: TimetableAppearance) {
@@ -107,6 +167,7 @@ class AppearanceSheet(
         finishedToggle.setChecked(target.showFinished, animate = true)
         apply(target)
         renderFitState()
+        renderStateStyle()
     }
 
     /** 铺满一屏时高度档位不生效，整排淡化提示「当前不起作用」，但保持可点。 */
@@ -154,11 +215,13 @@ class AppearanceSheet(
                 context.getString(PADDING_LABELS[value.paddingLevel]),
                 context.getString(TEXT_LABELS[value.textLevel])
             )
-            return if (value.showFinished) {
+            val withFinished = if (value.showFinished) {
                 context.getString(R.string.appearance_summary_with_finished, summary)
             } else {
                 summary
             }
+            return if (value.modernStateStyle) withFinished
+            else context.getString(R.string.appearance_summary_classic, withFinished)
         }
     }
 }

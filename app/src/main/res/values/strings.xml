@@ -195,6 +195,19 @@
     <string name="appearance_summary_with_finished">%1$s · 显示已上</string>
     <string name="appearance_show_finished">显示已上状态</string>
     <string name="appearance_show_finished_sub">下课后（精确到分钟）的课变灰并标「已上」</string>
+    <string name="appearance_group_state">状态显示</string>
+    <string name="appearance_state_style">停课与日程的样式</string>
+    <string name="appearance_state_modern">新版</string>
+    <string name="appearance_state_classic">经典</string>
+    <string name="appearance_state_hint">新版：停课空心虚线加删除线，日程浅底实线。经典：和 1.2.29 及之前一样。</string>
+    <string name="appearance_state_modern_desc">新版样式：停课的课画成空心虚线并划掉课程名，日程画成浅底实线框</string>
+    <string name="appearance_state_classic_desc">经典样式：停课的课变成灰色，日程画成深色实心块</string>
+    <string name="appearance_summary_classic">%1$s · 经典样式</string>
+    <string name="state_style_preview_course">体育</string>
+    <string name="state_style_preview_event">社团</string>
+    <string name="state_style_preview_suspended">停课</string>
+    <string name="state_style_tip">停课和日程换了新样式</string>
+    <string name="state_style_tip_action">改回</string>
 
     <!-- 课表库 library -->
     <string name="library_title">课表库</string>
