@@ -22,6 +22,7 @@ import com.zhusijiao.app.databinding.ActivityJoinBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.SharePreview
 import com.zhusijiao.app.ui.common.BaseActivity
+import com.zhusijiao.app.ui.schedule.ScheduleFragment
 import com.zhusijiao.app.util.Rpx
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.launch
@@ -207,6 +208,7 @@ class JoinActivity : BaseActivity() {
         }
         val switched = Prefs.activeScheduleId != localId
         Prefs.activeScheduleId = localId
+        ScheduleFragment.requestIntro(localId)
         // 情侣课表：TA 看到的是当前课表，切换了要让用户知道
         if (switched && ApiClient.coupleState().bound) Ui.toast(this, getString(R.string.library_couple_switch_toast))
         val intent = Intent(this, MainActivity::class.java).apply {

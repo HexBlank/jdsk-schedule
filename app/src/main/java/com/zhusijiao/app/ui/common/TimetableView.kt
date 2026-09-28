@@ -390,6 +390,7 @@ class TimetableView @JvmOverloads constructor(
         val previousWeek = week
         val oldRender = if (previous != null && schedule != null && previous.id == schedule.id) weekCache[week] else null
         cancelStateEffects()
+        cancelIntro()
         this.schedule = schedule
         this.events = events
         weekendDisplayMode = weekendMode
@@ -1070,6 +1071,7 @@ class TimetableView @JvmOverloads constructor(
             drawPage(canvas, renderFor(sec), secLeft)
         }
         val current = renderFor(week)
+        if (introPending) startIntro(current)
         drawPage(canvas, current, pageOffset)
         scheduleFinishedTick(current)
         scheduleNowTick(current)
@@ -1291,8 +1293,10 @@ class TimetableView @JvmOverloads constructor(
 
     private fun drawBlocks(canvas: Canvas, render: WeekRender) {
         val effects = if (render.week == week) stateEffects else null
+        val intro = if (render.week == week) intro else null
         render.blocks.forEach { b ->
             if (b.buried) return@forEach
+            if (intro != null && drawIntroBlock(canvas, b, intro)) return@forEach
             if (effects != null && effects.hides(b)) return@forEach
             val appear = effects?.appearAlpha(b) ?: 1f
             if (appear < 1f) {
@@ -1305,6 +1309,79 @@ class TimetableView @JvmOverloads constructor(
             if (solid > 0f) withBlockAlpha(canvas, b, solid) { drawBlock(canvas, b, STYLE_SOLID) }
         }
         effects?.let { drawFlight(canvas, it) }
+    }
+
+    /** 画入场动画中的块：还没轮到的不画，轮到的从上方落下并淡入；不在入场里的返回 false 由调用方照常画。 */
+    private fun drawIntroBlock(canvas: Canvas, b: Block, intro: Intro): Boolean {
+        val index = intro.order[b] ?: return false
+        val t = ((intro.elapsed - index * intro.stagger) / INTRO_DROP_MS).coerceIn(0f, 1f)
+        if (t >= 1f) return false
+        if (t <= 0f) return true
+        val eased = introInterpolator.getInterpolation(t)
+        canvas.save()
+        canvas.translate(0f, -(1f - eased) * rpx(48f))
+        withBlockAlpha(canvas, b, (t / 0.6f).coerceAtMost(1f)) { drawBlock(canvas, b) }
+        canvas.restore()
+        return true
+    }
+
+    // ===== 导入后入场：本周的课按星期、节次依次从上方落入 =====
+
+    private class Intro(val order: Map<Block, Int>, val stagger: Float) {
+        var elapsed = 0f
+        val duration: Long = (stagger * (order.size - 1).coerceAtLeast(0) + INTRO_DROP_MS).toLong()
+    }
+
+    private var introPending = false
+    private var intro: Intro? = null
+    private var introAnimator: ValueAnimator? = null
+    private val introInterpolator = OvershootInterpolator(1.1f)
+
+    /**
+     * 刚导入或加入一份课表后调用：下一次绘制时，本周的课一块接一块落进格子里。
+     * 放在下一次绘制才开始，是因为课表页此时可能还没显示、量不出块的位置。
+     */
+    fun playIntro() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ValueAnimator.areAnimatorsEnabled()) return
+        cancelIntro()
+        introPending = true
+        invalidate()
+    }
+
+    private fun startIntro(render: WeekRender) {
+        introPending = false
+        val blocks = render.blocks.filter { !it.buried }.sortedWith(compareBy({ it.col }, { it.startSection }))
+        if (blocks.isEmpty()) return
+        val order = java.util.IdentityHashMap<Block, Int>()
+        blocks.forEachIndexed { i, b -> order[b] = i }
+        // 课多时缩短间隔，整段入场控制在一秒左右
+        val stagger = if (blocks.size <= 1) 0f else minOf(INTRO_STAGGER_MS, INTRO_SPREAD_MS / (blocks.size - 1))
+        val effect = Intro(order, stagger)
+        intro = effect
+        introAnimator = ValueAnimator.ofFloat(0f, effect.duration.toFloat()).apply {
+            duration = effect.duration
+            interpolator = LinearInterpolator()
+            addUpdateListener {
+                effect.elapsed = it.animatedValue as Float
+                invalidate()
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    if (intro === effect) {
+                        intro = null
+                        invalidate()
+                    }
+                }
+            })
+            start()
+        }
+    }
+
+    private fun cancelIntro() {
+        introPending = false
+        introAnimator?.cancel()
+        introAnimator = null
+        intro = null
     }
 
     /** 画一个课程块；[forceStyle] 非空时按指定画法（停课过渡里叠画原来的实心样式）。 */
@@ -1657,6 +1734,7 @@ class TimetableView @JvmOverloads constructor(
         removeCallbacks(finishedTick)
         removeCallbacks(nowTick)
         cancelStateEffects()
+        cancelIntro()
     }
 
     /** 息屏或切后台期间定时器可能延后，回到前台时重绘一次，按当前时间补上「已上」。 */
@@ -1856,6 +1934,9 @@ class TimetableView @JvmOverloads constructor(
         private const val HOLIDAY_STAGGER_MS = 80L
         private const val HOLIDAY_FADE_MS = 280L
         private const val MARK_POP_MS = 360L
+        private const val INTRO_DROP_MS = 420f
+        private const val INTRO_STAGGER_MS = 60f
+        private const val INTRO_SPREAD_MS = 700f
 
         private const val STYLE_SOLID = 0
         private const val STYLE_GREY = 1

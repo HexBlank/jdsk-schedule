@@ -173,6 +173,10 @@ class ScheduleFragment : Fragment(), Refreshable {
                     binding.timetable.goToWeek(it.coerceIn(1, loadedSchedule.totalWeeks))
                     restoredWeek = null
                 }
+                if (introScheduleId == loadedSchedule.id) {
+                    introScheduleId = null
+                    binding.timetable.playIntro()
+                }
                 setState(STATE_CONTENT)
                 // 要打开的课表已经不在本机时必须明说，否则用户只会看到「打开的是别的课表」
                 if (activeId.isNotBlank() && requested == null) notifyMissingSchedule(activeId, loadedSchedule.name)
@@ -679,5 +683,13 @@ class ScheduleFragment : Fragment(), Refreshable {
 
         /** 本进程内已弹过「课表已失效」的课表，跨 Fragment 重建保留。 */
         private val promptedGone = mutableSetOf<String>()
+
+        /** 刚导入/加入、下次展示时要播入场动画的课表。 */
+        private var introScheduleId: String? = null
+
+        /** 导入或加入课表成功后调用：回到课表页时，本周的课依次落进格子里。 */
+        fun requestIntro(scheduleId: String) {
+            introScheduleId = scheduleId
+        }
     }
 }

@@ -23,6 +23,7 @@ import com.zhusijiao.app.domain.ParsedSchedule
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.ui.common.BaseActivity
 import com.zhusijiao.app.ui.eams.EamsWebActivity
+import com.zhusijiao.app.ui.schedule.ScheduleFragment
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -334,6 +335,7 @@ class ImportActivity : BaseActivity() {
                 val saved = ApiClient.saveSchedule(payload, target?.id, target?.revision)
                 val switched = Prefs.activeScheduleId != saved.id
                 Prefs.activeScheduleId = saved.id
+                ScheduleFragment.requestIntro(saved.id)
                 // 情侣课表：TA 看到的是当前课表，切换了要让用户知道（轻提示同时只显示一条，所以二选一）
                 if (switched && ApiClient.coupleState().bound) {
                     Ui.toastSuccess(this@ImportActivity, getString(R.string.library_couple_switch_toast))
