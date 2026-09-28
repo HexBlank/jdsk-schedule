@@ -22,10 +22,14 @@ import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import android.os.Handler
 import android.os.Looper
+import android.os.Build
 import android.os.Bundle
 import android.view.VelocityTracker
 import android.view.ViewConfiguration
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
+import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
@@ -381,6 +385,11 @@ class TimetableView @JvmOverloads constructor(
         jumpToCurrent: Boolean = true,
         weekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO
     ) {
+        // 同一份课表重建（调课、停课保存后）时，留住旧的这一页，重建后对比出变化播过渡
+        val previous = this.schedule
+        val previousWeek = week
+        val oldRender = if (previous != null && schedule != null && previous.id == schedule.id) weekCache[week] else null
+        cancelStateEffects()
         this.schedule = schedule
         this.events = events
         weekendDisplayMode = weekendMode
@@ -407,7 +416,8 @@ class TimetableView @JvmOverloads constructor(
         week = week.coerceIn(1, max(1, schedule.totalWeeks))
         dayCount = dayCountFor(week)
         dense = dayCount > WEEKDAY_COUNT
-        renderFor(week)
+        val fresh = renderFor(week)
+        if (oldRender != null && previous != null && week == previousWeek) startStateEffects(previous, schedule, oldRender, fresh)
         requestLayout()
         invalidate()
         notifyWeek()
@@ -1184,7 +1194,10 @@ class TimetableView @JvmOverloads constructor(
             when (render.marks.getOrNull(i)) {
                 MARK_MAKEUP -> drawDayMark(canvas, i, startY + nameH / 2f, "补", colMarkMakeupBg, colMarkMakeupText)
                 MARK_MADE_UP -> drawMadeUpDot(canvas, i, startY + nameH + rpx(2f) + dateH + dotH / 2f)
-                MARK_OFF -> drawDayMark(canvas, i, startY + nameH / 2f, "休", colMarkOffBg, colMarkOffText)
+                MARK_OFF -> drawDayMark(
+                    canvas, i, startY + nameH / 2f, "休", colMarkOffBg, colMarkOffText,
+                    scale = if (render.week == week) stateEffects?.markScale(i + 1) ?: 1f else 1f
+                )
             }
         }
         linePaint.color = colHeadBorder
@@ -1198,7 +1211,8 @@ class TimetableView @JvmOverloads constructor(
         markCy: Float,
         label: String,
         bg: Int,
-        text: Int
+        text: Int,
+        scale: Float = 1f
     ) {
         cornerPaint.textSize = rpx(17f)
         val markW = cornerPaint.measureText(label) + rpx(10f)
@@ -1207,11 +1221,14 @@ class TimetableView @JvmOverloads constructor(
         val pillRight = colRight - rpx(5f)
         val pillLeft = pillRight - markW
         val rect = RectF(pillLeft, markCy - markH / 2f, pillRight, markCy + markH / 2f)
+        canvas.save()
+        canvas.scale(scale, scale, rect.centerX(), rect.centerY())
         fillPaint.color = bg
         canvas.drawRoundRect(rect, rpx(8f), rpx(8f), fillPaint)
         cornerPaint.color = text
         val fm = cornerPaint.fontMetrics
         canvas.drawText(label, (pillLeft + pillRight) / 2f, markCy - (fm.ascent + fm.descent) / 2f, cornerPaint)
+        canvas.restore()
     }
 
     /** 补课来源日：日期正下方一枚补课橙小圆点，与补课日的「补」胶囊同色呼应，双向可见。 */
@@ -1273,84 +1290,255 @@ class TimetableView @JvmOverloads constructor(
     }
 
     private fun drawBlocks(canvas: Canvas, render: WeekRender) {
-        val radius = rpx(12f)
+        val effects = if (render.week == week) stateEffects else null
         render.blocks.forEach { b ->
             if (b.buried) return@forEach
-            val split = b.columnCount > 1
-            val padTop = blockPadTop(split)
-            val padH = blockPadH(split)
-            val rect = RectF(b.left, b.top, b.right, b.bottom)
-            val style = blockStyleOf(b)
-            val foreground = when (style) {
-                STYLE_GREY -> colSuspendedText
-                STYLE_GHOST -> BlockStyles.ghostText(b.tone)
-                STYLE_EVENT -> BlockStyles.eventText(b.tone)
-                else -> b.foreground
+            if (effects != null && effects.hides(b)) return@forEach
+            val appear = effects?.appearAlpha(b) ?: 1f
+            if (appear < 1f) {
+                if (appear > 0f) withBlockAlpha(canvas, b, appear) { drawBlock(canvas, b) }
+            } else {
+                drawBlock(canvas, b)
             }
-            fillPaint.color = when (style) {
-                STYLE_GREY -> colSuspendedBg
-                STYLE_GHOST -> Color.WHITE
-                STYLE_EVENT -> BlockStyles.eventFill(b.tone)
-                else -> b.background
-            }
-            canvas.drawRoundRect(rect, radius, radius, fillPaint)
-            when (style) {
-                STYLE_GREY -> {
-                    linePaint.color = foreground
-                    linePaint.strokeWidth = max(1f, rpx(2f))
-                    canvas.drawRoundRect(rect, radius, radius, linePaint)
-                }
-                STYLE_GHOST -> {
-                    // 空心虚线：这里原本有一节课，今天是个空位
-                    linePaint.color = BlockStyles.ghostStroke(b.tone)
-                    linePaint.strokeWidth = max(1f, rpx(3f))
-                    linePaint.pathEffect = ghostDash
-                    canvas.drawRoundRect(inset(rect, linePaint.strokeWidth / 2f), radius, radius, linePaint)
-                    linePaint.pathEffect = null
-                }
-                STYLE_EVENT -> {
-                    linePaint.color = BlockStyles.eventStroke(b.tone)
-                    linePaint.strokeWidth = max(1f, rpx(3f))
-                    canvas.drawRoundRect(inset(rect, linePaint.strokeWidth / 2f), radius, radius, linePaint)
-                }
-            }
-
-            canvas.save()
-            canvas.clipRect(rect)
-            val contentLeft = b.left + padH
-            var y = b.top + padTop
-            if (b.shownBadge.isNotEmpty() && !b.compact && b.badgeWidth > 0f) {
-                val badgeH = badgeHeightPx()
-                fillPaint.color = if (style == STYLE_GHOST || style == STYLE_EVENT) BlockStyles.badgeFill(b.tone) else colBadgeBg
-                val br = RectF(contentLeft, y, contentLeft + b.badgeWidth, y + badgeH)
-                canvas.drawRoundRect(br, rpx(8f), rpx(8f), fillPaint)
-                badgePaint.color = foreground
-                val fm = badgePaint.fontMetrics
-                canvas.drawText(b.shownBadge, contentLeft + rpx(8f), y + badgeH / 2f - (fm.ascent + fm.descent) / 2f, badgePaint)
-                y += badgeH + rpx(6f)
-            }
-            b.nameLayout?.let {
-                val paint = if (split) splitNamePaint else namePaint
-                paint.color = foreground
-                // 删除线只划课程名；「→ 周四 6–7 节」这类去向说明是有用信息，不划
-                paint.isStrikeThruText = style == STYLE_GHOST
-                canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
-                paint.isStrikeThruText = false
-                y += it.height
-            }
-            b.teacherLayout?.let {
-                y += if (b.compact) rpx(4f) else rpx(8f)
-                (if (split) splitTeacherPaint else teacherPaint).color = withAlpha(foreground, 0.94f)
-                canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
-                y += it.height
-            }
-            b.placeLayout?.let {
-                y += rpx(4f)
-                (if (split) splitPlacePaint else placePaint).color = withAlpha(foreground, 0.85f)
-                canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
-            }
-            canvas.restore()
+            // 刚设为停课的块：先画新样式，再把原来的实心样式叠在上面逐渐淡出
+            val solid = effects?.solidOverlay(b) ?: 0f
+            if (solid > 0f) withBlockAlpha(canvas, b, solid) { drawBlock(canvas, b, STYLE_SOLID) }
         }
+        effects?.let { drawFlight(canvas, it) }
+    }
+
+    /** 画一个课程块；[forceStyle] 非空时按指定画法（停课过渡里叠画原来的实心样式）。 */
+    private fun drawBlock(canvas: Canvas, b: Block, forceStyle: Int? = null) {
+        val radius = rpx(12f)
+        val split = b.columnCount > 1
+        val padTop = blockPadTop(split)
+        val padH = blockPadH(split)
+        val rect = RectF(b.left, b.top, b.right, b.bottom)
+        val style = forceStyle ?: blockStyleOf(b)
+        val foreground = when (style) {
+            STYLE_GREY -> colSuspendedText
+            STYLE_GHOST -> BlockStyles.ghostText(b.tone)
+            STYLE_EVENT -> BlockStyles.eventText(b.tone)
+            else -> b.foreground
+        }
+        fillPaint.color = when (style) {
+            STYLE_GREY -> colSuspendedBg
+            STYLE_GHOST -> Color.WHITE
+            STYLE_EVENT -> BlockStyles.eventFill(b.tone)
+            else -> b.background
+        }
+        canvas.drawRoundRect(rect, radius, radius, fillPaint)
+        when (style) {
+            STYLE_GREY -> {
+                linePaint.color = foreground
+                linePaint.strokeWidth = max(1f, rpx(2f))
+                canvas.drawRoundRect(rect, radius, radius, linePaint)
+            }
+            STYLE_GHOST -> {
+                // 空心虚线：这里原本有一节课，今天是个空位
+                linePaint.color = BlockStyles.ghostStroke(b.tone)
+                linePaint.strokeWidth = max(1f, rpx(3f))
+                linePaint.pathEffect = ghostDash
+                canvas.drawRoundRect(inset(rect, linePaint.strokeWidth / 2f), radius, radius, linePaint)
+                linePaint.pathEffect = null
+            }
+            STYLE_EVENT -> {
+                linePaint.color = BlockStyles.eventStroke(b.tone)
+                linePaint.strokeWidth = max(1f, rpx(3f))
+                canvas.drawRoundRect(inset(rect, linePaint.strokeWidth / 2f), radius, radius, linePaint)
+            }
+        }
+
+        canvas.save()
+        canvas.clipRect(rect)
+        val contentLeft = b.left + padH
+        var y = b.top + padTop
+        if (b.shownBadge.isNotEmpty() && !b.compact && b.badgeWidth > 0f) {
+            val badgeH = badgeHeightPx()
+            fillPaint.color = if (style == STYLE_GHOST || style == STYLE_EVENT) BlockStyles.badgeFill(b.tone) else colBadgeBg
+            val br = RectF(contentLeft, y, contentLeft + b.badgeWidth, y + badgeH)
+            canvas.drawRoundRect(br, rpx(8f), rpx(8f), fillPaint)
+            badgePaint.color = foreground
+            val fm = badgePaint.fontMetrics
+            canvas.drawText(b.shownBadge, contentLeft + rpx(8f), y + badgeH / 2f - (fm.ascent + fm.descent) / 2f, badgePaint)
+            y += badgeH + rpx(6f)
+        }
+        b.nameLayout?.let {
+            val paint = if (split) splitNamePaint else namePaint
+            paint.color = foreground
+            // 删除线只划课程名；「→ 周四 6–7 节」这类去向说明是有用信息，不划
+            paint.isStrikeThruText = style == STYLE_GHOST
+            canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
+            paint.isStrikeThruText = false
+            y += it.height
+        }
+        b.teacherLayout?.let {
+            y += if (b.compact) rpx(4f) else rpx(8f)
+            (if (split) splitTeacherPaint else teacherPaint).color = withAlpha(foreground, 0.94f)
+            canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
+            y += it.height
+        }
+        b.placeLayout?.let {
+            y += rpx(4f)
+            (if (split) splitPlacePaint else placePaint).color = withAlpha(foreground, 0.85f)
+            canvas.save(); canvas.translate(contentLeft, y); it.draw(canvas); canvas.restore()
+        }
+        canvas.restore()
+
+    }
+
+    // ===== 状态过渡：调课飞行、停课逐块变淡 =====
+
+    /**
+     * 课表数据变化后的一次性过渡：
+     * - 调课：课程块抬起、沿弧线飞到新格子、落地轻压，原位置的「已调出」块淡入；撤销调课则反向飞回；
+     *   新位置不在当前页（跨周调课）时只让出现的块淡入；
+     * - 停课：那一列的块自上而下依次从实心淡成新样式（间隔 80ms），表头「休」弹出。
+     */
+    private inner class StateEffects(
+        val flying: Block?,
+        val from: RectF?,
+        val appearing: Block?,
+        val holidayColumns: Map<Int, List<Block>>
+    ) {
+        var elapsed = 0f
+        val duration: Long = maxOf(
+            if (flying != null && from != null) FLY_MS else 0L,
+            if (appearing != null) APPEAR_DELAY_MS + APPEAR_MS else 0L,
+            holidayColumns.values.maxOfOrNull { HOLIDAY_STAGGER_MS * (it.size - 1) + HOLIDAY_FADE_MS } ?: 0L,
+            if (holidayColumns.isNotEmpty()) MARK_POP_MS else 0L
+        )
+
+        fun hides(b: Block) = flying != null && from != null && b === flying && elapsed < FLY_MS
+
+        fun appearAlpha(b: Block): Float =
+            if (b === appearing) ((elapsed - APPEAR_DELAY_MS) / APPEAR_MS).coerceIn(0f, 1f) else 1f
+
+        fun solidOverlay(b: Block): Float {
+            val list = holidayColumns[b.col] ?: return 0f
+            val index = list.indexOfFirst { it === b }
+            if (index < 0) return 0f
+            return 1f - ((elapsed - index * HOLIDAY_STAGGER_MS) / HOLIDAY_FADE_MS).coerceIn(0f, 1f)
+        }
+
+        /** 表头「休」的缩放：0 → 1 并略微回弹；不在这次停课的列返回 null。 */
+        fun markScale(day: Int): Float? {
+            if (day !in holidayColumns) return null
+            return markInterpolator.getInterpolation((elapsed / MARK_POP_MS).coerceIn(0f, 1f))
+        }
+    }
+
+    private var stateEffects: StateEffects? = null
+    private var effectsAnimator: ValueAnimator? = null
+    private val flyInterpolator = PathInterpolator(0.45f, 0f, 0.2f, 1f)
+    private val markInterpolator = OvershootInterpolator(2.2f)
+
+    private fun startStateEffects(old: Schedule, new: Schedule, oldRender: WeekRender, newRender: WeekRender) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ValueAnimator.areAnimatorsEnabled()) return
+        if (width <= 0) return
+        val w = newRender.week
+        var flying: Block? = null
+        var from: RectF? = null
+        var appearing: Block? = null
+        val oldIds = old.adjustments.map { it.id }.toSet()
+        val newIds = new.adjustments.map { it.id }.toSet()
+        val added = new.adjustments.firstOrNull { it.id !in oldIds && (it.targetWeek == w || it.sourceWeek == w) }
+        val removed = old.adjustments.firstOrNull { it.id !in newIds && (it.targetWeek == w || it.sourceWeek == w) }
+        if (added != null) {
+            val target = newRender.blocks.firstOrNull { it.occurrence == Occurrence.MOVED_IN && it.adjustment?.id == added.id }
+            val source = oldRender.blocks.firstOrNull {
+                it.event == null && it.occurrence == Occurrence.NORMAL && it.course.id == added.courseId &&
+                    it.col == added.sourceDay && it.startSection == added.sourceStartSection
+            }
+            val ghost = newRender.blocks.firstOrNull { it.occurrence == Occurrence.MOVED_OUT && it.adjustment?.id == added.id }
+            if (target != null && source != null) {
+                flying = target
+                from = RectF(source.left, source.top, source.right, source.bottom)
+                appearing = ghost
+            } else {
+                appearing = target ?: ghost
+            }
+        } else if (removed != null) {
+            val source = oldRender.blocks.firstOrNull { it.occurrence == Occurrence.MOVED_IN && it.adjustment?.id == removed.id }
+            val target = newRender.blocks.firstOrNull {
+                it.event == null && it.occurrence == Occurrence.NORMAL && it.course.id == removed.courseId &&
+                    it.col == removed.sourceDay && it.startSection == removed.sourceStartSection
+            }
+            if (target != null && source != null) {
+                flying = target
+                from = RectF(source.left, source.top, source.right, source.bottom)
+            } else {
+                appearing = target
+            }
+        }
+        val oldDays = old.holidays.filter { it.week == w }.map { it.day }.toSet()
+        val holidayColumns = new.holidays.filter { it.week == w && it.day !in oldDays }
+            .map { it.day }
+            .distinct()
+            .associateWith { day -> newRender.blocks.filter { it.col == day && it.holiday != null }.sortedBy { it.startSection } }
+        if (flying == null && appearing == null && holidayColumns.isEmpty()) return
+        val effects = StateEffects(flying, from, appearing, holidayColumns)
+        stateEffects = effects
+        effectsAnimator = ValueAnimator.ofFloat(0f, effects.duration.toFloat()).apply {
+            duration = effects.duration
+            interpolator = LinearInterpolator()
+            addUpdateListener {
+                effects.elapsed = it.animatedValue as Float
+                invalidate()
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    if (stateEffects === effects) {
+                        stateEffects = null
+                        invalidate()
+                    }
+                }
+            })
+            start()
+        }
+    }
+
+    private fun cancelStateEffects() {
+        effectsAnimator?.cancel()
+        effectsAnimator = null
+        stateEffects = null
+    }
+
+    /** 飞行中的块：沿二次贝塞尔弧线从旧格子移到新格子，前段抬起放大到 1.07，落地压到 0.97 再回到 1。 */
+    private fun drawFlight(canvas: Canvas, effects: StateEffects) {
+        val block = effects.flying ?: return
+        val from = effects.from ?: return
+        if (effects.elapsed >= FLY_MS) return
+        val t = effects.elapsed / FLY_MS
+        val p = flyInterpolator.getInterpolation(t)
+        val fx = from.centerX(); val fy = from.centerY()
+        val tx = (block.left + block.right) / 2f; val ty = (block.top + block.bottom) / 2f
+        val lift = max(abs(tx - fx), abs(ty - fy)) * 0.35f
+        val cx = (fx + tx) / 2f; val cy = min(fy, ty) - lift
+        val x = (1 - p) * (1 - p) * fx + 2 * (1 - p) * p * cx + p * p * tx
+        val y = (1 - p) * (1 - p) * fy + 2 * (1 - p) * p * cy + p * p * ty
+        val scale = when {
+            t < 0.15f -> 1f + 0.07f * (t / 0.15f)
+            t < 0.85f -> 1.07f
+            t < 0.93f -> 1.07f - 0.10f * ((t - 0.85f) / 0.08f)
+            else -> 0.97f + 0.03f * ((t - 0.93f) / 0.07f)
+        }
+        canvas.save()
+        canvas.translate(x - tx, y - ty)
+        canvas.scale(scale, scale, tx, ty)
+        // 飞行时底下垫一层淡阴影，像被拿起来
+        fillPaint.color = 0x22000000
+        val sh = rpx(6f) * (scale - 1f) / 0.07f
+        canvas.drawRoundRect(RectF(block.left + sh, block.top + sh * 1.6f, block.right + sh, block.bottom + sh * 1.6f), rpx(12f), rpx(12f), fillPaint)
+        drawBlock(canvas, block)
+        canvas.restore()
+    }
+
+    private inline fun withBlockAlpha(canvas: Canvas, b: Block, alpha: Float, draw: () -> Unit) {
+        val pad = rpx(4f)
+        val saved = canvas.saveLayerAlpha(b.left - pad, b.top - pad, b.right + pad, b.bottom + pad, (alpha.coerceIn(0f, 1f) * 255).roundToInt())
+        draw()
+        canvas.restoreToCount(saved)
     }
 
     /**
@@ -1468,6 +1656,7 @@ class TimetableView @JvmOverloads constructor(
         longPressHandler.removeCallbacks(longPressRunnable)
         removeCallbacks(finishedTick)
         removeCallbacks(nowTick)
+        cancelStateEffects()
     }
 
     /** 息屏或切后台期间定时器可能延后，回到前台时重绘一次，按当前时间补上「已上」。 */
@@ -1661,6 +1850,13 @@ class TimetableView @JvmOverloads constructor(
         const val MARK_MAKEUP = 2
         const val MARK_MADE_UP = 3
         /** Block.owner：情侣周视图里块属于谁。 */
+        private const val FLY_MS = 600L
+        private const val APPEAR_DELAY_MS = 120L
+        private const val APPEAR_MS = 320L
+        private const val HOLIDAY_STAGGER_MS = 80L
+        private const val HOLIDAY_FADE_MS = 280L
+        private const val MARK_POP_MS = 360L
+
         private const val STYLE_SOLID = 0
         private const val STYLE_GREY = 1
         private const val STYLE_GHOST = 2
