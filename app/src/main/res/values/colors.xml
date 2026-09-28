@@ -58,7 +58,9 @@
     <color name="tt_corner_border">#edf0ee</color>
     <color name="tt_day_text">#7b8581</color>
     <color name="tt_today_text">#1f6f58</color>
-    <color name="tt_today_bg">#222a27</color>
+    <color name="tt_today_bg">@color/accent</color>
+    <!-- 今天整列的浅底（主色 7%） -->
+    <color name="tt_today_col">#122f7d68</color>
     <color name="tt_time_number">#3b4641</color>
     <color name="tt_time_clock">#9ba49f</color>
     <color name="tt_grid_v">#f0f2f1</color>

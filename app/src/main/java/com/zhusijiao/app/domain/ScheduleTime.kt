@@ -60,6 +60,27 @@ object ScheduleTime {
         }.timeInMillis
     }
 
+    /**
+     * 当前时刻在节次栏里的纵向位置（行号，0 起），供课表画「现在」时间线：
+     * 上课中为「所在节 + 节内进度」，课间落在下一节的顶部；
+     * 早于第一节上课、晚于最后一节下课、或作息缺失时返回 null（不画）。
+     */
+    fun rowPosition(slots: List<TimeSlot>, nowMinutes: Int): Float? {
+        if (slots.isEmpty()) return null
+        val first = minutesOf(slots.first().startTime) ?: return null
+        val last = minutesOf(slots.last().endTime) ?: return null
+        if (nowMinutes < first || nowMinutes > last) return null
+        slots.forEachIndexed { index, slot ->
+            val start = minutesOf(slot.startTime) ?: return null
+            val end = minutesOf(slot.endTime) ?: return null
+            if (nowMinutes < start) return index.toFloat()
+            if (nowMinutes <= end) {
+                return index + if (end > start) (nowMinutes - start).toFloat() / (end - start) else 0f
+            }
+        }
+        return slots.size.toFloat()
+    }
+
     fun formatTime(minutes: Int): String {
         val clamped = minutes.coerceIn(0, 24 * 60 - 1)
         return "%02d:%02d".format(clamped / 60, clamped % 60)

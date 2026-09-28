@@ -278,6 +278,8 @@ class TimetableView @JvmOverloads constructor(
     private val colMarkMakeupBg = c(R.color.tt_mark_makeup_bg)
     private val colMarkOffText = c(R.color.tt_mark_off_text)
     private val colMarkOffBg = c(R.color.tt_mark_off_bg)
+    private val colTodayColumn = c(R.color.tt_today_col)
+    private val colNowLine = c(R.color.couple_now_line)
 
     // 手势
     private var downX = 0f; private var downY = 0f
@@ -1047,7 +1049,61 @@ class TimetableView @JvmOverloads constructor(
         val current = renderFor(week)
         drawPage(canvas, current, pageOffset)
         scheduleFinishedTick(current)
+        scheduleNowTick(current)
     }
+
+    /** 今天那一列铺一层浅主色底，往下看课程时也找得到今天。 */
+    private fun drawTodayColumn(canvas: Canvas, render: WeekRender) {
+        val col = render.dates.indexOfFirst { it.today }
+        if (col < 0) return
+        val left = timeColPx + col * dayColPx
+        fillPaint.color = colTodayColumn
+        canvas.drawRect(left, headerHeightPx, left + dayColPx, headerHeightPx + sectionsList.size * rowHeightPx, fillPaint)
+    }
+
+    /**
+     * 「现在」时间线：只在今天那一列画红线，左端一个圆点，节次栏里标出时刻；
+     * 与情侣日视图的当前时间线同色。早于第一节、晚于最后一节不画。
+     */
+    private fun drawNowLine(canvas: Canvas, render: WeekRender) {
+        val col = render.dates.indexOfFirst { it.today }
+        if (col < 0) return
+        val now = nowMinutes()
+        val row = ScheduleTime.rowPosition(sectionsList, now) ?: return
+        val y = headerHeightPx + row * rowHeightPx
+        val left = timeColPx + col * dayColPx
+        val thickness = max(2f, rpx(3.6f))
+        fillPaint.color = colNowLine
+        canvas.drawRect(left + rpx(4f), y - thickness / 2f, left + dayColPx - rpx(2f), y + thickness / 2f, fillPaint)
+        canvas.drawCircle(left + rpx(5f), y, rpx(7f), fillPaint)
+        // 节次栏里的时刻胶囊
+        cornerPaint.textSize = rpx(17f)
+        cornerPaint.typeface = Typeface.DEFAULT_BOLD
+        val label = ScheduleTime.formatTime(now)
+        val pillW = min(timeColPx - rpx(4f), cornerPaint.measureText(label) + rpx(10f))
+        val pillH = rpx(26f)
+        val cx = timeColPx / 2f
+        val rect = RectF(cx - pillW / 2f, y - pillH / 2f, cx + pillW / 2f, y + pillH / 2f)
+        canvas.drawRoundRect(rect, rpx(8f), rpx(8f), fillPaint)
+        cornerPaint.color = Color.WHITE
+        drawCenteredText(canvas, label, cx, y, cornerPaint)
+        cornerPaint.typeface = Typeface.DEFAULT
+    }
+
+    private fun nowMinutes(): Int {
+        val cal = java.util.Calendar.getInstance()
+        return cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
+    }
+
+    /** 当前页是本周（有今天）时，每到整分钟重绘一次，让时间线走起来。 */
+    private fun scheduleNowTick(render: WeekRender) {
+        removeCallbacks(nowTick)
+        if (render.dates.none { it.today }) return
+        val now = System.currentTimeMillis()
+        postDelayed(nowTick, 60_000L - now % 60_000L + FINISHED_TICK_SLACK_MS)
+    }
+
+    private val nowTick = Runnable { invalidate() }
 
     /** 在 [left, left+width] 区域绘制某一周（裁剪 + 平移），实现相邻周并排连贯滑动。 */
     private fun drawPage(canvas: Canvas, render: WeekRender, left: Float) {
@@ -1061,9 +1117,11 @@ class TimetableView @JvmOverloads constructor(
         canvas.clipRect(left, 0f, left + w, height.toFloat())
         canvas.translate(left, 0f)
         drawHeader(canvas, render)
+        drawTodayColumn(canvas, render)
         drawBody(canvas)
         drawFreeRuns(canvas, render)
         drawBlocks(canvas, render)
+        drawNowLine(canvas, render)
         if (render.blocks.isEmpty()) {
             emptyPaint.textSize = rpx(25f)
             emptyPaint.color = colEmpty
@@ -1348,12 +1406,18 @@ class TimetableView @JvmOverloads constructor(
         super.onDetachedFromWindow()
         longPressHandler.removeCallbacks(longPressRunnable)
         removeCallbacks(finishedTick)
+        removeCallbacks(nowTick)
     }
 
     /** 息屏或切后台期间定时器可能延后，回到前台时重绘一次，按当前时间补上「已上」。 */
     override fun onWindowVisibilityChanged(visibility: Int) {
         super.onWindowVisibilityChanged(visibility)
-        if (visibility == VISIBLE) invalidate() else removeCallbacks(finishedTick)
+        if (visibility == VISIBLE) {
+            invalidate()
+        } else {
+            removeCallbacks(finishedTick)
+            removeCallbacks(nowTick)
+        }
     }
 
     override fun performClick(): Boolean {
