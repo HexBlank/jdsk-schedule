@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/heading_ink"
-        android:textSize="17sp"
+        android:textSize="@dimen/text_title"
         android:textStyle="bold" />
 
     <TextView
@@ -25,7 +25,7 @@
         android:layout_marginTop="10dp"
         android:lineSpacingMultiplier="1.5"
         android:textColor="@color/muted"
-        android:textSize="13.5sp" />
+        android:textSize="@dimen/text_body" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -41,7 +41,7 @@
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
             android:minHeight="48dp"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_body"
             android:visibility="gone" />
 
         <TextView
@@ -51,6 +51,6 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:minHeight="48dp"
-            android:textSize="14sp" />
+            android:textSize="@dimen/text_body" />
     </LinearLayout>
 </LinearLayout>

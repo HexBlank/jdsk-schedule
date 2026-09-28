@@ -34,7 +34,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="@color/title_ink"
-                android:textSize="15sp"
+                android:textSize="@dimen/text_subtitle"
                 android:textStyle="bold" />
 
             <TextView
@@ -48,7 +48,7 @@
                 android:paddingEnd="8dp"
                 android:paddingBottom="2.5dp"
                 android:textColor="@color/danger"
-                android:textSize="11sp"
+                android:textSize="@dimen/text_caption"
                 android:visibility="gone" />
 
             <TextView
@@ -63,7 +63,7 @@
                 android:paddingBottom="2.5dp"
                 android:text="@string/library_active_tag"
                 android:textColor="@color/tag_text"
-                android:textSize="11sp"
+                android:textSize="@dimen/text_caption"
                 android:visibility="gone" />
 
             <!-- 情侣课表：TA 看到的就是当前课表 -->
@@ -79,7 +79,7 @@
                 android:paddingBottom="2.5dp"
                 android:text="@string/library_couple_visible_tag"
                 android:textColor="@color/warn"
-                android:textSize="11sp"
+                android:textSize="@dimen/text_caption"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:textColor="@color/sub_6c"
-            android:textSize="11.5sp" />
+            android:textSize="@dimen/text_hint" />
 
         <TextView
             android:id="@+id/cardSub"
@@ -97,7 +97,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             android:textColor="@color/sub_a2"
-            android:textSize="11sp" />
+            android:textSize="@dimen/text_caption" />
     </LinearLayout>
 
     <View
@@ -136,7 +136,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="@color/sub_77"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
         </LinearLayout>
 
         <TextView

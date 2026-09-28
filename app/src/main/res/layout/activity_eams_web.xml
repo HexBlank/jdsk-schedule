@@ -22,7 +22,7 @@
         android:paddingBottom="8dp"
         android:text="@string/eams_guide"
         android:textColor="@color/privacy_note_text"
-        android:textSize="11sp" />
+        android:textSize="@dimen/text_caption" />
 
     <ProgressBar
         android:id="@+id/progress"

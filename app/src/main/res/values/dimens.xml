@@ -3,17 +3,31 @@
     <!-- 尺寸约定：以 750 设计稿宽度 = 屏宽为基准，静态界面取 1dp ≈ 2 设计稿单位。
          课表（TimetableView）另行按屏宽等比换算 px，保证整周一屏、列宽精确。 -->
     <dimen name="page_padding">14dp</dimen>
-    <dimen name="card_radius">9dp</dimen>
-    <dimen name="card_radius_lg">10dp</dimen>
-    <dimen name="card_radius_sm">5dp</dimen>
-    <dimen name="button_radius">7dp</dimen>
+    <!-- 圆角只用四级：小控件 8 / 输入与选择 12 / 卡片 16 / 抽屉与弹窗 24；按钮一律全圆角胶囊 -->
+    <dimen name="radius_sm">8dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">16dp</dimen>
+    <dimen name="radius_xl">24dp</dimen>
+    <dimen name="radius_pill">100dp</dimen>
+    <!-- 旧名保留为别名，逐步替换 -->
+    <dimen name="card_radius">@dimen/radius_md</dimen>
+    <dimen name="card_radius_lg">@dimen/radius_lg</dimen>
+    <dimen name="card_radius_sm">@dimen/radius_md</dimen>
+    <dimen name="button_radius">@dimen/radius_pill</dimen>
     <dimen name="button_min_height">44dp</dimen>
 
-    <!-- 字号：1sp ≈ 2 设计稿单位 -->
-    <dimen name="text_nav_title">17sp</dimen>
-    <dimen name="text_page_title">20sp</dimen>
-    <dimen name="text_section">15sp</dimen>
-    <dimen name="text_button">15sp</dimen>
+    <!-- 字号只用七档，布局里不直接写数字：说明 11 / 辅助 12 / 正文小 13 / 正文 14 / 小标题 16 / 标题 18 / 大标题 22 -->
+    <dimen name="text_caption">11sp</dimen>
+    <dimen name="text_hint">12sp</dimen>
+    <dimen name="text_small">13sp</dimen>
     <dimen name="text_body">14sp</dimen>
-    <dimen name="text_sub">13sp</dimen>
+    <dimen name="text_subtitle">16sp</dimen>
+    <dimen name="text_title">18sp</dimen>
+    <dimen name="text_display">22sp</dimen>
+    <!-- 语义别名 -->
+    <dimen name="text_nav_title">@dimen/text_title</dimen>
+    <dimen name="text_page_title">@dimen/text_display</dimen>
+    <dimen name="text_section">@dimen/text_subtitle</dimen>
+    <dimen name="text_button">@dimen/text_subtitle</dimen>
+    <dimen name="text_sub">@dimen/text_small</dimen>
 </resources>

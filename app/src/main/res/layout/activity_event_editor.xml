@@ -34,7 +34,7 @@
                 android:includeFontPadding="false"
                 android:lineSpacingExtra="2dp"
                 android:textColor="@color/accent_strong"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_subtitle"
                 android:textStyle="bold" />
 
             <TextView
@@ -43,7 +43,7 @@
                 android:layout_marginTop="5dp"
                 android:text="@string/event_privacy"
                 android:textColor="@color/sub_9b"
-                android:textSize="11.5sp" />
+                android:textSize="@dimen/text_hint" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -52,7 +52,7 @@
                 android:layout_marginBottom="6dp"
                 android:text="@string/event_name_label"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <EditText
@@ -75,7 +75,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/event_time_label"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <com.zhusijiao.app.ui.common.SectionPickerView
@@ -90,7 +90,7 @@
                 android:layout_marginTop="8dp"
                 android:lineSpacingExtra="1dp"
                 android:textColor="@color/sub_9b"
-                android:textSize="11.5sp" />
+                android:textSize="@dimen/text_hint" />
 
             <LinearLayout
                 android:id="@+id/eventExactRow"
@@ -118,7 +118,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/event_exact_label"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -126,7 +126,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/event_exact_desc"
                         android:textColor="@color/sub_9b"
-                        android:textSize="11.5sp" />
+                        android:textSize="@dimen/text_hint" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -166,7 +166,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textColor="@color/value_ink"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_subtitle"
                         android:textStyle="bold" />
 
                     <TextView
@@ -174,7 +174,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/event_clock_change"
                         android:textColor="@color/accent_strong"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
                 <TextView
@@ -183,7 +183,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:textColor="@color/sub_9b"
-                    android:textSize="11.5sp" />
+                    android:textSize="@dimen/text_hint" />
 
                 <!-- 时间改到别的节次范围时给一条可点的建议，避免「写早上 8 点、块画在晚上」 -->
                 <TextView
@@ -197,7 +197,7 @@
                     android:lineSpacingExtra="1dp"
                     android:padding="10dp"
                     android:textColor="@color/accent_strong"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_hint"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -208,7 +208,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/event_repeat_label"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -230,7 +230,7 @@
                     android:layout_marginEnd="12dp"
                     android:text="@string/event_repeat_end_label"
                     android:textColor="@color/field_label"
-                    android:textSize="12.5sp" />
+                    android:textSize="@dimen/text_small" />
 
                 <com.zhusijiao.app.ui.common.StepperFieldView
                     android:id="@+id/eventEndWeek"
@@ -250,7 +250,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:textColor="@color/sub_9b"
-                android:textSize="11.5sp" />
+                android:textSize="@dimen/text_hint" />
 
             <!-- 地点/备注/颜色都不是必填，收起来让主路径只剩「名称 + 节次 + 重复」 -->
             <TextView
@@ -269,7 +269,7 @@
                 android:paddingEnd="12dp"
                 android:text="@string/event_more_label"
                 android:textColor="@color/sub_68"
-                android:textSize="13sp" />
+                android:textSize="@dimen/text_small" />
 
             <LinearLayout
                 android:id="@+id/eventMoreArea"
@@ -285,7 +285,7 @@
                     android:layout_marginBottom="6dp"
                     android:text="@string/event_place_label"
                     android:textColor="@color/field_label"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_hint"
                     android:textStyle="bold" />
 
                 <EditText
@@ -307,7 +307,7 @@
                     android:layout_marginBottom="6dp"
                     android:text="@string/event_note_label"
                     android:textColor="@color/field_label"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_hint"
                     android:textStyle="bold" />
 
                 <EditText
@@ -329,7 +329,7 @@
                     android:layout_marginBottom="6dp"
                     android:text="@string/event_color_label"
                     android:textColor="@color/field_label"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_hint"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -359,7 +359,7 @@
                         android:layout_weight="1"
                         android:text="@string/event_color_pick"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -374,7 +374,7 @@
                 android:lineSpacingExtra="2dp"
                 android:padding="11dp"
                 android:textColor="@color/accent_strong"
-                android:textSize="12.5sp"
+                android:textSize="@dimen/text_small"
                 android:visibility="gone" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

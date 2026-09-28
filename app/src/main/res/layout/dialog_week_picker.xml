@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:text="@string/week_picker_title"
             android:textColor="@color/heading_ink"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_subtitle"
             android:textStyle="bold" />
 
         <TextView
@@ -47,7 +47,7 @@
             android:paddingBottom="5dp"
             android:text="@string/week_picker_back_current"
             android:textColor="@color/accent_strong"
-            android:textSize="12sp" />
+            android:textSize="@dimen/text_hint" />
     </LinearLayout>
 
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
@@ -74,7 +74,7 @@
         android:layout_marginTop="11dp"
         android:text="@string/week_picker_weekend_section"
         android:textColor="@color/field_label"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_hint"
         android:textStyle="bold" />
 
     <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView，
@@ -96,7 +96,7 @@
             android:layout_weight="1"
             android:text="@string/week_picker_auto_weekend"
             android:textColor="@color/body_ink"
-            android:textSize="13.5sp" />
+            android:textSize="@dimen/text_body" />
 
         <com.zhusijiao.app.ui.common.ToggleView
             android:id="@+id/weekendAutoToggle"

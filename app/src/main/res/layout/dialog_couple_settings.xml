@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:text="@string/couple_settings_title"
         android:textColor="@color/heading_ink"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_subtitle"
         android:textStyle="bold" />
 
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
@@ -41,7 +41,7 @@
                 android:layout_marginTop="12dp"
                 android:text="@string/couple_settings_display"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView -->
@@ -71,7 +71,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/couple_setting_now_line"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -79,7 +79,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/couple_setting_now_line_sub"
                         android:textColor="@color/sub_a8"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -121,7 +121,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/couple_setting_highlight"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -129,7 +129,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/couple_setting_highlight_sub"
                         android:textColor="@color/sub_a8"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -171,7 +171,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/couple_setting_free_label"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -179,7 +179,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/couple_setting_free_label_sub"
                         android:textColor="@color/sub_a8"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -200,7 +200,7 @@
                 android:layout_marginTop="16dp"
                 android:text="@string/couple_settings_binding"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -220,7 +220,7 @@
                     android:layout_weight="1"
                     android:text="@string/couple_setting_profile"
                     android:textColor="@color/body_ink"
-                    android:textSize="13.5sp" />
+                    android:textSize="@dimen/text_body" />
 
                 <View
                     android:id="@+id/profileSwatchMe"
@@ -239,7 +239,7 @@
                     android:layout_marginStart="8dp"
                     android:text="›"
                     android:textColor="@color/arrow_grey"
-                    android:textSize="18sp" />
+                    android:textSize="@dimen/text_title" />
             </LinearLayout>
 
             <View
@@ -265,7 +265,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/couple_setting_schedule"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:id="@+id/scheduleValue"
@@ -277,7 +277,7 @@
                         android:gravity="end"
                         android:maxLines="1"
                         android:textColor="@color/muted"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
                 <TextView
@@ -286,7 +286,7 @@
                     android:layout_marginTop="3dp"
                     android:text="@string/couple_setting_schedule_hint"
                     android:textColor="@color/sub_a8"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
 
                 <TextView
                     android:id="@+id/syncedValue"
@@ -294,7 +294,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textColor="@color/sub_a8"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
             </LinearLayout>
 
             <View
@@ -313,7 +313,7 @@
                 android:minHeight="52dp"
                 android:text="@string/couple_unbind"
                 android:textColor="@color/danger"
-                android:textSize="13.5sp" />
+                android:textSize="@dimen/text_body" />
         </LinearLayout>
     </com.zhusijiao.app.ui.common.MaxHeightScrollView>
 </LinearLayout>

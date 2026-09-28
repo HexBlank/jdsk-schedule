@@ -23,7 +23,7 @@
         android:includeFontPadding="false"
         android:text="@string/color_picker_title"
         android:textColor="@color/heading_ink"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_title"
         android:textStyle="bold" />
 
     <TextView
@@ -34,7 +34,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@color/sub_8a"
-        android:textSize="13sp" />
+        android:textSize="@dimen/text_small" />
 
     <LinearLayout
         android:id="@+id/paletteContent"
@@ -48,7 +48,7 @@
             android:layout_marginTop="15dp"
             android:text="@string/color_picker_presets"
             android:textColor="@color/field_label"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_hint"
             android:textStyle="bold" />
 
         <GridLayout
@@ -71,7 +71,7 @@
                 android:layout_weight="1"
                 android:text="@string/color_picker_mine"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <TextView
@@ -85,7 +85,7 @@
                 android:paddingEnd="2dp"
                 android:text="@string/color_picker_add_custom"
                 android:textColor="@color/accent_strong"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_small"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -120,7 +120,7 @@
                 android:layout_weight="1"
                 android:text="@string/color_picker_follow_default"
                 android:textColor="@color/body_ink"
-                android:textSize="13.5sp" />
+                android:textSize="@dimen/text_body" />
 
             <TextView
                 android:id="@+id/followDefaultCheck"
@@ -128,7 +128,7 @@
                 android:layout_height="wrap_content"
                 android:text="✓"
                 android:textColor="@color/accent_strong"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body"
                 android:textStyle="bold"
                 android:visibility="gone" />
         </LinearLayout>
@@ -167,7 +167,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:textColor="@color/body_ink"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body"
                 android:textStyle="bold" />
 
             <TextView
@@ -181,7 +181,7 @@
                 android:paddingEnd="2dp"
                 android:text="@string/common_cancel"
                 android:textColor="@color/sub_68"
-                android:textSize="13sp" />
+                android:textSize="@dimen/text_small" />
         </LinearLayout>
 
         <TextView

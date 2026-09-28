@@ -59,7 +59,7 @@
                     android:singleLine="true"
                     android:textColor="@android:color/transparent"
                     android:textColorHint="@android:color/transparent"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/text_subtitle" />
             </FrameLayout>
 
             <LinearLayout
@@ -82,7 +82,7 @@
                     android:paddingBottom="6dp"
                     android:text="@string/join_paste"
                     android:textColor="@color/accent_strong"
-                    android:textSize="11.5sp" />
+                    android:textSize="@dimen/text_hint" />
 
             </LinearLayout>
 
@@ -95,7 +95,7 @@
                 android:gravity="center"
                 android:padding="10dp"
                 android:textColor="@color/danger"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:visibility="gone" />
 
             <TextView
@@ -131,7 +131,7 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:textColor="@color/title_ink"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_subtitle"
                         android:textStyle="bold" />
 
                     <TextView
@@ -145,7 +145,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="2.5dp"
                         android:textColor="@color/tag_text"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_caption"
                         android:visibility="gone" />
                 </LinearLayout>
 
@@ -155,7 +155,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:textColor="@color/sub_8a"
-                    android:textSize="11.5sp"
+                    android:textSize="@dimen/text_hint"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -178,7 +178,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/value_ink"
-                            android:textSize="18sp"
+                            android:textSize="@dimen/text_title"
                             android:textStyle="bold" />
 
                         <TextView
@@ -187,7 +187,7 @@
                             android:layout_marginTop="4.5dp"
                             android:text="@string/join_stat_sync"
                             android:textColor="@color/sub_94"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -202,7 +202,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/value_ink"
-                            android:textSize="18sp"
+                            android:textSize="@dimen/text_title"
                             android:textStyle="bold" />
 
                         <TextView
@@ -211,7 +211,7 @@
                             android:layout_marginTop="4.5dp"
                             android:text="@string/join_stat_courses"
                             android:textColor="@color/sub_94"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -226,7 +226,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/value_ink"
-                            android:textSize="18sp"
+                            android:textSize="@dimen/text_title"
                             android:textStyle="bold" />
 
                         <TextView
@@ -235,7 +235,7 @@
                             android:layout_marginTop="4.5dp"
                             android:text="@string/join_stat_weeks"
                             android:textColor="@color/sub_94"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -246,7 +246,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:textColor="@color/sub_9b"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
 
                 <TextView
                     android:id="@+id/joinConfirm"
@@ -263,7 +263,7 @@
                 android:lineSpacingMultiplier="1.4"
                 android:text="@string/join_tip"
                 android:textColor="@color/sub_a8"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

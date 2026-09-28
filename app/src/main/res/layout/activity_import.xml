@@ -41,7 +41,7 @@
                 android:paddingBottom="8dp"
                 android:text="@string/import_privacy_note"
                 android:textColor="@color/privacy_note_text"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
 
             <TextView
                 android:id="@+id/eamsBtn"
@@ -88,7 +88,7 @@
                     android:padding="8dp"
                     android:text="@string/import_show_guide"
                     android:textColor="@color/accent"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
 
                 <TextView
                     android:id="@+id/copyHelperBtn"
@@ -101,7 +101,7 @@
                     android:padding="8dp"
                     android:text="@string/import_copy_helper"
                     android:textColor="@color/accent"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
             </LinearLayout>
 
             <LinearLayout
@@ -126,7 +126,7 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textColor="@color/sub_3e"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
 
                 <TextView
                     android:id="@+id/fileChars"
@@ -134,7 +134,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:textColor="@color/sub_8a"
-                    android:textSize="11sp" />
+                    android:textSize="@dimen/text_caption" />
             </LinearLayout>
 
             <TextView
@@ -158,7 +158,7 @@
                 android:saveEnabled="false"
                 android:textColor="@color/ink"
                 android:textColorHint="@color/sub_a0"
-                android:textSize="13sp" />
+                android:textSize="@dimen/text_small" />
 
             <TextView
                 android:id="@+id/parseBtn"
@@ -177,7 +177,7 @@
                 android:gravity="center"
                 android:text="@string/import_parse"
                 android:textColor="#ffffff"
-                android:textSize="11.5sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -205,7 +205,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/sub_8a"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -233,7 +233,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/import_mode_title"
                         android:textColor="@color/heading_ink"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
                     <RadioButton
@@ -244,7 +244,7 @@
                         android:minHeight="48dp"
                         android:text="@string/import_mode_overwrite_loading"
                         android:textColor="@color/body_ink"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_body"
                         android:visibility="gone" />
 
                     <TextView
@@ -255,7 +255,7 @@
                         android:layout_marginBottom="4dp"
                         android:text="@string/import_mode_overwrite_desc"
                         android:textColor="@color/sub_8a"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_caption"
                         android:visibility="gone" />
 
                     <RadioButton
@@ -265,7 +265,7 @@
                         android:minHeight="48dp"
                         android:text="@string/import_mode_new"
                         android:textColor="@color/body_ink"
-                        android:textSize="14sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -273,7 +273,7 @@
                         android:layout_marginStart="36dp"
                         android:text="@string/import_mode_new_desc"
                         android:textColor="@color/sub_8a"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </RadioGroup>
 
                 <LinearLayout
@@ -321,7 +321,7 @@
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="2dp"
                         android:textColor="@color/sub_8a"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_caption"
                         android:visibility="gone" />
 
                     <TextView

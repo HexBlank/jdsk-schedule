@@ -26,7 +26,7 @@
         android:includeFontPadding="false"
         android:text="@string/holiday_title"
         android:textColor="@color/heading_ink"
-        android:textSize="20sp"
+        android:textSize="@dimen/text_display"
         android:textStyle="bold" />
 
     <TextView
@@ -36,7 +36,7 @@
         android:layout_marginTop="4dp"
         android:text="@string/holiday_intro"
         android:textColor="@color/sub_8a"
-        android:textSize="12.5sp" />
+        android:textSize="@dimen/text_small" />
 
     <!-- 开学日期不是周一时才显示：停错课的代价太大，这里把起算口径直接讲明白 -->
     <TextView
@@ -48,7 +48,7 @@
         android:lineSpacingExtra="2dp"
         android:padding="10dp"
         android:textColor="@color/sub_6c"
-        android:textSize="11.5sp"
+        android:textSize="@dimen/text_hint"
         android:visibility="gone" />
 
     <!-- 已有安排：默认收起为一行摘要，展开后列表就在日历上方 -->
@@ -70,7 +70,7 @@
             android:layout_weight="1"
             android:text="@string/holiday_list_label"
             android:textColor="@color/field_label"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_hint"
             android:textStyle="bold" />
 
         <TextView
@@ -78,7 +78,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/accent_strong"
-            android:textSize="12.5sp"
+            android:textSize="@dimen/text_small"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -109,7 +109,7 @@
                 android:layout_marginBottom="6dp"
                 android:text="@string/holiday_calendar_hint"
                 android:textColor="@color/sub_a2"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
 
             <LinearLayout
                 android:id="@+id/holidayCalendarCard"
@@ -157,7 +157,7 @@
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
                 android:textColor="@color/heading_ink"
-                android:textSize="15sp"
+                android:textSize="@dimen/text_subtitle"
                 android:textStyle="bold" />
 
             <TextView
@@ -166,7 +166,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/sub_68"
-                android:textSize="12.5sp" />
+                android:textSize="@dimen/text_small" />
         </LinearLayout>
 
         <LinearLayout
@@ -183,7 +183,7 @@
                 android:layout_weight="1"
                 android:text="@string/holiday_duration_label"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <com.zhusijiao.app.ui.common.StepperFieldView
@@ -210,7 +210,7 @@
         android:padding="11dp"
         android:text="@string/detail_read_only_hint"
         android:textColor="@color/sub_8a"
-        android:textSize="12.5sp"
+        android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
     <TextView
@@ -224,5 +224,5 @@
         android:gravity="center"
         android:text="@string/common_done"
         android:textColor="@color/sub_68"
-        android:textSize="14sp" />
+        android:textSize="@dimen/text_body" />
 </LinearLayout>

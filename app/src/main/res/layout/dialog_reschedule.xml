@@ -31,7 +31,7 @@
             android:includeFontPadding="false"
             android:text="@string/reschedule_title"
             android:textColor="@color/heading_ink"
-            android:textSize="20sp"
+            android:textSize="@dimen/text_display"
             android:textStyle="bold" />
 
         <TextView
@@ -40,7 +40,7 @@
             android:layout_marginTop="5dp"
             android:text="@string/reschedule_intro"
             android:textColor="@color/sub_8a"
-            android:textSize="12sp" />
+            android:textSize="@dimen/text_hint" />
 
         <TextView
             android:layout_width="match_parent"
@@ -48,7 +48,7 @@
             android:layout_marginTop="16dp"
             android:text="@string/reschedule_source_label"
             android:textColor="@color/field_label"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_hint"
             android:textStyle="bold" />
 
         <TextView
@@ -59,7 +59,7 @@
             android:background="@drawable/bg_reschedule_source"
             android:lineSpacingExtra="2dp"
             android:textColor="@color/body_ink"
-            android:textSize="13sp" />
+            android:textSize="@dimen/text_small" />
 
         <!-- 目标日期：整学期日历直选（与调休面板同一个控件），
              替代旧版「目标周次胶囊行 + 目标星期分段」两行抽象输入。 -->
@@ -70,7 +70,7 @@
             android:layout_marginBottom="6dp"
             android:text="@string/reschedule_date_label"
             android:textColor="@color/field_label"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_hint"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -98,7 +98,7 @@
             android:padding="11dp"
             android:text="@string/reschedule_no_calendar"
             android:textColor="@color/sub_8a"
-            android:textSize="12.5sp"
+            android:textSize="@dimen/text_small"
             android:visibility="gone" />
 
         <TextView
@@ -108,7 +108,7 @@
             android:layout_marginBottom="6dp"
             android:text="@string/reschedule_section"
             android:textColor="@color/field_label"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_hint"
             android:textStyle="bold" />
 
         <com.zhusijiao.app.ui.common.ChipRowView
@@ -124,7 +124,7 @@
             android:layout_marginBottom="6dp"
             android:text="@string/reschedule_room_label"
             android:textColor="@color/field_label"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_hint"
             android:textStyle="bold" />
 
         <EditText
@@ -151,7 +151,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/reschedule_summary_label"
                 android:textColor="@color/accent_strong"
-                android:textSize="11sp"
+                android:textSize="@dimen/text_caption"
                 android:textStyle="bold" />
 
             <TextView
@@ -161,7 +161,7 @@
                 android:layout_marginTop="4dp"
                 android:lineSpacingExtra="2dp"
                 android:textColor="@color/value_ink"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_body"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -182,6 +182,6 @@
             android:gravity="center"
             android:text="@string/common_cancel"
             android:textColor="@color/sub_68"
-            android:textSize="14sp" />
+            android:textSize="@dimen/text_body" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

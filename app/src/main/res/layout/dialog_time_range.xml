@@ -23,7 +23,7 @@
         android:includeFontPadding="false"
         android:text="@string/time_range_title"
         android:textColor="@color/heading_ink"
-        android:textSize="19sp"
+        android:textSize="@dimen/text_title"
         android:textStyle="bold" />
 
     <LinearLayout
@@ -39,7 +39,7 @@
             android:gravity="center"
             android:text="@string/time_range_start"
             android:textColor="@color/accent_strong"
-            android:textSize="12.5sp" />
+            android:textSize="@dimen/text_small" />
 
         <Space
             android:layout_width="26dp"
@@ -52,7 +52,7 @@
             android:gravity="center"
             android:text="@string/time_range_end"
             android:textColor="@color/accent_strong"
-            android:textSize="12.5sp" />
+            android:textSize="@dimen/text_small" />
     </LinearLayout>
 
     <LinearLayout
@@ -75,7 +75,7 @@
             android:paddingEnd="2dp"
             android:text="@string/time_range_colon"
             android:textColor="@color/sub_8a"
-            android:textSize="20sp" />
+            android:textSize="@dimen/text_display" />
 
         <com.zhusijiao.app.ui.common.WheelView
             android:id="@+id/startMinuteWheel"
@@ -89,7 +89,7 @@
             android:gravity="center"
             android:text="@string/time_range_dash"
             android:textColor="@color/sub_8a"
-            android:textSize="18sp" />
+            android:textSize="@dimen/text_title" />
 
         <com.zhusijiao.app.ui.common.WheelView
             android:id="@+id/endHourWheel"
@@ -104,7 +104,7 @@
             android:paddingEnd="2dp"
             android:text="@string/time_range_colon"
             android:textColor="@color/sub_8a"
-            android:textSize="20sp" />
+            android:textSize="@dimen/text_display" />
 
         <com.zhusijiao.app.ui.common.WheelView
             android:id="@+id/endMinuteWheel"
@@ -122,7 +122,7 @@
         android:gravity="center"
         android:text="@string/time_range_invalid"
         android:textColor="@color/danger"
-        android:textSize="12.5sp"
+        android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
     <TextView

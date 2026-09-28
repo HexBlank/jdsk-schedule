@@ -39,7 +39,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/heading_ink"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_title"
                 android:textStyle="bold" />
 
             <TextView
@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="@color/sub_8a"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_hint" />
         </LinearLayout>
     </LinearLayout>
 
@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:text="@string/detail_weeks"
             android:textColor="@color/detail_label"
-            android:textSize="12.5sp" />
+            android:textSize="@dimen/text_small" />
 
         <TextView
             android:id="@+id/sheetWeeks"
@@ -77,7 +77,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/body_ink"
-            android:textSize="13.5sp" />
+            android:textSize="@dimen/text_body" />
     </LinearLayout>
 
     <LinearLayout
@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"
             android:text="@string/detail_time"
             android:textColor="@color/detail_label"
-            android:textSize="12.5sp" />
+            android:textSize="@dimen/text_small" />
 
         <TextView
             android:id="@+id/sheetTime"
@@ -100,7 +100,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/body_ink"
-            android:textSize="13.5sp" />
+            android:textSize="@dimen/text_body" />
     </LinearLayout>
 
     <LinearLayout
@@ -115,7 +115,7 @@
             android:layout_height="wrap_content"
             android:text="@string/detail_room"
             android:textColor="@color/detail_label"
-            android:textSize="12.5sp" />
+            android:textSize="@dimen/text_small" />
 
         <TextView
             android:id="@+id/sheetRoom"
@@ -123,7 +123,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/body_ink"
-            android:textSize="13.5sp" />
+            android:textSize="@dimen/text_body" />
     </LinearLayout>
 
     <LinearLayout
@@ -138,7 +138,7 @@
             android:layout_height="wrap_content"
             android:text="@string/detail_teacher"
             android:textColor="@color/detail_label"
-            android:textSize="12.5sp" />
+            android:textSize="@dimen/text_small" />
 
         <TextView
             android:id="@+id/sheetTeacher"
@@ -146,7 +146,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/body_ink"
-            android:textSize="13.5sp" />
+            android:textSize="@dimen/text_body" />
     </LinearLayout>
 
     <TextView
@@ -157,7 +157,7 @@
         android:background="@color/tt_section_bg"
         android:padding="11dp"
         android:textColor="@color/body_ink"
-        android:textSize="13sp"
+        android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
     <TextView
@@ -169,7 +169,7 @@
         android:padding="11dp"
         android:text="@string/detail_read_only_hint"
         android:textColor="@color/sub_8a"
-        android:textSize="12.5sp"
+        android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
     <TextView
@@ -183,7 +183,7 @@
         android:gravity="center"
         android:text="@string/reschedule_action"
         android:textColor="@color/sheet_close_text"
-        android:textSize="15sp"
+        android:textSize="@dimen/text_subtitle"
         android:textStyle="bold"
         android:visibility="gone" />
 
@@ -196,7 +196,7 @@
         android:gravity="center"
         android:text="@string/reschedule_undo"
         android:textColor="@color/sub_8a"
-        android:textSize="15sp"
+        android:textSize="@dimen/text_subtitle"
         android:visibility="gone" />
 
     <TextView
@@ -211,6 +211,6 @@
         android:paddingBottom="13dp"
         android:text="@string/detail_done"
         android:textColor="@color/sub_8a"
-        android:textSize="15sp"
+        android:textSize="@dimen/text_subtitle"
         android:textStyle="bold" />
 </LinearLayout>

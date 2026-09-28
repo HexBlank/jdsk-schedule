@@ -11,22 +11,29 @@
     <color name="accent_soft">#e4f0ec</color>
     <color name="line">#e9edeb</color>
 
-    <!-- 主文字/次文字的近色阶，忠实还原各页 WXSS -->
+    <!-- 文字灰阶只用五级，按用途命名 -->
+    <color name="text_primary">#1d2421</color>
+    <color name="text_secondary">#5f6965</color>
+    <color name="text_tertiary">#8a9490</color>
+    <color name="text_disabled">#a2aba7</color>
+    <color name="divider">#e6ebe9</color>
+
+    <!-- 主文字/次文字的近色阶（旧名保留，按亮度并入上面五级） -->
     <color name="title_ink">#1d2421</color>
     <color name="heading_ink">#202623</color>
     <color name="value_ink">#21302b</color>
     <color name="body_ink">#333a37</color>
-    <color name="field_label">#5f6965</color>
-    <color name="sub_94">#949d99</color>
-    <color name="sub_8a">#8a9490</color>
-    <color name="sub_9b">#9ba49f</color>
-    <color name="sub_a2">#a2aba7</color>
-    <color name="sub_a8">#a8b0ac</color>
-    <color name="sub_a0">#a0a8a4</color>
-    <color name="sub_77">#77817d</color>
-    <color name="sub_6c">#6c7672</color>
-    <color name="sub_68">#68726e</color>
-    <color name="sub_3e">#3e4743</color>
+    <color name="field_label">@color/text_secondary</color>
+    <color name="sub_94">@color/text_tertiary</color>
+    <color name="sub_8a">@color/text_tertiary</color>
+    <color name="sub_9b">@color/text_tertiary</color>
+    <color name="sub_a2">@color/text_disabled</color>
+    <color name="sub_a8">@color/text_disabled</color>
+    <color name="sub_a0">@color/text_disabled</color>
+    <color name="sub_77">@color/text_secondary</color>
+    <color name="sub_6c">@color/text_secondary</color>
+    <color name="sub_68">@color/text_secondary</color>
+    <color name="sub_3e">@color/body_ink</color>
     <color name="action_ink">#35403b</color>
 
     <!-- 危险/删除 -->

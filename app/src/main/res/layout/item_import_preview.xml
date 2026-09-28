@@ -15,7 +15,7 @@
         android:layout_width="32dp"
         android:layout_height="wrap_content"
         android:textColor="@color/accent"
-        android:textSize="11sp"
+        android:textSize="@dimen/text_caption"
         android:textStyle="bold" />
 
     <LinearLayout
@@ -31,7 +31,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/ink"
-            android:textSize="12sp" />
+            android:textSize="@dimen/text_hint" />
 
         <TextView
             android:id="@+id/rowSub"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2.5dp"
             android:textColor="@color/sub_8a"
-            android:textSize="11sp" />
+            android:textSize="@dimen/text_caption" />
     </LinearLayout>
 
     <TextView
@@ -49,5 +49,5 @@
         android:layout_marginStart="7dp"
         android:gravity="end"
         android:textColor="@color/sub_8a"
-        android:textSize="11sp" />
+        android:textSize="@dimen/text_caption" />
 </LinearLayout>

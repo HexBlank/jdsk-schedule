@@ -57,7 +57,7 @@
                     android:layout_marginTop="4dp"
                     android:text="@string/couple_invite_desc"
                     android:textColor="@color/muted"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/text_hint" />
 
                 <LinearLayout
                     android:id="@+id/inviteChars"
@@ -74,7 +74,7 @@
                     android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:textColor="@color/sub_8a"
-                    android:textSize="11.5sp"
+                    android:textSize="@dimen/text_hint"
                     android:visibility="gone" />
 
                 <TextView
@@ -85,7 +85,7 @@
                     android:gravity="center"
                     android:text="@string/couple_invite_waiting"
                     android:textColor="@color/accent_strong"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_hint"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -160,7 +160,7 @@
                         android:singleLine="true"
                         android:textColor="@android:color/transparent"
                         android:textColorHint="@android:color/transparent"
-                        android:textSize="16sp" />
+                        android:textSize="@dimen/text_subtitle" />
                 </FrameLayout>
 
                 <TextView
@@ -178,7 +178,7 @@
                     android:paddingBottom="6dp"
                     android:text="@string/couple_accept_paste"
                     android:textColor="@color/accent_strong"
-                    android:textSize="11.5sp" />
+                    android:textSize="@dimen/text_hint" />
 
                 <TextView
                     android:id="@+id/errorNote"
@@ -189,7 +189,7 @@
                     android:gravity="center"
                     android:padding="10dp"
                     android:textColor="@color/danger"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_hint"
                     android:visibility="gone" />
 
                 <TextView
@@ -208,7 +208,7 @@
                 android:padding="12dp"
                 android:text="@string/couple_bind_privacy"
                 android:textColor="@color/field_label"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_hint" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

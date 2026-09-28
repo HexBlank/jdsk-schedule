@@ -33,7 +33,7 @@
             android:layout_weight="1"
             android:text="@string/appearance_title"
             android:textColor="@color/heading_ink"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_subtitle"
             android:textStyle="bold" />
 
         <TextView
@@ -49,7 +49,7 @@
             android:paddingBottom="5dp"
             android:text="@string/appearance_reset"
             android:textColor="@color/accent_strong"
-            android:textSize="12sp" />
+            android:textSize="@dimen/text_hint" />
     </LinearLayout>
 
     <TextView
@@ -58,7 +58,7 @@
         android:layout_marginTop="4dp"
         android:text="@string/appearance_hint"
         android:textColor="@color/sub_a8"
-        android:textSize="11sp" />
+        android:textSize="@dimen/text_caption" />
 
     <!-- 小屏或系统大字体下内容仍可能超出，这里限高可滚，保证三排档位都够得着 -->
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
@@ -76,7 +76,7 @@
                 android:layout_marginTop="14dp"
                 android:text="@string/appearance_row_height"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -113,7 +113,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/appearance_fit_screen"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -121,7 +121,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/appearance_fit_screen_sub"
                         android:textColor="@color/sub_a8"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -142,7 +142,7 @@
                 android:layout_marginTop="13dp"
                 android:text="@string/appearance_padding"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <TextView
@@ -151,7 +151,7 @@
                 android:layout_marginTop="3dp"
                 android:text="@string/appearance_padding_sub"
                 android:textColor="@color/sub_a8"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
 
             <com.zhusijiao.app.ui.common.SegmentedChoiceView
                 android:id="@+id/paddingChoice"
@@ -165,7 +165,7 @@
                 android:layout_marginTop="13dp"
                 android:text="@string/appearance_text_size"
                 android:textColor="@color/field_label"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
 
             <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -208,7 +208,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/appearance_show_finished"
                         android:textColor="@color/body_ink"
-                        android:textSize="13.5sp" />
+                        android:textSize="@dimen/text_body" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -216,7 +216,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/appearance_show_finished_sub"
                         android:textColor="@color/sub_a8"
-                        android:textSize="11sp" />
+                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView

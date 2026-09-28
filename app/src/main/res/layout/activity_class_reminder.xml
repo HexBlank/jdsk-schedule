@@ -70,7 +70,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/reminder_title"
                             android:textColor="@color/ink"
-                            android:textSize="13.5sp"
+                            android:textSize="@dimen/text_body"
                             android:textStyle="bold" />
 
                         <TextView
@@ -79,7 +79,7 @@
                             android:layout_marginTop="2.5dp"
                             android:text="@string/reminder_enabled_sub"
                             android:textColor="@color/sub_8a"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -111,7 +111,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/reminder_lead_label"
                         android:textColor="@color/field_label"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_hint"
                         android:textStyle="bold" />
 
                     <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -157,7 +157,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/reminder_events"
                             android:textColor="@color/ink"
-                            android:textSize="12.5sp"
+                            android:textSize="@dimen/text_small"
                             android:textStyle="bold" />
 
                         <TextView
@@ -166,7 +166,7 @@
                             android:layout_marginTop="2.5dp"
                             android:text="@string/reminder_events_sub"
                             android:textColor="@color/sub_8a"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -190,7 +190,7 @@
                 android:paddingEnd="11dp"
                 android:paddingBottom="9dp"
                 android:textColor="@color/privacy_note_text"
-                android:textSize="12sp" />
+                android:textSize="@dimen/text_hint" />
 
             <TextView
                 style="@style/SectionTitle"
@@ -204,7 +204,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/reminder_perm_section_sub"
                 android:textColor="@color/sub_8a"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -242,7 +242,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/reminder_perm_notification"
                                 android:textColor="@color/ink"
-                                android:textSize="12.5sp"
+                                android:textSize="@dimen/text_small"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -257,7 +257,7 @@
                             android:lineSpacingMultiplier="1.35"
                             android:text="@string/reminder_perm_notification_desc"
                             android:textColor="@color/sub_8a"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <TextView
@@ -309,7 +309,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="@string/reminder_perm_exact"
                                     android:textColor="@color/ink"
-                                    android:textSize="12.5sp"
+                                    android:textSize="@dimen/text_small"
                                     android:textStyle="bold" />
 
                                 <TextView
@@ -324,7 +324,7 @@
                                 android:lineSpacingMultiplier="1.35"
                                 android:text="@string/reminder_perm_exact_desc"
                                 android:textColor="@color/sub_8a"
-                                android:textSize="11sp" />
+                                android:textSize="@dimen/text_caption" />
                         </LinearLayout>
 
                         <TextView
@@ -371,7 +371,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/reminder_perm_background"
                                 android:textColor="@color/ink"
-                                android:textSize="12.5sp"
+                                android:textSize="@dimen/text_small"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -386,7 +386,7 @@
                             android:lineSpacingMultiplier="1.35"
                             android:text="@string/reminder_perm_background_desc"
                             android:textColor="@color/sub_8a"
-                            android:textSize="11sp" />
+                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <TextView
@@ -409,7 +409,7 @@
                 android:lineSpacingMultiplier="1.5"
                 android:text="@string/reminder_test_tip"
                 android:textColor="@color/sub_a8"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_caption" />
 
             <TextView
                 android:id="@+id/appDetailsLink"
@@ -426,7 +426,7 @@
                 android:paddingEnd="12dp"
                 android:text="@string/reminder_open_app_details"
                 android:textColor="@color/accent_strong"
-                android:textSize="12.5sp" />
+                android:textSize="@dimen/text_small" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

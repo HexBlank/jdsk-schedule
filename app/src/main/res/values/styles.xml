@@ -51,7 +51,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/field_label</item>
-        <item name="android:textSize">12.5sp</item>
+        <item name="android:textSize">@dimen/text_small</item>
         <item name="android:layout_marginTop">12dp</item>
         <item name="android:layout_marginBottom">5dp</item>
     </style>
@@ -77,7 +77,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/ink</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/text_subtitle</item>
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -99,7 +99,7 @@
         <item name="android:gravity">center</item>
         <item name="android:paddingStart">8dp</item>
         <item name="android:paddingEnd">8dp</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">@dimen/text_hint</item>
         <item name="android:textColor">@color/action_ink</item>
         <item name="android:background">@drawable/bg_menu_row</item>
         <item name="android:clickable">true</item>
@@ -115,7 +115,7 @@
         <item name="android:paddingTop">1.5dp</item>
         <item name="android:paddingEnd">6dp</item>
         <item name="android:paddingBottom">1.5dp</item>
-        <item name="android:textSize">10.5sp</item>
+        <item name="android:textSize">@dimen/text_caption</item>
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -130,7 +130,7 @@
         <item name="android:paddingEnd">10dp</item>
         <item name="android:background">@drawable/bg_ghost_button</item>
         <item name="android:textColor">@color/action_ink</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">@dimen/text_hint</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
