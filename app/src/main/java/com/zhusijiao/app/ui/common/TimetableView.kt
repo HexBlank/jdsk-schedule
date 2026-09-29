@@ -1110,10 +1110,12 @@ class TimetableView @JvmOverloads constructor(
     }
 
     /**
-     * 「现在」时间线：只在今天那一列画红线，左端一个圆点，节次栏里标出时刻；
-     * 与情侣日视图的当前时间线同色。早于第一节、晚于最后一节不画。
+     * 「现在」时间线：只在今天那一列画红线，左端一个圆点；与情侣日视图的当前时间线同色。
+     * 早于第一节、晚于最后一节不画。不在节次栏标时刻：胶囊会盖住那一节的上下课时间，
+     * 想知道几点直接看系统状态栏。可在课表外观里关掉（[TimetableAppearance.showNowLine]）。
      */
     private fun drawNowLine(canvas: Canvas, render: WeekRender) {
+        if (!appearance.showNowLine) return
         val col = render.dates.indexOfFirst { it.today }
         if (col < 0) return
         val now = nowMinutes()
@@ -1124,18 +1126,6 @@ class TimetableView @JvmOverloads constructor(
         fillPaint.color = colNowLine
         canvas.drawRect(left + rpx(4f), y - thickness / 2f, left + dayColPx - rpx(2f), y + thickness / 2f, fillPaint)
         canvas.drawCircle(left + rpx(5f), y, rpx(7f), fillPaint)
-        // 节次栏里的时刻胶囊
-        cornerPaint.textSize = rpx(17f)
-        cornerPaint.typeface = Typeface.DEFAULT_BOLD
-        val label = ScheduleTime.formatTime(now)
-        val pillW = min(timeColPx - rpx(4f), cornerPaint.measureText(label) + rpx(10f))
-        val pillH = rpx(26f)
-        val cx = timeColPx / 2f
-        val rect = RectF(cx - pillW / 2f, y - pillH / 2f, cx + pillW / 2f, y + pillH / 2f)
-        canvas.drawRoundRect(rect, rpx(8f), rpx(8f), fillPaint)
-        cornerPaint.color = Color.WHITE
-        drawCenteredText(canvas, label, cx, y, cornerPaint)
-        cornerPaint.typeface = Typeface.DEFAULT
     }
 
     private fun nowMinutes(): Int {
@@ -1146,7 +1136,7 @@ class TimetableView @JvmOverloads constructor(
     /** 当前页是本周（有今天）时，每到整分钟重绘一次，让时间线走起来。 */
     private fun scheduleNowTick(render: WeekRender) {
         removeCallbacks(nowTick)
-        if (render.dates.none { it.today }) return
+        if (!appearance.showNowLine || render.dates.none { it.today }) return
         val now = System.currentTimeMillis()
         postDelayed(nowTick, 60_000L - now % 60_000L + FINISHED_TICK_SLACK_MS)
     }

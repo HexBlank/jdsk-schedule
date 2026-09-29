@@ -1,7 +1,8 @@
 package com.zhusijiao.app.domain
 
 /**
- * 课表外观：格子高度、格子留白、文字大小三档偏好，外加「自动铺满一屏」「显示已上状态」与停课、日程的样式。
+ * 课表外观：格子高度、格子留白、文字大小三档偏好，外加「自动铺满一屏」「显示已上状态」、
+ * 停课与日程的样式，以及「当前时间线」「下一节课提示条」两个显示开关。
  *
  * 只影响本机显示，不随课表同步、不进服务端模型——同一份课表在不同同学手机上
  * 可以各调各的。数值一律用 750 设计稿单位（rpx），由 [com.zhusijiao.app.ui.common.TimetableView]
@@ -25,7 +26,11 @@ data class TimetableAppearance(
      * 停课与日程的样式：[STATE_STYLE_MODERN] 新版（停课空心虚线加删除线、日程浅底实线），
      * [STATE_STYLE_CLASSIC] 经典（1.2.29 及之前：停课灰底、日程深色实心）。周课表与情侣日视图共用。
      */
-    val stateStyle: Int = STATE_STYLE_MODERN
+    val stateStyle: Int = STATE_STYLE_MODERN,
+    /** 今天那一列上的红色「现在」横线；默认开启，关掉后周课表不再画它。 */
+    val showNowLine: Boolean = true,
+    /** 课表页顶部的「下一节课」提示条；默认开启。 */
+    val showNextClass: Boolean = true
 ) {
 
     val modernStateStyle: Boolean get() = stateStyle != STATE_STYLE_CLASSIC

@@ -204,6 +204,10 @@
     <string name="appearance_summary_with_finished">%1$s · 显示已上</string>
     <string name="appearance_show_finished">显示已上状态</string>
     <string name="appearance_show_finished_sub">下课后（精确到分钟）的课变灰并标「已上」</string>
+    <string name="appearance_show_now_line">显示当前时间线</string>
+    <string name="appearance_show_now_line_sub">今天那一列用红色横线标出此刻的位置</string>
+    <string name="appearance_show_next_class">显示下一节课提示</string>
+    <string name="appearance_show_next_class_sub">课表页顶部的「下一节 · 几分钟后」提示条</string>
     <string name="appearance_group_state">状态显示</string>
     <string name="appearance_state_style">停课与日程的样式</string>
     <string name="appearance_state_modern">新版</string>

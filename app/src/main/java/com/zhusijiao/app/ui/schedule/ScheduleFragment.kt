@@ -219,13 +219,14 @@ class ScheduleFragment : Fragment(), Refreshable {
     private var nextClass: NextClass.Info? = null
     private val nextClassTick = Runnable { updateNextClass() }
 
-    /** 只在看本周、今天还有没下课的课时显示；每到整分钟刷新一次倒计时。 */
+    /** 只在看本周、今天还有没下课的课时显示（课表外观里可整条关掉）；每到整分钟刷新一次倒计时。 */
     private fun updateNextClass() {
         val b = _binding ?: return
         b.root.removeCallbacks(nextClassTick)
         val s = schedule
         val now = System.currentTimeMillis()
-        val info = if (s != null && b.scroll.visibility == View.VISIBLE && currentWeek == currentWeekNumber) {
+        val enabled = Prefs.timetableAppearance.showNextClass
+        val info = if (enabled && s != null && b.scroll.visibility == View.VISIBLE && currentWeek == currentWeekNumber) {
             NextClass.find(s, events, now)?.takeIf { it.week == currentWeekNumber }
         } else null
         nextClass = info
@@ -610,6 +611,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         val beforeRow = binding.timetable.currentRowHeightPx()
         val beforeScroll = scroll.scrollY
         binding.timetable.setAppearance(value)
+        updateNextClass()
         if (beforeRow <= 0f || beforeScroll <= 0) return
         scroll.post {
             if (_binding == null) return@post

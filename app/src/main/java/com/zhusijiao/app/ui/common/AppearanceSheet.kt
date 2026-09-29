@@ -13,7 +13,8 @@ import com.zhusijiao.app.domain.TimetableAppearance
 
 /**
  * 课表外观底部面板：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」，
- * 以及「状态显示」分组：「显示已上状态」和停课、日程的样式（新版 / 经典，带预览的卡片二选一）。
+ * 以及「状态显示」分组：「显示已上状态」「显示当前时间线」「显示下一节课提示」三个开关，
+ * 和停课、日程的样式（新版 / 经典，带预览的卡片二选一）。
  *
  * 交互约定：
  * - 面板只占下半屏且几乎不压暗背景，用户一边点一边能看到上半屏真实课表，所以没有「确定」按钮，
@@ -37,6 +38,8 @@ class AppearanceSheet(
     private val textChoice: SegmentedChoiceView
     private val fitToggle: ToggleView
     private val finishedToggle: ToggleView
+    private val nowLineToggle: ToggleView
+    private val nextClassToggle: ToggleView
     private val resetButton: TextView
     private val modernCard: View
     private val classicCard: View
@@ -57,6 +60,8 @@ class AppearanceSheet(
         textChoice = findViewById(R.id.textChoice)
         fitToggle = findViewById(R.id.fitScreenToggle)
         finishedToggle = findViewById(R.id.showFinishedToggle)
+        nowLineToggle = findViewById(R.id.showNowLineToggle)
+        nextClassToggle = findViewById(R.id.showNextClassToggle)
         resetButton = findViewById(R.id.appearanceReset)
 
         heightChoice.configure(
@@ -92,6 +97,14 @@ class AppearanceSheet(
         finishedToggle.setChecked(current.showFinished, animate = false)
         finishedToggle.onCheckedChange = { checked -> apply(current.copy(showFinished = checked)) }
         findViewById<View>(R.id.showFinishedRow).setOnClickListener { finishedToggle.toggle() }
+
+        nowLineToggle.setChecked(current.showNowLine, animate = false)
+        nowLineToggle.onCheckedChange = { checked -> apply(current.copy(showNowLine = checked)) }
+        findViewById<View>(R.id.showNowLineRow).setOnClickListener { nowLineToggle.toggle() }
+
+        nextClassToggle.setChecked(current.showNextClass, animate = false)
+        nextClassToggle.onCheckedChange = { checked -> apply(current.copy(showNextClass = checked)) }
+        findViewById<View>(R.id.showNextClassRow).setOnClickListener { nextClassToggle.toggle() }
 
         modernCard = findViewById(R.id.stateStyleModern)
         classicCard = findViewById(R.id.stateStyleClassic)
@@ -165,6 +178,8 @@ class AppearanceSheet(
         textChoice.setSelection(target.textLevel)
         fitToggle.setChecked(target.fitScreen, animate = true)
         finishedToggle.setChecked(target.showFinished, animate = true)
+        nowLineToggle.setChecked(target.showNowLine, animate = true)
+        nextClassToggle.setChecked(target.showNextClass, animate = true)
         apply(target)
         renderFitState()
         renderStateStyle()

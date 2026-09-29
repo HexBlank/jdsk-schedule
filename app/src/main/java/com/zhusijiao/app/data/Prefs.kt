@@ -36,6 +36,8 @@ object Prefs {
     private const val KEY_TT_FIT_SCREEN = "timetableFitScreen"
     private const val KEY_TT_SHOW_FINISHED = "timetableShowFinished"
     private const val KEY_TT_STATE_STYLE = "timetableStateStyle"
+    private const val KEY_TT_SHOW_NOW_LINE = "timetableShowNowLine"
+    private const val KEY_TT_SHOW_NEXT_CLASS = "timetableShowNextClass"
     private const val KEY_STATE_STYLE_TIP = "stateStyleTip"
     private const val TIP_PENDING = "pending"
     private const val TIP_DONE = "done"
@@ -114,7 +116,7 @@ object Prefs {
         }
 
     /**
-     * 课表外观（格子高度/留白/文字大小、铺满一屏、显示已上状态）。
+     * 课表外观（格子高度/留白/文字大小、铺满一屏、显示已上状态、当前时间线、下一节课提示条）。
      * 纯本机显示偏好，不随课表同步：同一份课表各人可以各调各的。
      */
     var timetableAppearance: TimetableAppearance
@@ -129,7 +131,9 @@ object Prefs {
             showFinished = sp.getBoolean(KEY_TT_SHOW_FINISHED, false),
             stateStyle = if (sp.getInt(KEY_TT_STATE_STYLE, TimetableAppearance.STATE_STYLE_MODERN) ==
                 TimetableAppearance.STATE_STYLE_CLASSIC
-            ) TimetableAppearance.STATE_STYLE_CLASSIC else TimetableAppearance.STATE_STYLE_MODERN
+            ) TimetableAppearance.STATE_STYLE_CLASSIC else TimetableAppearance.STATE_STYLE_MODERN,
+            showNowLine = sp.getBoolean(KEY_TT_SHOW_NOW_LINE, true),
+            showNextClass = sp.getBoolean(KEY_TT_SHOW_NEXT_CLASS, true)
         )
         set(value) {
             sp.edit()
@@ -139,6 +143,8 @@ object Prefs {
                 .putBoolean(KEY_TT_FIT_SCREEN, value.fitScreen)
                 .putBoolean(KEY_TT_SHOW_FINISHED, value.showFinished)
                 .putInt(KEY_TT_STATE_STYLE, value.stateStyle)
+                .putBoolean(KEY_TT_SHOW_NOW_LINE, value.showNowLine)
+                .putBoolean(KEY_TT_SHOW_NEXT_CLASS, value.showNextClass)
                 .apply()
         }
 
