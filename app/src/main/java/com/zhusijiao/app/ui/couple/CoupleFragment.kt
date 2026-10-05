@@ -28,6 +28,7 @@ import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
+import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.CoupleDayView
 import com.zhusijiao.app.ui.common.EventDetailSheet
@@ -121,8 +122,11 @@ class CoupleFragment : Fragment(), Refreshable {
         binding.weekTimetable.onCourseClick = { click -> showWeekCourse(click) }
         binding.weekTimetable.onEventClick = { click -> showEvent(click.event, click.week, click.dayName) }
         binding.weekTimetable.setAppearance(Prefs.timetableAppearance)
-        binding.weekContent.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
-            binding.weekTimetable.setViewportHeight(bottom - top)
+        // 两个视图都铺到屏幕底、悬浮底栏盖在上面：末尾留出底栏的位置，「铺满一屏」按扣掉后的高度算
+        BottomNavView.padScrollContent(binding.dayScroll)
+        BottomNavView.padScrollContent(binding.weekScroll)
+        binding.weekContent.addOnLayoutChangeListener { v, _, top, _, bottom, _, _, _, _ ->
+            binding.weekTimetable.setViewportHeight(bottom - top - BottomNavView.contentInset(v))
         }
 
         binding.bindButton.setOnClickListener {

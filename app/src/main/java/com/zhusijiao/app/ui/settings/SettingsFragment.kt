@@ -26,6 +26,7 @@ import com.zhusijiao.app.domain.ServerAddress
 import com.zhusijiao.app.domain.UpdateChannelOptions
 import com.zhusijiao.app.reminder.ReminderPermissions
 import com.zhusijiao.app.ui.common.AppearanceSheet
+import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
@@ -53,6 +54,7 @@ class SettingsFragment : Fragment(), Refreshable {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.header.setTitle(getString(R.string.settings_title))
+        BottomNavView.padScrollContent(binding.scroll)
         bindStatus()
         bindReminderRow()
         bindAppearanceRow()

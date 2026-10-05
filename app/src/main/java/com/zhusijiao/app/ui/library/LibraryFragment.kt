@@ -18,6 +18,7 @@ import com.zhusijiao.app.databinding.FragmentLibraryBinding
 import com.zhusijiao.app.databinding.ItemScheduleCardBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
@@ -41,6 +42,7 @@ class LibraryFragment : Fragment(), Refreshable {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.header.setTitle(getString(R.string.library_title))
+        BottomNavView.padScrollContent(binding.scroll)
         binding.importBtn.setOnClickListener { startActivity(Intent(requireContext(), ImportActivity::class.java)) }
         binding.joinBtn.setOnClickListener {
             if (ApiClient.isLocalMode) showSharingUnavailable()

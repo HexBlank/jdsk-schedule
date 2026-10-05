@@ -31,6 +31,7 @@ import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimetableAppearance
 import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.AppearanceSheet
+import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.EventDetailSheet
@@ -108,8 +109,10 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.setAppearance(Prefs.timetableAppearance)
         // 「铺满一屏」要按可视高度平分行高；用始终可见的内容区测量，首帧就是最终高度，
         // 容器高度变化（分屏、系统字体缩放）时也会再次告知
-        binding.contentArea.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
-            binding.timetable.setViewportHeight(bottom - top)
+        // 内容区铺到屏幕底、悬浮底栏盖在上面：可视高度要扣掉底栏占的那一段
+        BottomNavView.padScrollContent(binding.scroll)
+        binding.contentArea.addOnLayoutChangeListener { v, _, top, _, bottom, _, _, _, _ ->
+            binding.timetable.setViewportHeight(bottom - top - BottomNavView.contentInset(v))
         }
         if (pendingAppearanceSheet) {
             pendingAppearanceSheet = false
