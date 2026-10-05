@@ -759,4 +759,37 @@
     <string name="leave_need_semester">这份课表没有开学日期，算不出每节课是哪一天，所以没法按时间请假。</string>
     <string name="detail_leave_action">这节课请假</string>
     <string name="detail_leave_active">%1$s · %2$s</string>
+
+    <!-- 桌面小部件 -->
+    <string name="widget_next_name">下一节课</string>
+    <string name="widget_next_desc">小号：接下来要上哪节课、几点、在哪</string>
+    <string name="widget_today_name">今日课程</string>
+    <string name="widget_today_desc">中号：今天的课一行一节，拉高一点还能看到明天的</string>
+    <string name="widget_week_name">本周课表</string>
+    <string name="widget_week_desc">大号：整周课表缩在桌面上</string>
+    <string name="widget_loading">正在读取课表…</string>
+    <string name="widget_no_schedule_title">还没有课表</string>
+    <string name="widget_no_schedule_hint">点这里导入或加入一份</string>
+    <string name="widget_no_semester_title">课表没有开学日期</string>
+    <string name="widget_no_semester_hint">算不出今天上什么课</string>
+    <string name="widget_semester_over_title">本学期结束了</string>
+    <string name="widget_semester_over_hint">假期愉快</string>
+    <string name="widget_label_next">下一节</string>
+    <string name="widget_label_ongoing">正在上课</string>
+    <string name="widget_label_event_next">接下来</string>
+    <string name="widget_label_event_ongoing">正在进行</string>
+    <string name="widget_label_today_done">今天的课上完了</string>
+    <string name="widget_label_today_free">今天没有课</string>
+    <string name="widget_label_before_semester">还没开学</string>
+    <string name="widget_nothing_soon">近两周都没有课</string>
+    <string name="widget_time_range">%1$s–%2$s</string>
+    <string name="widget_day_time">%1$s %2$s</string>
+    <string name="widget_tomorrow">明天</string>
+    <string name="widget_day_after">后天</string>
+    <string name="widget_week_title">第 %1$d 周</string>
+    <string name="widget_week_day_title">第 %1$d 周 · %2$s</string>
+    <string name="widget_date">%1$d月%2$d日</string>
+    <string name="widget_date_day">%1$d月%2$d日 %3$s</string>
+    <string name="widget_more">还有 %1$d 节</string>
+    <string name="widget_section_day">%1$s · %2$s</string>
 </resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 小部件课程行前的色条：白色占位，代码里按课程色着色 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#ffffff" />
+    <corners android:radius="2dp" />
+</shape>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 「今日课程」里的一行：开始时间 · 课程色条 · 课程名 · 教室 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="26dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/widgetRowTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:minWidth="38dp"
+        android:textColor="@color/title_ink"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/widgetRowBar"
+        android:layout_width="3dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="7dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_bar" />
+
+    <TextView
+        android:id="@+id/widgetRowTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/ink"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/widgetRowPlace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxWidth="110dp"
+        android:maxLines="1"
+        android:textColor="@color/text_tertiary"
+        android:textSize="11sp" />
+</LinearLayout>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 「今日课程」里的一行说明：「今天没有课」「明天 · 周五」「还有 2 节」 -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetSectionText"
+    android:layout_width="match_parent"
+    android:layout_height="26dp"
+    android:ellipsize="end"
+    android:gravity="center_vertical"
+    android:includeFontPadding="false"
+    android:maxLines="1"
+    android:textColor="@color/text_tertiary"
+    android:textSize="11sp"
+    android:textStyle="bold" />

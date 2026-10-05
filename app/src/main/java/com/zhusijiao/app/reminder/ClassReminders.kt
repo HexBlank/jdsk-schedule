@@ -18,6 +18,7 @@ import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.domain.ClassReminderPlanner
 import com.zhusijiao.app.domain.ReminderOccurrence
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.widget.ScheduleWidgets
 import java.util.concurrent.Executors
 
 /**
@@ -51,9 +52,13 @@ object ClassReminders {
         Thread(runnable, "class-reminder").apply { isDaemon = true }
     }
 
-    /** 数据或设置变了：异步重算并排好下一次提醒。任意线程、任意锁内都可以调用。 */
+    /**
+     * 数据或设置变了：异步重算并排好下一次提醒。任意线程、任意锁内都可以调用。
+     * 这些时机（课表、日程、请假、当前课表变化，开机、改时间）也正是桌面小部件该刷新的时候，一并触发。
+     */
     fun requestSync() {
         executor.execute { runCatching { syncNow(MainApplication.appContext) } }
+        ScheduleWidgets.requestUpdate()
     }
 
     /** 广播接收器用：重算完成后回调 [onDone]（通常是 goAsync 的 finish）。 */
@@ -62,7 +67,8 @@ object ClassReminders {
             try {
                 runCatching { syncNow(MainApplication.appContext) }
             } finally {
-                onDone()
+                // 小部件重画完再放行，免得进程在广播结束后被回收、小部件停在旧内容
+                ScheduleWidgets.requestUpdate(onDone)
             }
         }
     }

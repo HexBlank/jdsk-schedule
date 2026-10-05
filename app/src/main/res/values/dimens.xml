@@ -30,4 +30,7 @@
     <dimen name="text_section">@dimen/text_subtitle</dimen>
     <dimen name="text_button">@dimen/text_subtitle</dimen>
     <dimen name="text_sub">@dimen/text_small</dimen>
+
+    <!-- 桌面小部件圆角：Android 12 起跟随系统（values-v31），更早的系统用固定值 -->
+    <dimen name="widget_radius">20dp</dimen>
 </resources>
