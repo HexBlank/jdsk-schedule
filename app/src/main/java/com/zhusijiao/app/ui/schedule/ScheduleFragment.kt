@@ -25,6 +25,7 @@ import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.Course
 import com.zhusijiao.app.domain.DateUtils
+import com.zhusijiao.app.domain.ExtraCourse
 import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.Leave
 import com.zhusijiao.app.domain.NextClass
@@ -77,7 +78,13 @@ class ScheduleFragment : Fragment(), Refreshable {
      * 自己加的课（本机私有）。[schedule] 里存的是已经把它们并进去的课表，
      * 所以显示、调课冲突、请假、下一节课都不用再单独考虑；保存类操作只传 id 和草稿，不受影响。
      */
-    private var extras: List<Course> = emptyList()
+    private var extras: List<ExtraCourse> = emptyList()
+
+    /**
+     * 课表自己的手动配色（发布者设的、同步给全班的那份）。[schedule] 的 courseColors 里还并了
+     * 自己加的课的私人颜色，只能拿来显示；保存课表配色必须基于这一份，否则私人颜色会被写回去同步出去。
+     */
+    private var sharedColors: Map<String, String> = emptyMap()
     private var currentWeekNumber = 1
     private var currentWeek = 1
     private var restoredWeek: Int? = null
@@ -177,6 +184,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 val summary = requested ?: schedules[0]
                 val stored = ApiClient.getSchedule(summary.id)
                 extras = withContext(Dispatchers.IO) { ExtraCourseStore.list(stored.id) }
+                sharedColors = stored.courseColors
                 val loadedSchedule = ExtraCourses.merge(stored, extras)
                 events = withContext(Dispatchers.IO) { PersonalEventStore.list(loadedSchedule.id) }
                 leaves = withContext(Dispatchers.IO) { LeaveStore.list() }
@@ -474,6 +482,7 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     /** 调课、调休、改色保存后拿到的是课表本身，要重新并入自己加的课再显示。 */
     private fun applyUpdatedSchedule(stored: Schedule) {
+        sharedColors = stored.courseColors
         val updated = ExtraCourses.merge(stored, extras)
         schedule = updated
         binding.header.setTitle(updated.name)
@@ -531,15 +540,15 @@ class ScheduleFragment : Fragment(), Refreshable {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val removed = withContext(Dispatchers.IO) {
-                    ExtraCourseStore.list(scheduleId).find { it.id == courseId }
+                    ExtraCourseStore.list(scheduleId).find { it.course.id == courseId }
                         .also { ExtraCourseStore.delete(scheduleId, courseId) }
                 }
                 load(silent = true, syncRemote = false)
                 Ui.toastSuccess(
                     requireContext(),
                     getString(R.string.course_extra_deleted),
-                    removed?.let { course ->
-                        AppToast.Action(getString(R.string.common_undo)) { restoreExtraCourse(scheduleId, course) }
+                    removed?.let { extra ->
+                        AppToast.Action(getString(R.string.common_undo)) { restoreExtraCourse(scheduleId, extra) }
                     }
                 )
             } catch (error: Exception) {
@@ -548,14 +557,64 @@ class ScheduleFragment : Fragment(), Refreshable {
         }
     }
 
-    private fun restoreExtraCourse(scheduleId: String, course: Course) {
+    private fun restoreExtraCourse(scheduleId: String, extra: ExtraCourse) {
         if (_binding == null) return
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                withContext(Dispatchers.IO) { ExtraCourseStore.restore(scheduleId, course) }
+                withContext(Dispatchers.IO) { ExtraCourseStore.restore(scheduleId, extra) }
                 load(silent = true, syncRemote = false)
                 Ui.toastSuccess(requireContext(), getString(R.string.course_extra_restored))
             } catch (error: Exception) {
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
+    }
+
+    /**
+     * 长按自己加的课选色，和课表自带的课一样点色块即时预览、点「完成」才保存。
+     * 颜色存在本机（[ExtraCourseStore]），不写进课表的配色，所以订阅来的课表也能选。
+     */
+    private fun showExtraColorSheet(current: Schedule, click: TimetableView.CourseClick) {
+        val name = click.course.name
+        val saved = extras.find { it.course.id == click.course.id }?.color
+        // 「跟随默认配色」预览的是不带任何手动色时这门课的自动色
+        val autoColor = ScheduleView.buildCoursePaletteMap(
+            current.courses + current.adjustments.map { it.courseSnapshot }
+        )[name]?.background ?: click.backgroundColor
+        ColorPickerSheet(
+            requireContext(),
+            courseName = name,
+            autoColor = autoColor,
+            currentManual = saved,
+            onPick = { hex -> persistExtraColor(current.id, click.course.id, hex, saved) },
+            onReset = { persistExtraColor(current.id, click.course.id, null, saved) },
+            onPreview = { hex ->
+                val colors = if (hex == null) current.courseColors - name else current.courseColors + (name to hex)
+                previewSchedule(current.copy(courseColors = colors))
+            },
+            onPreviewCancel = { previewSchedule(schedule ?: current) }
+        ).show()
+    }
+
+    /** 保存自己加的课的颜色；[previous] 非 [color] 时轻提示带「撤销」。 */
+    private fun persistExtraColor(scheduleId: String, courseId: String, color: String?, previous: String?, undoable: Boolean = true) {
+        if (_binding == null) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) { ExtraCourseStore.setColor(scheduleId, courseId, color) }
+                load(silent = true, syncRemote = false)
+                Ui.toastSuccess(
+                    requireContext(),
+                    getString(if (undoable) R.string.course_colors_updated else R.string.course_colors_restored),
+                    if (undoable && previous != color) {
+                        AppToast.Action(getString(R.string.common_undo)) {
+                            persistExtraColor(scheduleId, courseId, previous, color, undoable = false)
+                        }
+                    } else null
+                )
+            } catch (error: Exception) {
+                // 课表上可能还是预览的颜色，保存失败要恢复成实际的样子
+                schedule?.let(::previewSchedule)
                 Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
             }
         }
@@ -798,13 +857,9 @@ class ScheduleFragment : Fragment(), Refreshable {
     /** 长按课程手动选色：手动颜色优先于自动配色，随课表同步给加入的同学。 */
     private fun showCourseColorSheet(click: TimetableView.CourseClick) {
         val current = schedule ?: return
-        // 自己加的课颜色自动配，长按直接进编辑（课表的手动配色是发布者同步给全班的，不该混进私人的课）
+        // 自己加的课另有一份只在本机的颜色，不受「只有发布者能改色」限制
         if (ExtraCourses.isExtra(click.course)) {
-            startActivity(
-                CourseEditorActivity.intent(
-                    requireContext(), current.id, click.course.id, click.course.day, click.course.startSection
-                )
-            )
+            showExtraColorSheet(current, click)
             return
         }
         if (!current.isOwner) {
@@ -815,9 +870,9 @@ class ScheduleFragment : Fragment(), Refreshable {
             requireContext(),
             courseName = click.course.name,
             autoColor = click.backgroundColor,
-            currentManual = current.courseColors[click.course.name],
-            onPick = { hex -> persistColors(current.courseColors + (click.course.name to hex)) },
-            onReset = { persistColors(current.courseColors - click.course.name) },
+            currentManual = sharedColors[click.course.name],
+            onPick = { hex -> persistColors(sharedColors + (click.course.name to hex)) },
+            onReset = { persistColors(sharedColors - click.course.name) },
             // 点色块只在课表上试色、不写入；点「完成」才保存，直接关掉则恢复
             onPreview = { hex ->
                 val colors = if (hex == null) current.courseColors - click.course.name
@@ -845,7 +900,7 @@ class ScheduleFragment : Fragment(), Refreshable {
     private fun persistColors(colors: Map<String, String>, undoable: Boolean = true) {
         if (_binding == null) return
         val current = schedule ?: return
-        val previous = current.courseColors
+        val previous = sharedColors
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val updated = ApiClient.setCourseColors(current.id, colors, current.revision)

@@ -203,6 +203,54 @@
                 android:minHeight="50dp"
                 android:singleLine="true" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/event_color_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <!-- 默认跟随自动配色；点开选一个自己的颜色，只在本机生效 -->
+            <LinearLayout
+                android:id="@+id/courseColorRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_field"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:minHeight="50dp"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="10dp">
+
+                <View
+                    android:id="@+id/courseColorSwatch"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginEnd="10dp" />
+
+                <TextView
+                    android:id="@+id/courseColorText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/body_ink"
+                    android:textSize="@dimen/text_body" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="@color/arrow_grey"
+                    android:textSize="@dimen/text_title" />
+            </LinearLayout>
+
             <!-- 和别的课时间重叠时提前说明：不拦，保存后两门并排显示 -->
             <TextView
                 android:id="@+id/courseConflict"

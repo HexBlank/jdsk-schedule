@@ -2,8 +2,8 @@ package com.zhusijiao.app.data
 
 import com.zhusijiao.app.MainApplication
 import com.zhusijiao.app.domain.Course
+import com.zhusijiao.app.domain.ExtraCourse
 import com.zhusijiao.app.domain.ExtraCourses
-import com.zhusijiao.app.domain.toCourseList
 import com.zhusijiao.app.reminder.ClassReminders
 import org.json.JSONArray
 import org.json.JSONObject
@@ -23,49 +23,70 @@ object ExtraCourseStore {
     private val lock = Any()
 
     /** 这份课表名下自己加的课。会读本机文件，请在后台线程调用。 */
-    fun list(scheduleId: String): List<Course> = synchronized(lock) {
-        read()[scheduleId].orEmpty().sortedWith(compareBy({ it.day }, { it.startSection }))
+    fun list(scheduleId: String): List<ExtraCourse> = synchronized(lock) {
+        read()[scheduleId].orEmpty().sortedWith(compareBy({ it.course.day }, { it.course.startSection }))
     }
 
     /**
-     * 新建（[courseId] 为 null）或修改一门自己加的课。
+     * 新建（[courseId] 为 null）或修改一门自己加的课；[color] 为手动颜色，null 表示跟随自动配色。
      * 校验失败、超出条数上限时抛 [ApiException]，message 即用户可读文案。
      * 与别的课时间重叠不拦——重修课和原班课撞在一起是常态，课表会并排显示。
      */
-    fun save(scheduleId: String, draft: Course, courseId: String?, totalWeeks: Int): Course = synchronized(lock) {
-        val normalized = try {
-            ExtraCourses.normalize(draft, totalWeeks)
+    fun save(
+        scheduleId: String,
+        draft: Course,
+        color: String?,
+        courseId: String?,
+        totalWeeks: Int
+    ): ExtraCourse = synchronized(lock) {
+        val saved = try {
+            ExtraCourse(ExtraCourses.normalize(draft, totalWeeks), ExtraCourses.normalizeColor(color))
         } catch (error: IllegalArgumentException) {
             throw ApiException(error.message ?: "课程信息无效")
         }
         val all = read().toMutableMap()
         val courses = all[scheduleId].orEmpty()
-        val existing = courseId?.let { id -> courses.find { it.id == id } }
+        val existing = courseId?.let { id -> courses.find { it.course.id == id } }
         if (courseId != null && existing == null) throw ApiException("这门课已经不存在了")
         if (existing == null && courses.size >= ExtraCourses.MAX_PER_SCHEDULE) {
             throw ApiException("一份课表最多自己加 ${ExtraCourses.MAX_PER_SCHEDULE} 门课")
         }
-        val saved = normalized.copy(id = existing?.id ?: "${ExtraCourses.ID_PREFIX}${UUID.randomUUID()}")
-        all[scheduleId] = courses.filterNot { it.id == saved.id } + saved
+        val id = existing?.course?.id ?: "${ExtraCourses.ID_PREFIX}${UUID.randomUUID()}"
+        val stored = saved.copy(course = saved.course.copy(id = id))
+        all[scheduleId] = courses.filterNot { it.course.id == id } + stored
         write(all)
-        saved
+        stored
+    }
+
+    /** 只改颜色（课表上长按自己加的课选色）；[color] 为 null 表示改回自动配色。 */
+    fun setColor(scheduleId: String, courseId: String, color: String?) = synchronized(lock) {
+        val normalized = try {
+            ExtraCourses.normalizeColor(color)
+        } catch (error: IllegalArgumentException) {
+            throw ApiException(error.message ?: "颜色值无效")
+        }
+        val all = read().toMutableMap()
+        val courses = all[scheduleId].orEmpty()
+        if (courses.none { it.course.id == courseId }) throw ApiException("这门课已经不存在了")
+        all[scheduleId] = courses.map { if (it.course.id == courseId) it.copy(color = normalized) else it }
+        write(all)
     }
 
     fun delete(scheduleId: String, courseId: String) = synchronized(lock) {
         val all = read().toMutableMap()
         val courses = all[scheduleId].orEmpty()
-        val remaining = courses.filterNot { it.id == courseId }
+        val remaining = courses.filterNot { it.course.id == courseId }
         if (remaining.size == courses.size) throw ApiException("这门课已经不存在了")
         if (remaining.isEmpty()) all.remove(scheduleId) else all[scheduleId] = remaining
         write(all)
     }
 
-    /** 撤销删除：把刚删掉的课原样放回（id 不变）。 */
-    fun restore(scheduleId: String, course: Course) = synchronized(lock) {
+    /** 撤销删除：把刚删掉的课原样放回（id、颜色都不变）。 */
+    fun restore(scheduleId: String, extra: ExtraCourse) = synchronized(lock) {
         val all = read().toMutableMap()
         val courses = all[scheduleId].orEmpty()
-        if (courses.any { it.id == course.id }) return@synchronized
-        all[scheduleId] = courses + course
+        if (courses.any { it.course.id == extra.course.id }) return@synchronized
+        all[scheduleId] = courses + extra
         write(all)
     }
 
@@ -80,14 +101,22 @@ object ExtraCourseStore {
         tempFile().delete()
     }
 
-    private fun read(): Map<String, List<Course>> = runCatching {
+    /** 每门课存成课程本身的 JSON 再加一个可选的 color 字段。 */
+    private fun read(): Map<String, List<ExtraCourse>> = runCatching {
         val raw = file().takeIf { it.exists() }?.readText() ?: return@runCatching emptyMap()
         val root = JSONObject(raw)
-        val result = mutableMapOf<String, List<Course>>()
+        val result = mutableMapOf<String, List<ExtraCourse>>()
         for (key in root.keys()) {
-            val courses = root.optJSONArray(key).toCourseList().filter { course ->
-                ExtraCourses.isExtra(course) && course.name.isNotBlank() && course.day in 1..7 &&
+            val array = root.optJSONArray(key) ?: continue
+            val courses = (0 until array.length()).mapNotNull { index ->
+                val item = array.optJSONObject(index) ?: return@mapNotNull null
+                val course = Course.fromJson(item)
+                val usable = ExtraCourses.isExtra(course) && course.name.isNotBlank() && course.day in 1..7 &&
                     course.startSection >= 1 && course.endSection >= course.startSection && course.weeks.isNotEmpty()
+                if (!usable) return@mapNotNull null
+                val color = if (item.isNull("color")) null
+                else runCatching { ExtraCourses.normalizeColor(item.optString("color")) }.getOrNull()
+                ExtraCourse(course, color)
             }
             if (key.isNotBlank() && courses.isNotEmpty()) result[key] = courses
         }
@@ -95,13 +124,15 @@ object ExtraCourseStore {
     }.getOrDefault(emptyMap())
 
     /** 与 LocalScheduleStore 一致的原子写：先写临时文件并 fsync，再整体替换。 */
-    private fun write(courses: Map<String, List<Course>>) {
+    private fun write(courses: Map<String, List<ExtraCourse>>) {
         val target = file()
         val temp = tempFile()
         target.parentFile?.mkdirs()
         val root = JSONObject()
         courses.forEach { (scheduleId, list) ->
-            if (list.isNotEmpty()) root.put(scheduleId, JSONArray(list.map { it.toJson() }))
+            if (list.isNotEmpty()) {
+                root.put(scheduleId, JSONArray(list.map { it.course.toJson().put("color", it.color ?: JSONObject.NULL) }))
+            }
         }
         FileOutputStream(temp).use { output ->
             output.write(root.toString().toByteArray(Charsets.UTF_8))

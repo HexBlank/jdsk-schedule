@@ -2,6 +2,7 @@ package com.zhusijiao.app.ui.course
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -12,12 +13,14 @@ import com.zhusijiao.app.data.ExtraCourseStore
 import com.zhusijiao.app.data.LocalScheduleStore
 import com.zhusijiao.app.databinding.ActivityCourseEditorBinding
 import com.zhusijiao.app.domain.Course
+import com.zhusijiao.app.domain.ExtraCourse
 import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimeSlot
 import com.zhusijiao.app.ui.common.BaseActivity
+import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,6 +31,7 @@ import kotlinx.coroutines.withContext
  *
  * 和日程编辑页是同一个路数——名称、在节次网格上点出第几节、选周次——但课的默认值不一样：
  * 周次默认整个学期每周都上（日程默认从点的那一周开始），星期可以改，多一栏教师。
+ * 颜色默认跟随自动配色，也可以手动选一个（只在本机生效，不会写进课表同步给同学）。
  * 与别的课时间重叠只提示不拦：重修课和原班课撞在一起是常态，课表会把两门并排显示。
  * 保存进 [ExtraCourseStore]，只在本机。见 docs/DECISIONS.md D23。
  */
@@ -37,8 +41,11 @@ class CourseEditorActivity : BaseActivity() {
 
     /** 课表本身（不含自己加的课）与这份课表名下已有的自己加的课。 */
     private var schedule: Schedule? = null
-    private var extras: List<Course> = emptyList()
+    private var extras: List<ExtraCourse> = emptyList()
     private var editing: Course? = null
+
+    /** 手动颜色；null 为跟随自动配色。 */
+    private var color: String? = null
     private var slots: List<TimeSlot> = emptyList()
     private var totalWeeks = 20
     private var ready = false
@@ -61,7 +68,7 @@ class CourseEditorActivity : BaseActivity() {
                 LocalScheduleStore.getScheduleOrNull(scheduleId) to ExtraCourseStore.list(scheduleId)
             }
             val target = loaded.first
-            val found = courseId?.let { id -> loaded.second.find { it.id == id } }
+            val found = courseId?.let { id -> loaded.second.find { it.course.id == id } }
             if (target == null || (courseId != null && found == null)) {
                 Ui.toastError(this@CourseEditorActivity, getString(R.string.common_load_failed))
                 finish()
@@ -69,7 +76,8 @@ class CourseEditorActivity : BaseActivity() {
             }
             schedule = target
             extras = loaded.second
-            editing = found
+            editing = found?.course
+            color = found?.color
             bind(initialDay, initialSection)
         }
     }
@@ -127,6 +135,16 @@ class CourseEditorActivity : BaseActivity() {
             getString(R.string.event_repeat_label)
         ) { refresh() }
 
+        binding.courseColorRow.setOnClickListener {
+            ColorPickerSheet(
+                this,
+                courseName = binding.courseName.text.toString().trim().ifEmpty { getString(R.string.course_new_title) },
+                autoColor = autoColor(),
+                currentManual = color,
+                onPick = { hex -> color = hex; paintColor() },
+                onReset = { color = null; paintColor() }
+            ).show()
+        }
         binding.courseSave.setOnClickListener { submit() }
         ready = true
         refresh()
@@ -164,7 +182,28 @@ class CourseEditorActivity : BaseActivity() {
             ScheduleView.formatWeekSummary(weeks),
             weeks.size
         )
+        paintColor()
         updateConflictHint()
+    }
+
+    /** 不手动选时这门课会被自动配成什么颜色（跟课程名和课表里已有的课有关，名字改了会跟着变）。 */
+    private fun autoColor(): Int {
+        val name = binding.courseName.text.toString().trim()
+        if (name.isEmpty()) return ScheduleView.COURSE_PALETTES[0].background
+        val others = others()
+        val probe = Course(name = name, teacher = "", position = "", day = 1, startSection = 1, endSection = 1, weeks = listOf(1))
+        return ScheduleView.buildCoursePaletteMap(
+            others.courses + others.adjustments.map { it.courseSnapshot } + probe
+        )[name]?.background ?: ScheduleView.COURSE_PALETTES[0].background
+    }
+
+    private fun paintColor() {
+        val manual = ScheduleView.manualPalette(color)?.background
+        binding.courseColorSwatch.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(manual ?: autoColor())
+        }
+        binding.courseColorText.setText(if (manual == null) R.string.course_color_auto else R.string.course_color_manual)
     }
 
     private fun updateConflictHint() {
@@ -190,7 +229,7 @@ class CourseEditorActivity : BaseActivity() {
     /** 课表加上其他自己加的课（不含正在编辑的这一门），用来查时间重叠。 */
     private fun others(): Schedule {
         val current = schedule!!
-        return ExtraCourses.merge(current, extras.filterNot { it.id == editing?.id })
+        return ExtraCourses.merge(current, extras.filterNot { it.course.id == editing?.id })
     }
 
     // ===== 草稿 =====
@@ -242,7 +281,7 @@ class CourseEditorActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    ExtraCourseStore.save(current.id, course, editing?.id, current.totalWeeks.coerceAtLeast(1))
+                    ExtraCourseStore.save(current.id, course, color, editing?.id, current.totalWeeks.coerceAtLeast(1))
                 }
                 Ui.toastSuccess(this@CourseEditorActivity, getString(R.string.course_saved))
                 setResult(RESULT_OK)

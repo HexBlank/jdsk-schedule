@@ -828,7 +828,9 @@
     <string name="course_save">保存</string>
     <string name="course_saved">课程已保存</string>
     <string name="course_no_section">请先点选这门课上第几节</string>
-    <string name="course_extra_note">这是你自己加的课，只存在这台手机上，不会同步给同学。</string>
+    <string name="course_extra_note">这是你自己加的课，只存在这台手机上，不会同步给同学。长按课表上的这门课可以换颜色。</string>
+    <string name="course_color_auto">跟随自动配色</string>
+    <string name="course_color_manual">自己选的颜色</string>
     <string name="course_extra_edit">编辑</string>
     <string name="course_extra_delete">删除</string>
     <string name="course_extra_deleted">课程已删除</string>

@@ -26,14 +26,19 @@ class ExtraCourseTest {
     private fun extra(name: String, day: Int = 1, start: Int, end: Int, weeks: List<Int> = (1..16).toList()) =
         course(name, day, start, end, weeks).copy(id = ExtraCourses.ID_PREFIX + name)
 
+    private fun mine(name: String, day: Int = 1, start: Int, end: Int, weeks: List<Int> = (1..16).toList(), color: String? = null) =
+        ExtraCourse(extra(name, day, start, end, weeks), color)
+
     private fun schedule(
         courses: List<Course>,
         totalWeeks: Int = 16,
-        holidays: List<DayHoliday> = emptyList()
+        holidays: List<DayHoliday> = emptyList(),
+        courseColors: Map<String, String> = emptyMap()
     ) = Schedule(
         id = "s1", name = "测试课表", school = "", semesterStart = "2026-09-07", totalWeeks = totalWeeks,
         shareCode = null, revision = 1, createdAt = "", updatedAt = "", subscriberCount = 0, role = "subscriber",
-        courseCount = courses.size, timeSlots = emptyList(), courses = courses, holidays = holidays
+        courseCount = courses.size, timeSlots = emptyList(), courses = courses, holidays = holidays,
+        courseColors = courseColors
     )
 
     private val base = schedule(listOf(course("高等数学", start = 1, end = 2)))
@@ -84,19 +89,60 @@ class ExtraCourseTest {
         val merged = ExtraCourses.merge(
             short,
             listOf(
-                extra("物理实验", start = 3, end = 4, weeks = listOf(7, 8, 9, 10)),
-                extra("形势与政策", start = 6, end = 7, weeks = listOf(12, 13))
+                mine("物理实验", start = 3, end = 4, weeks = listOf(7, 8, 9, 10)),
+                mine("形势与政策", start = 6, end = 7, weeks = listOf(12, 13), color = "#112233")
             )
         )
         assertEquals(listOf("高等数学", "物理实验"), merged.courses.map { it.name })
         assertEquals(listOf(7, 8), merged.courses[1].weeks)
         // 摘要字段说的是课表本身，不跟着变
         assertEquals(1, merged.courseCount)
+        // 没并进去的课，它的颜色也不并
+        assertTrue(merged.courseColors.isEmpty())
+    }
+
+    @Test
+    fun merge_addsManualColorsByCourseName() {
+        val shared = schedule(base.courses, courseColors = mapOf("高等数学" to "#AA0000"))
+        val merged = ExtraCourses.merge(
+            shared,
+            listOf(
+                mine("物理实验", start = 3, end = 4, color = "#00AA00"),
+                mine("体育", day = 2, start = 1, end = 2)
+            )
+        )
+        // 课表自己的配色保留，自己选的颜色加进去；没选颜色的走自动配色（不进这张表）
+        assertEquals(mapOf("高等数学" to "#AA0000", "物理实验" to "#00AA00"), merged.courseColors)
+        val palette = ScheduleView.buildCoursePaletteMap(merged.courses, merged.courseColors)
+        assertEquals(ScheduleView.manualPalette("#00AA00"), palette["物理实验"])
+        // 原课表对象不受影响：保存课表配色时用的还是它那一份
+        assertEquals(mapOf("高等数学" to "#AA0000"), shared.courseColors)
+    }
+
+    @Test
+    fun merge_sameNameAsScheduleCourse_ownColorWins() {
+        // 重修课和课表里的课重名：两者同色，以自己选的为准
+        val shared = schedule(base.courses, courseColors = mapOf("高等数学" to "#AA0000"))
+        val merged = ExtraCourses.merge(shared, listOf(mine("高等数学", day = 3, start = 6, end = 7, color = "#0000AA")))
+        assertEquals("#0000AA", merged.courseColors["高等数学"])
+    }
+
+    @Test
+    fun normalizeColor_uppercasesAndRejectsGarbage() {
+        assertEquals("#1A2B3C", ExtraCourses.normalizeColor(" #1a2b3c "))
+        assertEquals(null, ExtraCourses.normalizeColor(null))
+        assertEquals(null, ExtraCourses.normalizeColor("  "))
+        try {
+            ExtraCourses.normalizeColor("red")
+            fail("不是 #RRGGBB 应当被拒绝")
+        } catch (e: IllegalArgumentException) {
+            assertEquals("颜色值无效", e.message)
+        }
     }
 
     @Test
     fun merged_extraCourse_isRemindedLikeAnyCourse() {
-        val merged = ExtraCourses.merge(base, listOf(extra("物理实验", start = 3, end = 4)))
+        val merged = ExtraCourses.merge(base, listOf(mine("物理实验", start = 3, end = 4)))
         val items = ClassReminderPlanner.occurrencesOn(merged, emptyList(), false, 1, 1, "2026-09-07")
         assertEquals(listOf("高等数学", "物理实验"), items.map { it.title })
         assertFalse(items[1].isEvent)
@@ -107,7 +153,7 @@ class ExtraCourseTest {
 
     @Test
     fun merged_extraCourse_followsHolidayAndLeave() {
-        val extras = listOf(extra("物理实验", start = 3, end = 4))
+        val extras = listOf(mine("物理实验", start = 3, end = 4))
         // 停课日：自己加的课也停
         val suspended = ExtraCourses.merge(
             schedule(base.courses, holidays = listOf(DayHoliday(id = "h1", week = 1, day = 1, createdAt = "", updatedAt = ""))),
