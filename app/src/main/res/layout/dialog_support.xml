@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 支持开发：一段说明 + 微信赞赏码。完全自愿，主按钮是「完成」而不是任何付费动作 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="14dp">
+
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_sheet_handle" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/support_title"
+        android:textColor="@color/heading_ink"
+        android:textSize="@dimen/text_title"
+        android:textStyle="bold" />
+
+    <com.zhusijiao.app.ui.common.MaxHeightScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.45"
+                android:text="@string/support_message"
+                android:textColor="@color/body_ink"
+                android:textSize="@dimen/text_body" />
+
+            <ImageView
+                android:id="@+id/supportQr"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="14dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/support_qr_description"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/supportHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.4"
+                android:text="@string/support_hint_save"
+                android:textColor="@color/sub_8a"
+                android:textSize="@dimen/text_hint" />
+        </LinearLayout>
+    </com.zhusijiao.app.ui.common.MaxHeightScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/supportSave"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_ghost_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/support_save"
+            android:textColor="@color/action_ink"
+            android:textSize="@dimen/text_body" />
+
+        <TextView
+            android:id="@+id/supportClose"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="@string/common_done"
+            android:textSize="@dimen/text_body" />
+    </LinearLayout>
+</LinearLayout>

@@ -29,6 +29,7 @@ import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
+import com.zhusijiao.app.ui.common.SupportSheet
 import com.zhusijiao.app.ui.couple.CoupleBindActivity
 import com.zhusijiao.app.ui.reminder.ClassReminderActivity
 import com.zhusijiao.app.util.SyncLogClipboard
@@ -66,6 +67,7 @@ class SettingsFragment : Fragment(), Refreshable {
         }
         binding.menuQqGroup.setOnClickListener { copyQqGroupNumber() }
         binding.menuOpenSource.setOnClickListener { openProjectRepo() }
+        binding.menuSupport.setOnClickListener { SupportSheet(requireContext()).show() }
         binding.menuSyncLog.setOnClickListener { SyncLogClipboard.copy(requireContext()) }
         binding.menuDelete.setOnClickListener {
             val danger = ContextCompat.getColor(requireContext(), R.color.danger_confirm_alt)

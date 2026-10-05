@@ -704,4 +704,18 @@
 
     <string name="library_couple_visible_tag">TA 可见</string>
     <string name="library_couple_switch_toast">已切换当前课表，TA 那边也会看到这份课表</string>
+
+    <!-- 支持开发（完全自愿，文案不催促） -->
+    <string name="support_title">支持开发</string>
+    <string name="support_row_sub">完全自愿，不打赏也能用全部功能</string>
+    <string name="support_message">几点上课是课余时间做的小工具，所有功能都免费，也没有广告，以后也会这样。
+
+如果它帮你省了点事、你又刚好想请作者喝杯奶茶，可以用微信扫下面的赞赏码。不打赏完全没关系，放心用就好。</string>
+    <string name="support_qr_description">微信赞赏码</string>
+    <string name="support_hint_save">保存到相册后，在微信「扫一扫」里从相册选取</string>
+    <string name="support_hint_screenshot">截图后，在微信「扫一扫」里从相册选取</string>
+    <string name="support_save">保存到相册</string>
+    <string name="support_saved">赞赏码已保存到相册</string>
+    <string name="support_save_failed">保存失败，可以截图后再到微信里扫</string>
+    <string name="support_open_wechat">打开微信</string>
 </resources>
