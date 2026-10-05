@@ -10,10 +10,11 @@ import android.view.WindowManager
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
+import com.zhusijiao.app.domain.Leaves
 
 /**
  * 课程详情底部抽屉：课程色浅底的头部里，教室用大字、时间和节次紧随其后（最常被问的「在哪上、几点上」）；
- * 周次、教师两格次要信息；调课、撤销、完成并排放在底部。
+ * 周次、教师两格次要信息；一行请假入口；调课、撤销、完成并排放在底部。
  */
 class CourseDetailSheet(
     context: Context,
@@ -22,7 +23,9 @@ class CourseDetailSheet(
     onReschedule: (() -> Unit)? = null,
     onUndo: (() -> Unit)? = null,
     /** 只读时的说明；默认是「通过分享码加入的课表」那一句，情侣课表里换成更贴切的话。 */
-    readOnlyNote: String? = null
+    readOnlyNote: String? = null,
+    /** 「这节课请假」或查看已有请假；为 null 时不显示入口（情侣课表、没有开学日期的课表）。 */
+    onLeave: (() -> Unit)? = null
 ) :
     Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
 
@@ -112,6 +115,26 @@ class CourseDetailSheet(
                 visibility = View.VISIBLE
                 setOnClickListener { dismiss(); onUndo?.invoke() }
             }
+        }
+
+        // 请假入口：当天真要上的课可以请假；已经在请假时段里的显示时段，点进去修改或取消
+        val attends = data.holiday == null && data.madeUpNote == null &&
+            data.occurrence != TimetableView.Occurrence.MOVED_OUT
+        if (onLeave != null && !data.partner && data.dateIso != null && (data.leave != null || attends)) {
+            findViewById<View>(R.id.sheetLeave).apply {
+                visibility = View.VISIBLE
+                setOnClickListener { dismiss(); onLeave() }
+            }
+            findViewById<TextView>(R.id.sheetLeaveText).text = data.leave?.let { leave ->
+                listOfNotNull(
+                    context.getString(
+                        R.string.detail_leave_active,
+                        leave.type.label,
+                        Leaves.displayRange(leave.start, leave.end)
+                    ),
+                    leave.note.takeIf { it.isNotBlank() }
+                ).joinToString("\n")
+            } ?: context.getString(R.string.detail_leave_action)
         }
 
         findViewById<TextView>(R.id.sheetClose).setOnClickListener { dismiss() }

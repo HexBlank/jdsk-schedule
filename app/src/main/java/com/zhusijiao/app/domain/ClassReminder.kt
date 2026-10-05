@@ -85,6 +85,7 @@ object ClassReminderPlanner {
      * @param earlyToleranceMillis 允许提前多久就算「到点」。精确定时传 0；
      *   没有精确定时权限时系统只保证在一个时间窗内送达，窗口开在目标时刻之前（宁早勿晚），
      *   这里要传同样的窗口长度，否则提前送达时会被判为「还没到」，接着又排一次、反复唤醒。
+     * @param leaves 本机的请假记录，请假时段内的课不提醒（日程照常）。
      */
     fun plan(
         schedule: Schedule,
@@ -92,7 +93,8 @@ object ClassReminderPlanner {
         settings: ClassReminderSettings,
         nowMillis: Long,
         notifiedUpToMillis: Long,
-        earlyToleranceMillis: Long = 0L
+        earlyToleranceMillis: Long = 0L,
+        leaves: List<Leave> = emptyList()
     ): Plan {
         if (!DateUtils.hasSemesterStart(schedule.semesterStart)) {
             return Plan(emptyList(), null, emptyList(), Blocker.NO_SEMESTER_START)
@@ -111,7 +113,7 @@ object ClassReminderPlanner {
         for (week in startWeek..totalWeeks) {
             val dates = DateUtils.datesForWeek(schedule.semesterStart, week)
             for (day in 1..7) {
-                val items = occurrencesOn(schedule, events, settings.includeEvents, week, day, dates[day - 1].iso)
+                val items = occurrencesOn(schedule, events, settings.includeEvents, week, day, dates[day - 1].iso, leaves)
                 for (item in items) {
                     if (item.startAtMillis <= floor) continue
                     val trigger = item.startAtMillis - leadMillis
@@ -135,6 +137,8 @@ object ClassReminderPlanner {
     /**
      * 第 [week] 周周 [day]（日期 [dateIso]）要提醒的课和日程，按开始时间排序。
      * 课程先合并「同一门课、同一教室、连着上」的相邻段；日程不合并，各自提醒。
+     * 落在 [leaves] 请假时段内的课先剔掉再合并（连着两段只请了后一段，前一段照常提醒）；
+     * 请的是课的假，自己加的日程不受影响。
      */
     fun occurrencesOn(
         schedule: Schedule,
@@ -142,10 +146,12 @@ object ClassReminderPlanner {
         includeEvents: Boolean,
         week: Int,
         day: Int,
-        dateIso: String
+        dateIso: String,
+        leaves: List<Leave> = emptyList()
     ): List<ReminderOccurrence> {
         val slots = ScheduleTime.slotsOf(schedule.timeSlots)
         val courses = ScheduleOccurrences.coursesOn(schedule, week, day).mapNotNull { course ->
+            if (Leaves.leaveFor(leaves, schedule, dateIso, course) != null) return@mapNotNull null
             occurrence(
                 isEvent = false,
                 title = course.name,
@@ -173,6 +179,38 @@ object ClassReminderPlanner {
 
         return (mergeConsecutive(courses) + eventItems)
             .sortedWith(compareBy({ it.startAtMillis }, { it.isEvent }, { it.title }))
+    }
+
+    /**
+     * 第 [week] 周周 [day] 落在请假时段内的课（[occurrencesOn] 剔掉的那些），同样合并连着上的相邻段。
+     * 桌面小部件的「今日课程」把它们列出来并标上「请假 / 公假」。
+     */
+    fun leaveOccurrencesOn(
+        schedule: Schedule,
+        week: Int,
+        day: Int,
+        dateIso: String,
+        leaves: List<Leave>
+    ): List<Pair<ReminderOccurrence, LeaveType>> {
+        if (leaves.isEmpty()) return emptyList()
+        val slots = ScheduleTime.slotsOf(schedule.timeSlots)
+        val byType = linkedMapOf<LeaveType, MutableList<ReminderOccurrence>>()
+        ScheduleOccurrences.coursesOn(schedule, week, day).forEach { course ->
+            val leave = Leaves.leaveFor(leaves, schedule, dateIso, course) ?: return@forEach
+            val item = occurrence(
+                isEvent = false,
+                title = course.name,
+                position = course.position,
+                teacher = course.teacher,
+                dateIso = dateIso,
+                startTime = slots.find { it.number == course.startSection }?.startTime,
+                endTime = slots.find { it.number == course.endSection }?.endTime
+            ) ?: return@forEach
+            byType.getOrPut(leave.type) { mutableListOf() } += item
+        }
+        return byType.flatMap { (type, items) ->
+            mergeConsecutive(items.sortedWith(compareBy({ it.startAtMillis }, { it.endAtMillis }))).map { it to type }
+        }.sortedBy { it.first.startAtMillis }
     }
 
     /** 同一门课、同一教室、间隔不超过 [MERGE_GAP_MINUTES] 的相邻段合成一段（完全重复的也会并掉）。 */

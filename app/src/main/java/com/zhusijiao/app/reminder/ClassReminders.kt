@@ -11,6 +11,7 @@ import android.os.Build
 import com.zhusijiao.app.MainActivity
 import com.zhusijiao.app.MainApplication
 import com.zhusijiao.app.R
+import com.zhusijiao.app.data.LeaveStore
 import com.zhusijiao.app.data.LocalScheduleStore
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
@@ -23,7 +24,7 @@ import java.util.concurrent.Executors
  * 上课通知提醒：在当前课表每节课开始前 N 分钟发一条普通通知（不是响铃闹钟）。
  *
  * 做法是「只排下一次」：算出下一节课的提醒时刻，交给系统定时唤醒；到点发通知后
- * 再排下一次。课表、日程、设置、当前课表任一变化，或开机、改系统时间、App 升级后，
+ * 再排下一次。课表、日程、请假、设置、当前课表任一变化，或开机、改系统时间、App 升级后，
  * 都调用 [requestSync] 从头重算并覆盖同一个定时，所以不会留下作废的旧提醒。
  *
  * 排期逻辑在纯 Kotlin 的 [ClassReminderPlanner] 里（有单元测试），这里只负责
@@ -78,7 +79,9 @@ object ClassReminders {
     fun previewPlan(schedule: Schedule, nowMillis: Long = System.currentTimeMillis()): ClassReminderPlanner.Plan {
         val settings = Prefs.classReminderSettings
         val events = if (settings.includeEvents) PersonalEventStore.list(schedule.id) else emptyList()
-        return ClassReminderPlanner.plan(schedule, events, settings, nowMillis, Prefs.classReminderNotifiedUpTo)
+        return ClassReminderPlanner.plan(
+            schedule, events, settings, nowMillis, Prefs.classReminderNotifiedUpTo, leaves = LeaveStore.list()
+        )
     }
 
     private fun syncNow(context: Context) {
@@ -97,7 +100,8 @@ object ClassReminders {
             settings = settings,
             nowMillis = now,
             notifiedUpToMillis = Prefs.classReminderNotifiedUpTo,
-            earlyToleranceMillis = if (exact) 0L else INEXACT_WINDOW_MILLIS
+            earlyToleranceMillis = if (exact) 0L else INEXACT_WINDOW_MILLIS,
+            leaves = LeaveStore.list()
         )
         if (plan.due.isNotEmpty()) {
             ensureChannel(context)

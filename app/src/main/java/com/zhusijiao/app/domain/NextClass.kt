@@ -4,7 +4,7 @@ import java.util.Calendar
 
 /**
  * 课表页顶部「下一节课」提示条的数据：今天还没下课的第一节课或日程（正在上的也算）。
- * 口径与上课提醒一致（[ClassReminderPlanner.occurrencesOn]），调课、停课、补课都已算进去，
+ * 口径与上课提醒一致（[ClassReminderPlanner.occurrencesOn]），调课、停课、补课、请假都已算进去，
  * 连着上的同一门课合成一段。纯 Kotlin，JVM 单元测试可直接覆盖。
  */
 object NextClass {
@@ -20,7 +20,12 @@ object NextClass {
         val minutesUntil: Int
     )
 
-    fun find(schedule: Schedule, events: List<PersonalEvent>, nowMillis: Long): Info? {
+    fun find(
+        schedule: Schedule,
+        events: List<PersonalEvent>,
+        nowMillis: Long,
+        leaves: List<Leave> = emptyList()
+    ): Info? {
         if (!DateUtils.hasSemesterStart(schedule.semesterStart)) return null
         val totalWeeks = if (schedule.totalWeeks > 0) schedule.totalWeeks else 20
         val week = DateUtils.teachingWeekAt(schedule.semesterStart, nowMillis)
@@ -29,7 +34,7 @@ object NextClass {
         val dates = DateUtils.datesForWeek(schedule.semesterStart, week)
         val day = dates.indexOfFirst { it.iso == todayIso } + 1
         if (day < 1) return null
-        val item = ClassReminderPlanner.occurrencesOn(schedule, events, includeEvents = true, week, day, todayIso)
+        val item = ClassReminderPlanner.occurrencesOn(schedule, events, includeEvents = true, week, day, todayIso, leaves)
             .firstOrNull { it.endAtMillis > nowMillis }
             ?: return null
         val ongoing = item.startAtMillis <= nowMillis

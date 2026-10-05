@@ -142,6 +142,42 @@
         android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
+    <!-- 请假入口：本机私有，订阅的课表也能用；已请假时显示请假时段，点进去修改或取消 -->
+    <LinearLayout
+        android:id="@+id/sheetLeave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_detail_cell"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="44dp"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/sheetLeaveText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:lineSpacingMultiplier="1.3"
+            android:textColor="@color/body_ink"
+            android:textSize="@dimen/text_small" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="›"
+            android:textColor="@color/arrow_grey"
+            android:textSize="@dimen/text_title" />
+    </LinearLayout>
+
     <!-- 操作并排：撤销调课（有调课时）· 调课 · 完成 -->
     <LinearLayout
         android:layout_width="match_parent"

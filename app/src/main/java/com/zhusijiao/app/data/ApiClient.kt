@@ -193,6 +193,7 @@ object ApiClient {
         withContext(Dispatchers.IO) {
             LocalScheduleStore.deleteAll()
             PersonalEventStore.clear()
+            LeaveStore.clear()
         }
         if (!isLocalMode) {
             // 删除本机数据绝不依赖网络；服务端删除只做短时尽力尝试。

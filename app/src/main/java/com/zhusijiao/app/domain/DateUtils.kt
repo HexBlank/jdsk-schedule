@@ -60,6 +60,9 @@ object DateUtils {
     fun isMonday(value: String?): Boolean =
         hasSemesterStart(value) && parseLocalDate(value).get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY
 
+    /** 星期几，按全 App 约定 1 = 周一 … 7 = 周日。 */
+    fun dayOfWeek(date: Calendar): Int = (date.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1
+
     private fun addDays(date: Calendar, amount: Int): Calendar =
         (date.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, amount) }
 

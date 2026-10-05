@@ -139,6 +139,10 @@ class WheelView @JvmOverloads constructor(
             // 距离中心越远字越小越淡，形成滚轮的纵深感
             val distance = min(1f, abs(index * step - offset) / step)
             textPaint.textSize = sp(SELECTED_SP - (SELECTED_SP - NORMAL_SP) * distance)
+            // 长文案（如「10月8日 周四」）放不下时等比缩小，不被列宽裁掉
+            val room = width - 4f * resources.displayMetrics.density
+            val wanted = textPaint.measureText(label)
+            if (wanted > room && room > 0f) textPaint.textSize *= room / wanted
             val color = if (distance < 0.5f) colorSelected else colorNormal
             textPaint.color = withAlpha(color, 1f - 0.45f * distance)
             val fm = textPaint.fontMetrics

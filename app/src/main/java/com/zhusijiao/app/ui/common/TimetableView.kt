@@ -41,6 +41,8 @@ import com.zhusijiao.app.domain.CoupleFreeTime
 import com.zhusijiao.app.domain.Course
 import com.zhusijiao.app.domain.CourseAdjustment
 import com.zhusijiao.app.domain.DayHoliday
+import com.zhusijiao.app.domain.Leave
+import com.zhusijiao.app.domain.Leaves
 import com.zhusijiao.app.domain.DayMakeup
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.PersonalEvent
@@ -87,7 +89,11 @@ class TimetableView @JvmOverloads constructor(
         val makeup: DayMakeup? = null,
         val madeUpNote: String? = null,
         /** 情侣周视图里 TA 的课（只读）。 */
-        val partner: Boolean = false
+        val partner: Boolean = false,
+        /** 这节课落在哪条请假里（本机记录，只标自己的课）。 */
+        val leave: Leave? = null,
+        /** 块所在列的日期（YYYY-MM-DD）；课表没有开学日期时为 null。「这节课请假」用它预填时间。 */
+        val dateIso: String? = null
     )
 
     /** 点击表头某一天（用于查看/设置停课与补课）。 */
@@ -148,6 +154,8 @@ class TimetableView @JvmOverloads constructor(
 
     private var schedule: Schedule? = null
     private var events: List<PersonalEvent> = emptyList()
+    /** 本机的请假记录：请假时段内自己的课画成「今天不上」的样式并标「请假 / 公假」。 */
+    private var leaves: List<Leave> = emptyList()
     private var couple: CoupleLayer? = null
     private var paletteMap: Map<String, ScheduleView.Palette> = emptyMap()
     private var week = 1
@@ -208,6 +216,8 @@ class TimetableView @JvmOverloads constructor(
         val makeup: DayMakeup? = null,
         val madeUpNote: String? = null,
         val event: PersonalEvent? = null,
+        /** 这节课落在请假时段内：课照常开，只是我不去。 */
+        val leave: Leave? = null,
         /** 情侣周视图里块属于谁：[OWNER_ME] / [OWNER_PARTNER]；单人课表恒为 [OWNER_ME]。 */
         val owner: Int = OWNER_ME,
         /** 「是哪一门」的身份色：新版状态样式里停课块、日程块都按它上色（见 [BlockStyles]）。 */
@@ -229,9 +239,9 @@ class TimetableView @JvmOverloads constructor(
         /** 已经下课（需开「显示已上状态」）：画成鬼影并标「已上」，但仍参与分栏，免得下课那一刻格子跳动。 */
         var finished = false
 
-        /** 「鬼影」块：已调出、整日停课、补课来源日——当天都不上，不参与冲突分栏。 */
+        /** 「鬼影」块：已调出、整日停课、补课来源日、请假——当天都不上，不参与冲突分栏。 */
         val ghosted: Boolean
-            get() = occurrence == Occurrence.MOVED_OUT || holiday != null || madeUpNote != null
+            get() = occurrence == Occurrence.MOVED_OUT || holiday != null || madeUpNote != null || leave != null
 
         /** 画成灰色鬼影样式：当天不上的，或已经上完的。 */
         val faded: Boolean get() = ghosted || finished
@@ -383,7 +393,8 @@ class TimetableView @JvmOverloads constructor(
         schedule: Schedule?,
         events: List<PersonalEvent> = emptyList(),
         jumpToCurrent: Boolean = true,
-        weekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO
+        weekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO,
+        leaves: List<Leave> = emptyList()
     ) {
         // 同一份课表重建（调课、停课保存后）时，留住旧的这一页，重建后对比出变化播过渡
         val previous = this.schedule
@@ -393,6 +404,7 @@ class TimetableView @JvmOverloads constructor(
         cancelIntro()
         this.schedule = schedule
         this.events = events
+        this.leaves = leaves
         weekendDisplayMode = weekendMode
         pageOffset = 0f
         secondaryWeek = null
@@ -487,7 +499,7 @@ class TimetableView @JvmOverloads constructor(
         if (schedule == null) return false
         val render = renderFor(week)
         val candidates = render.blocks.filter { b ->
-            !b.buried && b.col == day && b.holiday == null && b.madeUpNote == null &&
+            !b.buried && b.col == day && b.holiday == null && b.madeUpNote == null && b.leave == null &&
                 b.occurrence != Occurrence.MOVED_OUT &&
                 if (isEvent) b.event?.title?.trim() == title else b.event == null && b.course.name.trim() == title
         }
@@ -720,6 +732,8 @@ class TimetableView @JvmOverloads constructor(
             val madeUp = madeUpByDay[course.day]
             // 已调出的单课 / 补课来源日 / 整日停课都用「鬼影」样式：不再是正常的课上。
             val ghosted = adjustment != null || holiday != null || madeUp != null
+            // 本来就不上的课不用再标请假
+            val leave = if (ghosted) null else leaveOf(r, s, owner, course.day, course)
             val madeUpDate = madeUp?.let { madeUpDateText(s, it) }
             r.blocks += Block(
                 course = course,
@@ -730,6 +744,7 @@ class TimetableView @JvmOverloads constructor(
                     adjustment != null -> "已调出"
                     madeUp != null -> "已补"
                     holiday != null -> "停课"
+                    leave != null -> leave.type.label
                     else -> ScheduleView.alternatingWeekBadge(course.weeks)
                 },
                 compact = span == 1,
@@ -745,6 +760,7 @@ class TimetableView @JvmOverloads constructor(
                 madeUpNote = madeUp?.let {
                     "该日课表已整体调整到 $madeUpDate（周${dayName(it.targetDay)}）补课，当天不上课。"
                 },
+                leave = leave,
                 owner = owner
             )
         }
@@ -752,11 +768,12 @@ class TimetableView @JvmOverloads constructor(
             val base = s.courses.find { it.id == adjustment.courseId }
             val course = adjustment.targetCourse(base)
             val palette = paletteOf(course)
+            val leave = leaveOf(r, s, owner, course.day, course)
             r.blocks += Block(
                 course = course,
                 background = palette.background,
                 foreground = palette.foreground,
-                badge = "调课",
+                badge = leave?.type?.label ?: "调课",
                 compact = course.startSection == course.endSection,
                 col = course.day,
                 startSection = course.startSection,
@@ -764,6 +781,7 @@ class TimetableView @JvmOverloads constructor(
                 adjustment = adjustment,
                 occurrence = Occurrence.MOVED_IN,
                 orphaned = base == null,
+                leave = leave,
                 owner = owner
             )
         }
@@ -774,16 +792,18 @@ class TimetableView @JvmOverloads constructor(
                     course.day > dayCount || movedOut.containsKey(course.id to makeup.sourceWeek)
                 ) return@forEach
                 val palette = paletteOf(course)
+                val leave = leaveOf(r, s, owner, makeup.targetDay, course)
                 r.blocks += Block(
                     course = course,
                     background = palette.background,
                     foreground = palette.foreground,
-                    badge = "补课",
+                    badge = leave?.type?.label ?: "补课",
                     compact = course.startSection == course.endSection,
                     col = makeup.targetDay,
                     startSection = course.startSection,
                     span = course.endSection - course.startSection + 1,
                     makeup = makeup,
+                    leave = leave,
                     owner = owner
                 )
             }
@@ -794,21 +814,32 @@ class TimetableView @JvmOverloads constructor(
                 val course = adjustment.targetCourse(base)
                 if (course.day > dayCount) return@forEach
                 val palette = paletteOf(course)
+                val leave = leaveOf(r, s, owner, makeup.targetDay, course)
                 r.blocks += Block(
                     course = course,
                     background = palette.background,
                     foreground = palette.foreground,
-                    badge = "补课",
+                    badge = leave?.type?.label ?: "补课",
                     compact = course.startSection == course.endSection,
                     col = makeup.targetDay,
                     startSection = course.startSection,
                     span = course.endSection - course.startSection + 1,
                     makeup = makeup,
                     orphaned = base == null,
+                    leave = leave,
                     owner = owner
                 )
             }
         }
+    }
+
+    /**
+     * 第 [col] 列的这节课是否落在我的请假时段内。只标我自己的课（TA 的请假这台手机上没有），
+     * 课表没有开学日期时推不出日期，也不标。
+     */
+    private fun leaveOf(r: WeekRender, s: Schedule, owner: Int, col: Int, course: Course): Leave? {
+        if (owner != OWNER_ME || leaves.isEmpty()) return null
+        return Leaves.leaveFor(leaves, s, r.dates.getOrNull(col - 1)?.iso, course)
     }
 
     /**
@@ -1864,6 +1895,7 @@ class TimetableView @JvmOverloads constructor(
                     hit.makeup != null -> "补第 ${hit.makeup.sourceWeek} 周周${dayName(hit.makeup.sourceDay)} 的课"
                     hit.madeUpNote != null -> "第 $blockWeek 周 · 已补"
                     hit.holiday != null -> "第 $blockWeek 周 · 停课"
+                    hit.leave != null -> "第 $blockWeek 周 · ${hit.leave.type.label}"
                     else -> when (hit.occurrence) {
                         Occurrence.NORMAL -> ScheduleView.formatWeekSummary(hit.course.weeks)
                         Occurrence.MOVED_IN -> "第 $blockWeek 周 · 调入"
@@ -1873,7 +1905,9 @@ class TimetableView @JvmOverloads constructor(
                 holiday = hit.holiday,
                 makeup = hit.makeup,
                 madeUpNote = hit.madeUpNote,
-                partner = hit.owner == OWNER_PARTNER
+                partner = hit.owner == OWNER_PARTNER,
+                leave = hit.leave,
+                dateIso = date?.iso?.takeIf { DateUtils.hasSemesterStart(schedule?.semesterStart) }
             )
         (sink ?: onCourseClick)?.invoke(click)
     }
@@ -1894,7 +1928,7 @@ class TimetableView @JvmOverloads constructor(
                 Occurrence.MOVED_IN -> "，调入课程"
                 Occurrence.MOVED_OUT -> "，已调出"
             }
-        } + if (block.finished) "，已上" else ""
+        } + (block.leave?.let { "，${it.type.label}，这节课不去" } ?: "") + if (block.finished) "，已上" else ""
         val teacher = block.course.teacher.takeIf { it.isNotBlank() }?.let { "，教师$it" }.orEmpty()
         val place = block.course.position.takeIf { it.isNotBlank() }?.let { "，地点$it" }.orEmpty()
         return ownerPrefix(block) + "${block.course.name}$status，周${listOf("一", "二", "三", "四", "五", "六", "日").getOrElse(block.col - 1) { "" }}，第${block.startSection}到${block.startSection + block.span - 1}节$teacher$place"

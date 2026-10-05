@@ -718,4 +718,45 @@
     <string name="support_saved">赞赏码已保存到相册</string>
     <string name="support_save_failed">保存失败，可以截图后再到微信里扫</string>
     <string name="support_open_wechat">打开微信</string>
+
+    <!-- 请假（本机私有，不随课表同步） -->
+    <string name="leave_title">请假</string>
+    <string name="leave_entry">请假</string>
+    <string name="leave_entry_count">请假 %1$d</string>
+    <string name="leave_list_desc">请假只记在这台手机上，不会同步给用同一份课表的同学。请假时段内的课会标成「请假」或「公假」，也不再提醒。</string>
+    <string name="leave_list_empty">还没有请假记录</string>
+    <string name="leave_add">新增请假</string>
+    <string name="leave_new_title">新增请假</string>
+    <string name="leave_edit_title">修改请假</string>
+    <string name="leave_editor_desc">选好从什么时候到什么时候，精确到分钟，可以跨天。和这段时间有重叠的课都算请假。</string>
+    <string name="leave_type_label">类别</string>
+    <string name="leave_type_desc_prefix">类别：</string>
+    <string name="leave_span_label">请假时间</string>
+    <string name="leave_whole_day">按整天</string>
+    <string name="leave_start_label">开始</string>
+    <string name="leave_end_label">结束</string>
+    <string name="leave_pick_start">从什么时候开始</string>
+    <string name="leave_pick_end">到什么时候结束</string>
+    <string name="leave_today">今天</string>
+    <string name="leave_note_label">事由（选填）</string>
+    <string name="leave_note_hint">比如：感冒发烧、校运会志愿者</string>
+    <string name="leave_preview_label">涉及的课</string>
+    <string name="leave_preview_none">这段时间内没有课</string>
+    <string name="leave_preview_count">涉及 %1$d 节课</string>
+    <string name="leave_preview_section">第 %1$d 节</string>
+    <string name="leave_preview_sections">第 %1$d–%2$d 节</string>
+    <string name="leave_preview_more">……还有 %1$d 节</string>
+    <string name="leave_save">保存</string>
+    <string name="leave_delete">删除</string>
+    <string name="leave_saved">已保存请假</string>
+    <string name="leave_deleted">已删除请假</string>
+    <string name="leave_restored">已恢复请假</string>
+    <string name="leave_status_ongoing">进行中</string>
+    <string name="leave_status_ended">已结束</string>
+    <string name="leave_row_classes">涉及 %1$d 节课</string>
+    <string name="leave_row_no_classes">时段内没有课</string>
+    <string name="leave_need_semester_title">暂时不能请假</string>
+    <string name="leave_need_semester">这份课表没有开学日期，算不出每节课是哪一天，所以没法按时间请假。</string>
+    <string name="detail_leave_action">这节课请假</string>
+    <string name="detail_leave_active">%1$s · %2$s</string>
 </resources>
