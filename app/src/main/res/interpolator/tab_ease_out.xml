@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 页签切换的缓出曲线：起步快、收尾慢（同 Flutter 的 Curves.easeOut） -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0"
+    android:controlY1="0"
+    android:controlX2="0.58"
+    android:controlY2="1" />

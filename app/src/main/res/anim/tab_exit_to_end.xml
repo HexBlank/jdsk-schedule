@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主界面页签切换：往前切，旧页向右滑出去 -->
+<translate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:fromXDelta="0"
+    android:interpolator="@interpolator/tab_ease_out"
+    android:toXDelta="100%" />
