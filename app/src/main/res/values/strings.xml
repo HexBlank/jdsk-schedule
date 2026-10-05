@@ -721,9 +721,7 @@
 
     <!-- 请假（本机私有，不随课表同步） -->
     <string name="leave_title">请假</string>
-    <string name="leave_entry">请假</string>
-    <string name="leave_entry_count">请假 %1$d</string>
-    <string name="leave_list_desc">请假只记在这台手机上，不会同步给用同一份课表的同学。请假时段内的课会标成「请假」或「公假」，也不再提醒。</string>
+    <string name="leave_list_desc">请假只记在这台手机上，不会同步给用同一份课表的同学。请假时段内的课会标成「请假」或「公假」，也不再提醒。只请一节课的话，在课表上点那节课更快。</string>
     <string name="leave_list_empty">还没有请假记录</string>
     <string name="leave_add">新增请假</string>
     <string name="leave_new_title">新增请假</string>
@@ -758,6 +756,10 @@
     <string name="leave_need_semester_title">暂时不能请假</string>
     <string name="leave_need_semester">这份课表没有开学日期，算不出每节课是哪一天，所以没法按时间请假。</string>
     <string name="detail_leave_action">这节课请假</string>
+    <string name="settings_leave_sub">记录请假或公假，时段内的课不再提醒</string>
+    <string name="settings_leave_sub_active">有 %1$d 条还没结束的请假</string>
+    <string name="settings_leave_no_schedule_title">还没有课表</string>
+    <string name="settings_leave_no_schedule">先导入或加入一份课表，才能按课表请假。</string>
     <string name="detail_leave_active">%1$s · %2$s</string>
 
     <!-- 桌面小部件 -->

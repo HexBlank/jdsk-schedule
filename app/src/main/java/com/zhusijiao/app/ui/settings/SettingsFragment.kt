@@ -19,15 +19,18 @@ import com.zhusijiao.app.MainActivity
 import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
 import com.zhusijiao.app.data.AppUpdater
+import com.zhusijiao.app.data.LeaveStore
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.data.UpdateCheck
 import com.zhusijiao.app.databinding.FragmentSettingsBinding
 import com.zhusijiao.app.domain.ServerAddress
 import com.zhusijiao.app.domain.UpdateChannelOptions
+import com.zhusijiao.app.reminder.ClassReminders
 import com.zhusijiao.app.reminder.ReminderPermissions
 import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ChannelSheet
+import com.zhusijiao.app.ui.common.LeaveFlow
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
 import com.zhusijiao.app.ui.common.SupportSheet
@@ -35,7 +38,9 @@ import com.zhusijiao.app.ui.couple.CoupleBindActivity
 import com.zhusijiao.app.ui.reminder.ClassReminderActivity
 import com.zhusijiao.app.util.SyncLogClipboard
 import com.zhusijiao.app.util.Ui
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebViewDatabase
@@ -57,6 +62,7 @@ class SettingsFragment : Fragment(), Refreshable {
         BottomNavView.padScrollContent(binding.scroll)
         bindStatus()
         bindReminderRow()
+        bindLeaveRow()
         bindAppearanceRow()
         bindUpdateSection()
         bindServerRow()
@@ -105,6 +111,7 @@ class SettingsFragment : Fragment(), Refreshable {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        leaveFlow.dismiss()
         _binding = null
     }
 
@@ -112,6 +119,7 @@ class SettingsFragment : Fragment(), Refreshable {
         if (_binding != null) {
             bindStatus()
             bindReminderRow()
+            bindLeaveRow()
             bindCoupleRow()
             bindAppearanceRow()
             bindServerRow()
@@ -131,6 +139,40 @@ class SettingsFragment : Fragment(), Refreshable {
         }
         binding.menuReminder.setOnClickListener {
             startActivity(Intent(requireContext(), ClassReminderActivity::class.java))
+        }
+    }
+
+    private val leaveFlow = LeaveFlow(this) { bindLeaveRow() }
+
+    /**
+     * 「请假」行：副标题说明还有几条没结束的请假；点击打开请假记录（按当前课表算涉及哪些课）。
+     * 请假不是常用功能，所以记录放在设置里；给单节课请假在课程详情里更顺手。
+     */
+    private fun bindLeaveRow() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val leaves = withContext(Dispatchers.IO) { LeaveStore.list() }
+            if (_binding == null) return@launch
+            val now = System.currentTimeMillis()
+            val active = leaves.count { (it.endAtMillis ?: 0L) > now }
+            binding.leaveSub.text = if (active > 0) getString(R.string.settings_leave_sub_active, active)
+            else getString(R.string.settings_leave_sub)
+        }
+        binding.menuLeave.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val (schedule, leaves) = withContext(Dispatchers.IO) {
+                    ClassReminders.currentSchedule() to LeaveStore.list()
+                }
+                if (_binding == null) return@launch
+                if (schedule == null) {
+                    Ui.alert(
+                        requireContext(),
+                        getString(R.string.settings_leave_no_schedule_title),
+                        getString(R.string.settings_leave_no_schedule)
+                    )
+                } else {
+                    leaveFlow.showList(schedule, leaves)
+                }
+            }
         }
     }
 

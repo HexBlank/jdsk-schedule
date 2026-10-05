@@ -24,7 +24,6 @@ import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.Leave
-import com.zhusijiao.app.domain.Leaves
 import com.zhusijiao.app.domain.NextClass
 import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.ReminderOccurrence
@@ -39,8 +38,7 @@ import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.EventDetailSheet
 import com.zhusijiao.app.ui.common.HolidaySheet
-import com.zhusijiao.app.ui.common.LeaveEditorSheet
-import com.zhusijiao.app.ui.common.LeaveListSheet
+import com.zhusijiao.app.ui.common.LeaveFlow
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.TimetableView
 import com.zhusijiao.app.ui.common.RescheduleSheet
@@ -77,9 +75,6 @@ class ScheduleFragment : Fragment(), Refreshable {
     /** 打开中的调休面板：保存后就地刷新，不必关掉再进。 */
     private var holidaySheet: HolidaySheet? = null
 
-    /** 打开中的请假记录面板：增删改后就地刷新。 */
-    private var leaveListSheet: LeaveListSheet? = null
-
     /** 从设置页跳过来时先记下，等课表视图就绪再弹外观面板。 */
     private var pendingAppearanceSheet = false
 
@@ -105,7 +100,6 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.weekCenter.setOnClickListener { showWeekPicker() }
         binding.backToCurrentWeek.setOnClickListener { binding.timetable.goToWeek(currentWeekNumber) }
         binding.nextClassBar.setOnClickListener { openNextClass() }
-        binding.leaveEntry.setOnClickListener { showLeaveList() }
         binding.emptyImport.setOnClickListener {
             startActivity(Intent(requireContext(), ImportActivity::class.java))
         }
@@ -137,8 +131,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.root.removeCallbacks(nextClassTick)
         holidaySheet?.dismiss()
         holidaySheet = null
-        leaveListSheet?.dismiss()
-        leaveListSheet = null
+        leaveFlow.dismiss()
         _binding = null
     }
 
@@ -207,7 +200,6 @@ class ScheduleFragment : Fragment(), Refreshable {
                 if (activeId.isNotBlank() && requested == null) notifyMissingSchedule(activeId, loadedSchedule.name)
                 else maybePromptGone(loadedSchedule)
                 maybeShowStateStyleTip()
-                updateLeaveEntry()
                 syncRemoteThenReload(syncRemote)
             } catch (e: Exception) {
                 binding.errorMessage.text = e.message ?: getString(R.string.index_load_failed_title)
@@ -237,113 +229,24 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     // ===== 请假 =====
 
-    /** 周次栏左侧的胶囊：有还没结束的请假时带上条数，一眼知道「我现在记着几条假」。 */
-    private fun updateLeaveEntry() {
-        val b = _binding ?: return
-        val now = System.currentTimeMillis()
-        val active = leaves.count { (it.endAtMillis ?: 0L) > now }
-        b.leaveEntry.text = if (active > 0) getString(R.string.leave_entry_count, active) else getString(R.string.leave_entry)
-    }
-
-    /** 没有开学日期的课表推不出每节课是哪一天，没法按时间请假：说明原因，不进面板。 */
-    private fun leaveReadySchedule(): Schedule? {
-        val current = schedule ?: return null
-        if (DateUtils.hasSemesterStart(current.semesterStart)) return current
-        Ui.alert(requireContext(), getString(R.string.leave_need_semester_title), getString(R.string.leave_need_semester))
-        return null
-    }
-
-    private fun showLeaveList() {
-        val current = leaveReadySchedule() ?: return
-        val sheet = LeaveListSheet(
-            requireContext(),
-            current,
-            leaves,
-            onAdd = {
-                // 默认请今天一整个教学日：第一节上课到最后一节下课
-                val slots = ScheduleTime.slotsOf(current.timeSlots)
-                val lastSection = current.courses.maxOfOrNull { it.endSection } ?: slots.last().number
-                val today = DateUtils.formatDate(Calendar.getInstance())
-                val startMinutes = ScheduleTime.minutesOf(slots.first().startTime) ?: 8 * 60
-                val endMinutes = ScheduleTime.minutesOf(slots.find { it.number == lastSection }?.endTime) ?: 18 * 60
-                showLeaveEditor(null, Leaves.moment(today, startMinutes), Leaves.moment(today, maxOf(endMinutes, startMinutes + 1)))
-            },
-            onEdit = { leave -> showLeaveEditor(leave, leave.start, leave.end) }
-        )
-        sheet.setOnDismissListener { if (leaveListSheet === sheet) leaveListSheet = null }
-        leaveListSheet = sheet
-        sheet.show()
-    }
-
-    /** 从课程详情进入：已请假的打开那条请假，否则按这节课的上下课时间预填一条。 */
-    private fun showLeaveForCourse(click: TimetableView.CourseClick) {
-        val current = leaveReadySchedule() ?: return
-        click.leave?.let { leave ->
-            showLeaveEditor(leave, leave.start, leave.end)
-            return
-        }
-        val dateIso = click.dateIso ?: return
-        val slots = ScheduleTime.slotsOf(current.timeSlots)
-        val startMinutes = ScheduleTime.minutesOf(slots.find { it.number == click.course.startSection }?.startTime)
-        val endMinutes = ScheduleTime.minutesOf(slots.find { it.number == click.course.endSection }?.endTime)
-        if (startMinutes == null || endMinutes == null) return
-        showLeaveEditor(null, Leaves.moment(dateIso, startMinutes), Leaves.moment(dateIso, maxOf(endMinutes, startMinutes + 1)))
-    }
-
-    private fun showLeaveEditor(existing: Leave?, start: String, end: String) {
-        val current = schedule ?: return
-        LeaveEditorSheet(
-            requireContext(),
-            current,
-            existing,
-            initialStart = start,
-            initialEnd = end,
-            onSave = { draft ->
-                persistLeaves(getString(R.string.leave_saved)) { LeaveStore.save(draft, existing?.id) }
-            },
-            onDelete = existing?.let { leave ->
-                {
-                    persistLeaves(
-                        getString(R.string.leave_deleted),
-                        undo = { persistLeaves(getString(R.string.leave_restored)) { LeaveStore.restore(leave) } }
-                    ) { LeaveStore.delete(leave.id) }
-                }
-            }
-        ).show()
-    }
-
-    /** 请假增删改：落盘后就地重绘课表、刷新「下一节课」和请假面板；[undo] 非空时轻提示带「撤销」。 */
-    private fun persistLeaves(message: String, undo: (() -> Unit)? = null, block: () -> Unit) {
-        if (_binding == null) return
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val loaded = withContext(Dispatchers.IO) {
-                    block()
-                    LeaveStore.list()
-                }
-                if (_binding == null) return@launch
-                leaves = loaded
-                schedule?.let { current ->
-                    binding.timetable.setSchedule(
-                        current,
-                        events = events,
-                        jumpToCurrent = false,
-                        weekendMode = Prefs.weekendDisplayMode,
-                        leaves = leaves
-                    )
-                    binding.timetable.goToWeek(currentWeek)
-                }
-                updateNextClass()
-                updateLeaveEntry()
-                leaveListSheet?.update(leaves)
-                Ui.toastSuccess(
-                    requireContext(),
-                    message,
-                    undo?.let { AppToast.Action(getString(R.string.common_undo)) { it() } }
+    /**
+     * 请假不是常用功能，课表页上不单独放按钮：这里只接课程详情里的「这节课请假」，
+     * 看全部记录、请跨天的长假在设置页。两处共用 [LeaveFlow]。
+     */
+    private val leaveFlow = LeaveFlow(this) { loaded ->
+        if (_binding != null) {
+            leaves = loaded
+            schedule?.let { current ->
+                binding.timetable.setSchedule(
+                    current,
+                    events = events,
+                    jumpToCurrent = false,
+                    weekendMode = Prefs.weekendDisplayMode,
+                    leaves = leaves
                 )
-            } catch (error: Exception) {
-                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+                binding.timetable.goToWeek(currentWeek)
             }
+            updateNextClass()
         }
     }
 
@@ -490,7 +393,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             click,
             canEdit = current.isOwner,
             // 请假是本机私有的，订阅来的课表同样可以请；没有开学日期时详情里不给入口
-            onLeave = { showLeaveForCourse(click) },
+            onLeave = { leaveFlow.showForCourse(current, click) },
             onReschedule = {
                 RescheduleSheet(requireContext(), current, click) { draft ->
                     viewLifecycleOwner.lifecycleScope.launch {
