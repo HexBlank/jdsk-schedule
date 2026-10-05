@@ -794,4 +794,43 @@
     <string name="widget_date_day">%1$d月%2$d日 %3$s</string>
     <string name="widget_more">还有 %1$d 节</string>
     <string name="widget_section_day">%1$s · %2$s</string>
+
+    <!-- 自己加课（本机私有，并进当前课表一起显示） -->
+    <string name="add_entry_title">在%1$s第 %2$d 节添加</string>
+    <string name="add_entry_course">一节课</string>
+    <string name="add_entry_course_desc">课表里没有的选修、重修、实验课。和导入的课一样提醒、请假、进桌面小部件</string>
+    <string name="add_entry_event">一条日程</string>
+    <string name="add_entry_event_desc">社团、兼职这类课以外的安排，可以精确到分钟</string>
+    <string name="course_new_title">自己加课</string>
+    <string name="course_edit_title">修改课程</string>
+    <string name="course_extra_privacy">自己加的课只存在这台手机，不会同步给用同一份课表的同学；重新导入课表也不会丢。</string>
+    <string name="course_headline">%1$s · %2$s</string>
+    <string name="course_headline_pending">先点下面的格子，选这门课上第几节</string>
+    <string name="course_name_label">课程名称</string>
+    <string name="course_name_hint">例如：大学物理实验</string>
+    <string name="course_day_label">星期</string>
+    <string name="course_day_prefix">周</string>
+    <string name="course_sections_label">节次</string>
+    <string name="course_sections_value">第 %1$s 节</string>
+    <string name="course_section_hint_end">再点一格可以选到第几节结束，例如第 3–4 节</string>
+    <string name="course_weeks_label">上课周次</string>
+    <string name="course_weeks_to">到</string>
+    <string name="course_week_value">第 %1$d 周</string>
+    <string name="course_start_week_label">从第几周开始</string>
+    <string name="course_end_week_label">到第几周结束</string>
+    <string name="course_weeks_empty">这个范围里没有符合的周次，换一下起止周或单双周</string>
+    <string name="course_position_label">教室（选填）</string>
+    <string name="course_position_hint">例如：实验楼 B204</string>
+    <string name="course_teacher_label">教师（选填）</string>
+    <string name="course_teacher_hint">例如：王老师</string>
+    <string name="course_conflict_hint">和 %1$s 时间重叠。可以照常保存，课表上会并排显示。</string>
+    <string name="course_conflict_item">「%1$s」（第 %2$s 周）</string>
+    <string name="course_save">保存</string>
+    <string name="course_saved">课程已保存</string>
+    <string name="course_no_section">请先点选这门课上第几节</string>
+    <string name="course_extra_note">这是你自己加的课，只存在这台手机上，不会同步给同学。</string>
+    <string name="course_extra_edit">编辑</string>
+    <string name="course_extra_delete">删除</string>
+    <string name="course_extra_deleted">课程已删除</string>
+    <string name="course_extra_restored">课程已恢复</string>
 </resources>

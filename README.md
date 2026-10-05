@@ -61,12 +61,12 @@
 app/                 原生 Android 应用（Kotlin + XML Views，AppCompat-only）
   src/main/java/com/zhusijiao/app/
     AppConfig.kt       全局配置：后端域名（唯一变量）、教务入口
-    domain/            模型、日期、配色/周次、EAMS 解析器、日程、请假、情侣课表（按人分栏、当天安排、都有空）
+    domain/            模型、日期、配色/周次、EAMS 解析器、日程、请假、自己加的课、情侣课表（按人分栏、当天安排、都有空）
     data/              ApiClient（OkHttp）、原子本机存储、离线缓存、情侣状态、Prefs
     ui/common/         AppHeader、BottomNavView（悬浮底栏）、TimetableView、情侣日视图、各类底部面板、BaseActivity
     reminder/          上课提醒：排下一次定时、发通知、开机/改时间后重排、系统授权检测
     widget/            桌面小部件：下一节课、今日课程、本周课表
-    ui/schedule|library|settings|importer|join|share|eams|event|couple|reminder/   各页面
+    ui/schedule|library|settings|importer|join|share|eams|event|course|couple|reminder/   各页面
   src/main/assets/eams-export.js   WebView 注入的教务课表导出脚本
 backend/             Fastify + SQLite 后端（匿名设备登录、课表与调课服务、情侣绑定）
 backend/public/app/  应用更新分发目录（release.json + APK）

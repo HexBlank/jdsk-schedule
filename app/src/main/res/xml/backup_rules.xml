@@ -5,4 +5,5 @@
     <exclude domain="database" path="." />
     <exclude domain="file" path="schedules/" />
     <exclude domain="file" path="leaves/" />
+    <exclude domain="file" path="extras/" />
 </full-backup-content>

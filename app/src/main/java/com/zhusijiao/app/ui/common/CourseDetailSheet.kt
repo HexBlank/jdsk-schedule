@@ -25,7 +25,10 @@ class CourseDetailSheet(
     /** 只读时的说明；默认是「通过分享码加入的课表」那一句，情侣课表里换成更贴切的话。 */
     readOnlyNote: String? = null,
     /** 「这节课请假」或查看已有请假；为 null 时不显示入口（情侣课表、没有开学日期的课表）。 */
-    onLeave: (() -> Unit)? = null
+    onLeave: (() -> Unit)? = null,
+    /** 自己加的课：底部给「编辑」和「删除」（课表自带的课不传，照旧是调课）。 */
+    onEditExtra: (() -> Unit)? = null,
+    onDeleteExtra: (() -> Unit)? = null
 ) :
     Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
 
@@ -114,6 +117,22 @@ class CourseDetailSheet(
             findViewById<TextView>(R.id.sheetUndo).apply {
                 visibility = View.VISIBLE
                 setOnClickListener { dismiss(); onUndo?.invoke() }
+            }
+        }
+        // 自己加的课不走调课（它不在课表里，调课记录无处可存），直接改或删；两个按钮借用调课那两个位置
+        if (onEditExtra != null) {
+            findViewById<TextView>(R.id.sheetReschedule).apply {
+                visibility = View.VISIBLE
+                setText(R.string.course_extra_edit)
+                setOnClickListener { dismiss(); onEditExtra() }
+            }
+        }
+        if (onDeleteExtra != null) {
+            findViewById<TextView>(R.id.sheetUndo).apply {
+                visibility = View.VISIBLE
+                setText(R.string.course_extra_delete)
+                setTextColor(ContextCompat.getColor(context, R.color.danger_action))
+                setOnClickListener { dismiss(); onDeleteExtra() }
             }
         }
 

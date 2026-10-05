@@ -165,6 +165,7 @@ object ApiClient {
             val record = syncRecordFor(schedule)
             LocalScheduleStore.deleteSchedule(id)
             PersonalEventStore.removeSchedule(id)
+            ExtraCourseStore.removeSchedule(id)
             when {
                 record == null -> Unit
                 // 服务端已经没有这份课表（或已不是成员）：退出请求没有意义，直接丢掉映射，
@@ -185,6 +186,7 @@ object ApiClient {
             val record = syncRecordFor(schedule)
             LocalScheduleStore.deleteSchedule(id)
             PersonalEventStore.removeSchedule(id)
+            ExtraCourseStore.removeSchedule(id)
             if (record != null) ScheduleSyncStore.markPending(record, ScheduleSyncStore.PendingAction.DELETE)
         }
     }
@@ -193,6 +195,7 @@ object ApiClient {
         withContext(Dispatchers.IO) {
             LocalScheduleStore.deleteAll()
             PersonalEventStore.clear()
+            ExtraCourseStore.clear()
             LeaveStore.clear()
         }
         if (!isLocalMode) {

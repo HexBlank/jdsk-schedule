@@ -18,12 +18,14 @@ import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.MainActivity
 import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
+import com.zhusijiao.app.data.ExtraCourseStore
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.databinding.FragmentCoupleBinding
 import com.zhusijiao.app.domain.CoupleDay
 import com.zhusijiao.app.domain.CoupleState
 import com.zhusijiao.app.domain.DateUtils
+import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
@@ -176,7 +178,10 @@ class CoupleFragment : Fragment(), Refreshable {
     private suspend fun readLocal() {
         state = ApiClient.coupleState()
         val activeId = Prefs.activeScheduleId
-        mySchedule = ApiClient.listSchedules().find { it.id == activeId }
+        // 我这边按并入自己加的课之后的课表算（TA 那边看不到我自己加的课：它们只在这台手机上）
+        mySchedule = ApiClient.listSchedules().find { it.id == activeId }?.let { stored ->
+            ExtraCourses.merge(stored, withContext(Dispatchers.IO) { ExtraCourseStore.list(stored.id) })
+        }
         myEvents = mySchedule?.let { schedule ->
             withContext(Dispatchers.IO) { PersonalEventStore.list(schedule.id) }
         } ?: emptyList()

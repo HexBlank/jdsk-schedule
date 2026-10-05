@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自己加课 / 修改自己加的课：名称、星期、节次、周次是主路径，教师和教室选填 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <com.zhusijiao.app.ui.common.AppHeader
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/page_padding"
+            android:paddingEnd="@dimen/page_padding"
+            android:paddingBottom="24dp">
+
+            <!-- 实时摘要放最上面：一眼确认「加在周几第几节、上哪几周」 -->
+            <TextView
+                android:id="@+id/courseHeadline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/accent_strong"
+                android:textSize="@dimen/text_subtitle"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:lineSpacingMultiplier="1.35"
+                android:text="@string/course_extra_privacy"
+                android:textColor="@color/sub_9b"
+                android:textSize="@dimen/text_hint" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/course_name_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/courseName"
+                style="@style/FieldInput"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@null"
+                android:hint="@string/course_name_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLength="40"
+                android:minHeight="50dp"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/course_day_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                android:id="@+id/courseDay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/course_sections_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <com.zhusijiao.app.ui.common.SectionPickerView
+                android:id="@+id/courseSections"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/courseSectionHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="1dp"
+                android:textColor="@color/sub_9b"
+                android:textSize="@dimen/text_hint" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/course_weeks_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.zhusijiao.app.ui.common.StepperFieldView
+                    android:id="@+id/courseStartWeek"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="@string/course_weeks_to"
+                    android:textColor="@color/sub_8a"
+                    android:textSize="@dimen/text_small" />
+
+                <com.zhusijiao.app.ui.common.StepperFieldView
+                    android:id="@+id/courseEndWeek"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+            <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                android:id="@+id/courseRepeat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/courseWeeksSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/sub_9b"
+                android:textSize="@dimen/text_hint" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/course_position_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/coursePosition"
+                style="@style/FieldInput"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@null"
+                android:hint="@string/course_position_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLength="40"
+                android:minHeight="50dp"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/course_teacher_label"
+                android:textColor="@color/field_label"
+                android:textSize="@dimen/text_hint"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/courseTeacher"
+                style="@style/FieldInput"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@null"
+                android:hint="@string/course_teacher_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLength="30"
+                android:minHeight="50dp"
+                android:singleLine="true" />
+
+            <!-- 和别的课时间重叠时提前说明：不拦，保存后两门并排显示 -->
+            <TextView
+                android:id="@+id/courseConflict"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_detail_cell"
+                android:lineSpacingMultiplier="1.35"
+                android:padding="11dp"
+                android:textColor="@color/warn"
+                android:textSize="@dimen/text_hint"
+                android:visibility="gone" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/page_padding"
+        android:paddingTop="10dp"
+        android:paddingEnd="@dimen/page_padding"
+        android:paddingBottom="10dp">
+
+        <!-- 与日程编辑页一致：不拉满整行，避免按钮两角压在屏幕圆角上 -->
+        <TextView
+            android:id="@+id/courseSave"
+            style="@style/PrimaryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:minWidth="170dp"
+            android:minHeight="@dimen/button_min_height"
+            android:paddingStart="40dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="40dp"
+            android:paddingBottom="10dp"
+            android:text="@string/course_save" />
+    </LinearLayout>
+</LinearLayout>

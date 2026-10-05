@@ -16,13 +16,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ApiClient
+import com.zhusijiao.app.data.ExtraCourseStore
 import com.zhusijiao.app.data.LeaveStore
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.data.ScheduleSyncStore
 import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
+import com.zhusijiao.app.domain.Course
 import com.zhusijiao.app.domain.DateUtils
+import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.Leave
 import com.zhusijiao.app.domain.NextClass
 import com.zhusijiao.app.domain.PersonalEvent
@@ -31,6 +34,7 @@ import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimetableAppearance
+import com.zhusijiao.app.ui.common.AddEntrySheet
 import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.BottomNavView
@@ -43,6 +47,7 @@ import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.TimetableView
 import com.zhusijiao.app.ui.common.RescheduleSheet
 import com.zhusijiao.app.ui.common.WeekPickerSheet
+import com.zhusijiao.app.ui.course.CourseEditorActivity
 import com.zhusijiao.app.ui.event.EventEditorActivity
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
@@ -67,6 +72,12 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     /** 本机的请假记录，不随课表同步、也不按课表分组（请假说的是「我这段时间不在」）。 */
     private var leaves: List<Leave> = emptyList()
+
+    /**
+     * 自己加的课（本机私有）。[schedule] 里存的是已经把它们并进去的课表，
+     * 所以显示、调课冲突、请假、下一节课都不用再单独考虑；保存类操作只传 id 和草稿，不受影响。
+     */
+    private var extras: List<Course> = emptyList()
     private var currentWeekNumber = 1
     private var currentWeek = 1
     private var restoredWeek: Int? = null
@@ -91,9 +102,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.onCourseLongClick = { click -> showCourseColorSheet(click) }
         binding.timetable.onDayClick = { click -> showHolidaySheet(click.week, click.day) }
         binding.timetable.onEventClick = { click -> showEvent(click) }
-        binding.timetable.onEmptySlotClick = { week, day, section ->
-            showEventEditor(null, week, day, section)
-        }
+        binding.timetable.onEmptySlotClick = { week, day, section -> showAddChoice(week, day, section) }
         binding.timetable.onWeekChanged = { week, isFirst, isLast -> updateWeekBar(week, isFirst, isLast) }
         binding.prevWeek.setOnClickListener { binding.timetable.previousWeek() }
         binding.nextWeek.setOnClickListener { binding.timetable.nextWeek() }
@@ -155,6 +164,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                     schedule = null
                     events = emptyList()
                     leaves = emptyList()
+                    extras = emptyList()
                     binding.timetable.setSchedule(null)
                     binding.header.setTitle(getString(R.string.index_default_title))
                     binding.header.clearActions()
@@ -165,7 +175,9 @@ class ScheduleFragment : Fragment(), Refreshable {
                 }
                 val requested = schedules.find { it.id == activeId }
                 val summary = requested ?: schedules[0]
-                val loadedSchedule = ApiClient.getSchedule(summary.id)
+                val stored = ApiClient.getSchedule(summary.id)
+                extras = withContext(Dispatchers.IO) { ExtraCourseStore.list(stored.id) }
+                val loadedSchedule = ExtraCourses.merge(stored, extras)
                 events = withContext(Dispatchers.IO) { PersonalEventStore.list(loadedSchedule.id) }
                 leaves = withContext(Dispatchers.IO) { LeaveStore.list() }
                 // 同一份课表刷新（切后台回前台、同步完成等）时保持用户正在浏览的周次，
@@ -388,6 +400,10 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     private fun showCourse(click: com.zhusijiao.app.ui.common.TimetableView.CourseClick) {
         val current = schedule ?: return
+        if (ExtraCourses.isExtra(click.course)) {
+            showExtraCourse(current, click)
+            return
+        }
         CourseDetailSheet(
             requireContext(),
             click,
@@ -456,7 +472,9 @@ class ScheduleFragment : Fragment(), Refreshable {
         }
     }
 
-    private fun applyUpdatedSchedule(updated: Schedule) {
+    /** 调课、调休、改色保存后拿到的是课表本身，要重新并入自己加的课再显示。 */
+    private fun applyUpdatedSchedule(stored: Schedule) {
+        val updated = ExtraCourses.merge(stored, extras)
         schedule = updated
         binding.header.setTitle(updated.name)
         updateHeaderActions()
@@ -469,6 +487,81 @@ class ScheduleFragment : Fragment(), Refreshable {
         )
         binding.timetable.goToWeek(currentWeek)
     }
+
+    // ===== 自己加的课 =====
+
+    /** 点空格子：先问加一节课还是加一条日程（都只存在本机，订阅来的课表同样可以加）。 */
+    private fun showAddChoice(week: Int, day: Int, section: Int) {
+        val current = schedule ?: return
+        AddEntrySheet(
+            requireContext(),
+            title = getString(R.string.add_entry_title, dayNames.getOrElse(day - 1) { "" }, section),
+            onCourse = {
+                startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, section))
+            },
+            onEvent = { showEventEditor(null, week, day, section) }
+        ).show()
+    }
+
+    /**
+     * 自己加的课的详情：不能调课（它不在课表里），底部换成「编辑」和「删除」。
+     * 编辑页保存后回到本页，MainActivity.onResume 会触发 refresh() 重新读取。
+     */
+    private fun showExtraCourse(current: Schedule, click: TimetableView.CourseClick) {
+        CourseDetailSheet(
+            requireContext(),
+            click,
+            canEdit = false,
+            readOnlyNote = getString(R.string.course_extra_note),
+            onLeave = { leaveFlow.showForCourse(current, click) },
+            onEditExtra = {
+                startActivity(
+                    CourseEditorActivity.intent(
+                        requireContext(), current.id, click.course.id, click.course.day, click.course.startSection
+                    )
+                )
+            },
+            onDeleteExtra = { deleteExtraCourse(current.id, click.course.id) }
+        ).show()
+    }
+
+    /** 删除自己加的课：直接删，轻提示里可以撤销。 */
+    private fun deleteExtraCourse(scheduleId: String, courseId: String) {
+        if (_binding == null) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val removed = withContext(Dispatchers.IO) {
+                    ExtraCourseStore.list(scheduleId).find { it.id == courseId }
+                        .also { ExtraCourseStore.delete(scheduleId, courseId) }
+                }
+                load(silent = true, syncRemote = false)
+                Ui.toastSuccess(
+                    requireContext(),
+                    getString(R.string.course_extra_deleted),
+                    removed?.let { course ->
+                        AppToast.Action(getString(R.string.common_undo)) { restoreExtraCourse(scheduleId, course) }
+                    }
+                )
+            } catch (error: Exception) {
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
+    }
+
+    private fun restoreExtraCourse(scheduleId: String, course: Course) {
+        if (_binding == null) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                withContext(Dispatchers.IO) { ExtraCourseStore.restore(scheduleId, course) }
+                load(silent = true, syncRemote = false)
+                Ui.toastSuccess(requireContext(), getString(R.string.course_extra_restored))
+            } catch (error: Exception) {
+                Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            }
+        }
+    }
+
+    private val dayNames = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
 
     // ===== 自定义日程 =====
 
@@ -705,6 +798,15 @@ class ScheduleFragment : Fragment(), Refreshable {
     /** 长按课程手动选色：手动颜色优先于自动配色，随课表同步给加入的同学。 */
     private fun showCourseColorSheet(click: TimetableView.CourseClick) {
         val current = schedule ?: return
+        // 自己加的课颜色自动配，长按直接进编辑（课表的手动配色是发布者同步给全班的，不该混进私人的课）
+        if (ExtraCourses.isExtra(click.course)) {
+            startActivity(
+                CourseEditorActivity.intent(
+                    requireContext(), current.id, click.course.id, click.course.day, click.course.startSection
+                )
+            )
+            return
+        }
         if (!current.isOwner) {
             Ui.toastError(requireContext(), getString(R.string.course_colors_owner_only))
             return
@@ -766,7 +868,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             try {
                 val updated = block()
                 applyUpdatedSchedule(updated)
-                holidaySheet?.applySchedule(updated)
+                holidaySheet?.applySchedule(schedule ?: updated)
                 Ui.toastSuccess(requireContext(), successMessage(updated))
             } catch (error: Exception) {
                 Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))

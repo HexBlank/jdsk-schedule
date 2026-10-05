@@ -9,9 +9,11 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.R
+import com.zhusijiao.app.data.ExtraCourseStore
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.databinding.ActivityEventEditorBinding
 import com.zhusijiao.app.data.LocalScheduleStore
+import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.PersonalEventDraft
 import com.zhusijiao.app.domain.PersonalEventValidator
@@ -76,7 +78,9 @@ class EventEditorActivity : BaseActivity() {
 
         lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
+                // 查日程和课的时间重叠时，自己加的课也算课
                 val target = LocalScheduleStore.getScheduleOrNull(scheduleId)
+                    ?.let { ExtraCourses.merge(it, ExtraCourseStore.list(scheduleId)) }
                 target to PersonalEventStore.list(scheduleId)
             }
             val target = loaded.first

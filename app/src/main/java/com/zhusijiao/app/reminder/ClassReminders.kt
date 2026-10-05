@@ -11,11 +11,13 @@ import android.os.Build
 import com.zhusijiao.app.MainActivity
 import com.zhusijiao.app.MainApplication
 import com.zhusijiao.app.R
+import com.zhusijiao.app.data.ExtraCourseStore
 import com.zhusijiao.app.data.LeaveStore
 import com.zhusijiao.app.data.LocalScheduleStore
 import com.zhusijiao.app.data.PersonalEventStore
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.domain.ClassReminderPlanner
+import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.ReminderOccurrence
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.widget.ScheduleWidgets
@@ -73,10 +75,16 @@ object ClassReminders {
         }
     }
 
-    /** 当前课表（与课表页口径一致：记住的那份，找不到时取最近更新的一份）。 */
-    fun currentSchedule(): Schedule? =
-        LocalScheduleStore.getScheduleOrNull(Prefs.activeScheduleId)
+    /**
+     * 当前课表（与课表页口径一致：记住的那份，找不到时取最近更新的一份），已并入自己加的课——
+     * 自己加的课和导入的课一样要提醒、要进桌面小部件。会读本机文件，请在后台线程调用。
+     */
+    fun currentSchedule(): Schedule? {
+        val stored = LocalScheduleStore.getScheduleOrNull(Prefs.activeScheduleId)
             ?: LocalScheduleStore.listSchedules().firstOrNull()
+            ?: return null
+        return ExtraCourses.merge(stored, ExtraCourseStore.list(stored.id))
+    }
 
     /**
      * 按当前设置和课表算一遍排期（不发通知、不改定时），设置页展示「下一次提醒」用。
