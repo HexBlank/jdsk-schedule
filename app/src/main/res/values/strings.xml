@@ -85,7 +85,7 @@
     <string name="reschedule_orphaned">原课程在最近一次重新导入后已不存在。为避免丢失，本次调课仍按快照显示；可撤销后重新选择课程调课。</string>
 
     <!-- 停课与补课（假期调休）：日历直选，不再让用户心算「第几周周几」 -->
-    <string name="holiday_title">调休安排</string>
+    <string name="holiday_title">调休</string>
     <string name="holiday_week_notice">第 1 周从 %1$s（周一）算起</string>
     <string name="holiday_list_label">已有安排</string>
     <string name="holiday_list_count">已有安排 · %1$d</string>
@@ -96,9 +96,9 @@
     <string name="holiday_row_makeup">补课 · %1$s → %2$s</string>
     <string name="holiday_delete">删除</string>
     <string name="holiday_delete_suspend_title">删除停课？</string>
-    <string name="holiday_delete_suspend_content">%1$s 将恢复上课。</string>
+    <string name="holiday_delete_suspend_content">%1$s 恢复上课。</string>
     <string name="holiday_delete_makeup_title">删除补课？</string>
-    <string name="holiday_delete_makeup_content">%1$s 的补课将取消，该日恢复无课。</string>
+    <string name="holiday_delete_makeup_content">%1$s 的补课取消。</string>
 
     <!-- 日历 -->
     <string name="holiday_calendar_description">学期日历，点选日期设置停课或补课</string>
@@ -107,37 +107,37 @@
 
     <!-- 所选日期 -->
     <string name="holiday_pick_hint">选择日期</string>
-    <string name="holiday_no_selection">还没有选日期</string>
+    <string name="holiday_no_selection">未选日期</string>
     <string name="holiday_selected_title">%1$s · 第%2$d周</string>
-    <string name="holiday_selected_courses">这一天有 %1$d 门课：%2$s</string>
+    <string name="holiday_selected_courses">%1$d 门课：%2$s</string>
     <string name="holiday_selected_more">等</string>
-    <string name="holiday_selected_none">这一天没有课</string>
+    <string name="holiday_selected_none">无课</string>
     <string name="holiday_state_suspended">已停课</string>
-    <string name="holiday_state_makeup_target">补课日 · 这天上 %1$s 的课</string>
-    <string name="holiday_state_makeup_source">这天的课已补到 %1$s</string>
+    <string name="holiday_state_makeup_target">补课日 · 上 %1$s 的课</string>
+    <string name="holiday_state_makeup_source">课已补到 %1$s</string>
 
     <!-- 停课 -->
-    <string name="holiday_duration_label">连停几天</string>
+    <string name="holiday_duration_label">连停</string>
     <string name="holiday_days_label">连续停课天数</string>
     <string name="holiday_days_value">%1$d 天</string>
     <string name="holiday_range_format">%1$s – %2$s · 共 %3$d 天</string>
-    <string name="holiday_action_suspend_day">这一天停课</string>
-    <string name="holiday_action_suspend_days">从这天起连停 %1$d 天</string>
-    <string name="holiday_action_remove_suspend">取消这一天停课</string>
-    <string name="holiday_saved_count">已设置 %1$d 天停课</string>
-    <string name="holiday_nothing_added">所选日期都已有安排，未新增停课</string>
+    <string name="holiday_action_suspend_day">停课</string>
+    <string name="holiday_action_suspend_days">停课 %1$d 天</string>
+    <string name="holiday_action_remove_suspend">取消停课</string>
+    <string name="holiday_saved_count">已停课 %1$d 天</string>
+    <string name="holiday_nothing_added">这些日子已有安排</string>
 
     <!-- 补课 -->
-    <string name="holiday_action_move_out">把这天的课补到…</string>
+    <string name="holiday_action_move_out">补到另一天…</string>
     <string name="holiday_action_add_makeup">保存补课</string>
-    <string name="holiday_action_remove_makeup">取消这次补课</string>
-    <string name="holiday_action_remove_makeup_source">取消补到 %1$s 的安排</string>
-    <string name="holiday_makeup_title">把 %1$s 的课补到…</string>
+    <string name="holiday_action_remove_makeup">取消补课</string>
+    <string name="holiday_action_remove_makeup_source">取消补到 %1$s</string>
+    <string name="holiday_makeup_title">%1$s 的课补到…</string>
     <string name="holiday_makeup_pick_hint">选择补课日</string>
     <string name="holiday_makeup_chosen">补课日：%1$s</string>
     <string name="holiday_makeup_target_courses">当天已有 %1$d 门课</string>
     <string name="holiday_makeup_target_free">当天无课</string>
-    <string name="holiday_makeup_need_target">请先在日历上点选补课日</string>
+    <string name="holiday_makeup_need_target">先在日历上选补课日</string>
 
     <string name="holiday_date_label">%1$s 周%2$s</string>
     <string name="holiday_week_fallback">第 %1$d 周周%2$s</string>
@@ -206,20 +206,15 @@
     <string name="library_count">%1$d 份</string>
     <string name="library_empty_title">暂无课表</string>
     <string name="library_active_tag">当前</string>
-    <string name="library_meta_owner">我的课表</string>
-    <string name="library_meta_sync">同步课表</string>
-    <string name="library_meta_format">%1$s · %2$d 个课程时段 · %3$d 周</string>
-    <string name="library_version_format">v%1$d · %2$s</string>
+    <string name="library_meta_format">%1$d 个时段 · %2$d 周 · %3$s</string>
     <string name="library_sync_owner">%1$d 人正在同步</string>
     <string name="library_sync_none">还没有人加入</string>
-    <string name="library_sync_subscriber">发布者更新后自动同步</string>
+    <string name="library_sync_subscriber">跟随发布者更新</string>
     <string name="library_sync_local">仅保存在本机</string>
-    <string name="library_sync_pending">已保存本机，等待联网同步</string>
-    <string name="library_sync_failed">同步失败，点此查看原因</string>
-    <string name="library_gone_deleted">发布者已删除，建议移除</string>
-    <string name="library_gone_not_member">已不在同步名单，建议移除</string>
-    <string name="library_gone_tag_deleted">已删除</string>
-    <string name="library_gone_tag_not_member">已停止同步</string>
+    <string name="library_sync_pending">等待联网同步</string>
+    <string name="library_sync_failed">同步失败</string>
+    <string name="library_gone_deleted">发布者已删除</string>
+    <string name="library_gone_not_member">已停止同步</string>
     <string name="gone_deleted_title">发布者已删除这份课表</string>
     <string name="gone_deleted_content">「%1$s」已被发布者删除，不会再更新。移除后无法恢复。</string>
     <string name="gone_not_member_title">这份课表已停止同步</string>
@@ -238,7 +233,7 @@
     <string name="schedule_missing_generic">要打开的课表已不在本机，可能已被移除。</string>
     <string name="schedule_missing_switched">现在显示的是「%1$s」。</string>
     <string name="join_missing_local">本机没有找到这份课表，请重新输入分享码加入。</string>
-    <string name="library_action_update">更新</string>
+    <string name="library_action_update">重新导入</string>
     <string name="library_action_share">分享</string>
     <string name="library_action_export">导出</string>
     <string name="library_action_delete">删除</string>
@@ -328,41 +323,27 @@
 
     <!-- 导入 import -->
     <string name="import_title">导入课表</string>
-    <string name="import_intro">支持教务系统网页登录导入，也支持导出助手生成的 JSON 或包含 TaskActivity 的页面源码。</string>
-    <string name="import_privacy_note">导入过程不读取、不保存教务账号、密码或 Cookie。</string>
     <string name="import_from_eams">从教务系统导入</string>
     <string name="import_choose_file">选择文件</string>
     <string name="import_read_clipboard">读取剪贴板</string>
-    <string name="import_show_guide">查看导出步骤</string>
+    <string name="import_show_guide">导出步骤</string>
     <string name="import_copy_helper">复制导出助手地址</string>
-    <string name="import_paste_label">粘贴源码或 JSON</string>
-    <string name="import_paste_hint">在这里粘贴导出内容</string>
-    <string name="import_parse">解析课表</string>
-    <string name="import_parsing">正在解析</string>
-    <string name="import_result">识别结果</string>
+    <string name="import_paste_hint">粘贴页面源码或 JSON</string>
+    <string name="import_parse">识别</string>
     <string name="import_result_count">%1$d 个课程时段</string>
     <string name="import_more">另有 %1$d 个时段</string>
-    <string name="import_name_label">课表名称</string>
-    <string name="import_name_hint">例如：2026 秋季课表</string>
-    <string name="import_date_label">第一周的周一</string>
-    <string name="import_date_hint">请选择日期</string>
-    <string name="import_date_week1">第 1 周：%1$s（周一）– %2$s（周日）</string>
-    <string name="import_date_snapped">开学日期已按所在周的周一算起：%1$s</string>
-    <string name="import_weeks_label">学期总周数</string>
-    <string name="import_save">创建课表</string>
-    <string name="import_mode_title">导入到哪里？</string>
-    <string name="import_mode_overwrite_loading">覆盖当前课表</string>
-    <string name="import_mode_overwrite">覆盖课表「%1$s」</string>
-    <string name="import_mode_overwrite_desc">以本次导入为准，替换当前课程和作息，并清空手动调课。</string>
-    <string name="import_mode_overwrite_adjustments">以本次导入为准；当前 %1$d 条手动调课将被删除。</string>
+    <string name="import_name_label">名称</string>
+    <string name="import_date_label">第 1 周</string>
+    <string name="import_date_hint">未设置</string>
+    <string name="import_weeks_label">总周数</string>
+    <string name="import_mode_overwrite">覆盖「%1$s」</string>
+    <string name="import_mode_overwrite_adjustments">将删除 %1$d 条手动调课</string>
     <string name="import_mode_new">新建课表</string>
-    <string name="import_mode_new_desc">保留当前课表不变，另外创建一份课表。</string>
     <string name="import_save_overwrite">覆盖所选课表</string>
     <string name="import_save_new">新建课表</string>
     <string name="import_overwrite_confirm_title">覆盖并删除手动调课？</string>
     <string name="import_overwrite_confirm_content">最新导入会完全替换「%1$s」，其中 %2$d 条手动调课将被删除。此操作无法撤销。</string>
     <string name="import_overwrite_confirm">确认覆盖</string>
-    <string name="import_parsed_count">识别到 %1$d 个时段</string>
     <string name="import_parse_failed_title">没能识别这份课表</string>
     <string name="import_need_parse">请先解析课表</string>
     <string name="import_need_name">请填写课表名称</string>
@@ -378,15 +359,20 @@
     <string name="import_clip_empty">剪贴板是空的</string>
     <string name="import_file_too_large">文件不能超过 1.8MB</string>
     <string name="import_read_failed">文件读取失败</string>
-    <string name="import_file_chars">%1$d 字符</string>
     <string name="import_week_day">周%1$s</string>
     <string name="import_preview_sub">%1$s · 第 %2$d–%3$d 节</string>
     <string name="import_week_range">%1$d–%2$d 周</string>
     <string name="import_week_list">%1$s 周</string>
-    <string name="import_guide_title">怎样从教务导入？</string>
-    <string name="import_guide_content">推荐用「从教务系统导入」：在应用内打开教务系统网页，登录后进入「学生课表」页面，再点击右下角「导入课表」，脚本只在本地解析并把结果交回应用，不上传账号、密码或 Cookie。\n\n如果网页提示读到了课表却没能自动交回，点网页上的「复制课表数据」，回到这一页点「读取剪贴板」即可继续。也可以在电脑浏览器运行导出助手生成 JSON，再回到这里选择文件或粘贴。</string>
+    <string name="import_guide_title">导出步骤</string>
+    <string name="import_guide_content">1. 点「从教务系统导入」，在打开的网页里登录
+2. 进入「学生课表」
+3. 点右下角「导入课表」
+
+网页没把课表交回来时，点网页上的「复制课表数据」，回到这里点「读取剪贴板」。
+
+也可以在电脑浏览器运行导出助手生成 JSON，再选择文件导入。</string>
     <string name="import_helper_unavailable_title">未配置数据服务</string>
-    <string name="import_helper_unavailable_content">配置 API 域名后，可复制服务端的导出助手地址；开发阶段也可直接使用仓库 backend/scripts 目录内的文件。</string>
+    <string name="import_helper_unavailable_content">本机模式下没有导出助手地址。</string>
     <string name="import_helper_copied">导出助手地址已复制</string>
     <string name="import_original_failed">原课表加载失败</string>
     <string name="import_source_eams">来自教务系统</string>
@@ -603,7 +589,6 @@
     <string name="settings_couple_row">情侣课表</string>
     <string name="settings_couple_sub_bound">%1$s</string>
 
-    <string name="library_couple_visible_tag">TA 可见</string>
     <string name="library_couple_switch_toast">已切换，TA 也会看到这份课表</string>
 
     <!-- 支持开发（完全自愿，文案不催促） -->
@@ -742,4 +727,12 @@
     <string name="export_need_dates">没有开学日期，不能导出日历</string>
     <string name="export_expired">导出中断，请重试</string>
     <string name="export_no_schedule">还没有课表</string>
+    <string name="import_paste_row">手动粘贴</string>
+    <string name="import_reselect">重新选择</string>
+    <string name="import_source_pasted">手动粘贴的内容</string>
+    <string name="import_week_count">%1$d 周</string>
+    <string name="import_week_span">%1$s – %2$s</string>
+    <string name="import_week_span_year">%1$s年 %2$s</string>
+    <string name="library_active_couple_tag">当前 · TA 可见</string>
+    <string name="library_more">更多操作</string>
 </resources>

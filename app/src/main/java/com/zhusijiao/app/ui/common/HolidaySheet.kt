@@ -95,7 +95,6 @@ class HolidaySheet(
             entriesExpanded = !entriesExpanded
             renderList()
         }
-        findViewById<View>(R.id.holidayClose).setOnClickListener { dismiss() }
 
         if (!canEdit) {
             // 订阅者看不到操作，但仍保留「所选日期」卡片，方便查哪天停课/补课。

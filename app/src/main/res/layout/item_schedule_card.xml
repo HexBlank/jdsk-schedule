@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  课表库卡片：缩略图 + 名称 + 两行值（同步状态、规模），操作全收进右上角「⋯」的操作面板。
+  点卡片打开课表；同步失败 / 已被删除时状态行变红，点状态行看原因。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/cardRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="10dp"
     android:background="@drawable/bg_card"
     android:orientation="vertical">
 
@@ -18,7 +22,7 @@
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingTop="12dp"
-        android:paddingEnd="13dp"
+        android:paddingEnd="4dp"
         android:paddingBottom="12dp">
 
         <!-- 课表缩略图：靠形状一眼认出是哪张课表 -->
@@ -35,146 +39,83 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/cardName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="@color/title_ink"
-                android:textSize="@dimen/text_subtitle"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/goneTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_tag_danger"
-                android:paddingStart="8dp"
-                android:paddingTop="2.5dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="2.5dp"
-                android:textColor="@color/danger"
-                android:textSize="@dimen/text_caption"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/activeTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_tag"
-                android:paddingStart="8dp"
-                android:paddingTop="2.5dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="2.5dp"
-                android:text="@string/library_active_tag"
-                android:textColor="@color/tag_text"
-                android:textSize="@dimen/text_caption"
-                android:visibility="gone" />
-
-            <!-- 情侣课表：TA 看到的就是当前课表 -->
-            <TextView
-                android:id="@+id/coupleTag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:background="@drawable/bg_tag_warn"
-                android:paddingStart="8dp"
-                android:paddingTop="2.5dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="2.5dp"
-                android:text="@string/library_couple_visible_tag"
-                android:textColor="@color/warn"
-                android:textSize="@dimen/text_caption"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/cardMeta"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textColor="@color/sub_6c"
-            android:textSize="@dimen/text_hint" />
-
-        <TextView
-            android:id="@+id/cardSub"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:textColor="@color/sub_a2"
-            android:textSize="@dimen/text_caption" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="@color/foot_border" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="13dp"
-        android:paddingTop="5dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="5dp">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <View
-                android:id="@+id/syncDot"
-                android:layout_width="6dp"
-                android:layout_height="6dp"
-                android:layout_marginEnd="7dp"
-                android:background="@drawable/sync_dot_green" />
-
-            <TextView
-                android:id="@+id/syncText"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/cardName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/title_ink"
+                    android:textSize="@dimen/text_subtitle"
+                    android:textStyle="bold" />
+
+                <!-- 当前课表；情侣绑定时写成「当前 · TA 可见」 -->
+                <TextView
+                    android:id="@+id/activeTag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_tag"
+                    android:paddingStart="8dp"
+                    android:paddingTop="2.5dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="2.5dp"
+                    android:textColor="@color/tag_text"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/syncRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/syncDot"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/sync_dot_green" />
+
+                <TextView
+                    android:id="@+id/syncText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_small" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/cardMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/sub_77"
-                android:textSize="@dimen/text_caption" />
+                android:textColor="@color/text_tertiary"
+                android:textSize="@dimen/text_hint" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/actionUpdate"
-            style="@style/CardAction"
-            android:text="@string/library_action_update" />
-
-        <TextView
-            android:id="@+id/actionShare"
-            style="@style/CardAction"
-            android:text="@string/library_action_share"
-            android:textColor="@color/tag_text" />
-
-        <TextView
-            android:id="@+id/actionExport"
-            style="@style/CardAction"
-            android:text="@string/library_action_export" />
-
-        <TextView
-            android:id="@+id/actionRemove"
-            style="@style/CardAction"
-            android:text="@string/library_action_delete"
-            android:textColor="@color/danger_action" />
+        <ImageView
+            android:id="@+id/actionMore"
+            android:layout_width="44dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top"
+            android:background="@drawable/bg_menu_row"
+            android:contentDescription="@string/library_more"
+            android:scaleType="center"
+            android:src="@drawable/ic_more" />
     </LinearLayout>
 </LinearLayout>

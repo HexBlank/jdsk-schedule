@@ -194,17 +194,4 @@
         android:textColor="@color/sub_8a"
         android:textSize="@dimen/text_small"
         android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/holidayClose"
-        android:layout_width="match_parent"
-        android:layout_height="46dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_menu_row"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="@string/common_done"
-        android:textColor="@color/sub_68"
-        android:textSize="@dimen/text_body" />
 </LinearLayout>

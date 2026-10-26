@@ -1,6 +1,5 @@
 package com.zhusijiao.app.ui.importer
 
-import android.app.DatePickerDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -10,6 +9,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.AppConfig
 import com.zhusijiao.app.MainActivity
@@ -23,15 +23,21 @@ import com.zhusijiao.app.domain.ParsedSchedule
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.export.ScheduleBackup
 import com.zhusijiao.app.ui.common.BaseActivity
+import com.zhusijiao.app.ui.common.WeekStartSheet
 import com.zhusijiao.app.ui.eams.EamsWebActivity
 import com.zhusijiao.app.ui.schedule.ScheduleFragment
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.Calendar
 
-/** 导入/更新课表页：文件导入，以及「应用内 WebView 登录教务系统直接导入」。 */
+/**
+ * 导入/更新课表页：文件导入，以及「应用内 WebView 登录教务系统直接导入」。
+ *
+ * 分两步、一屏只做一件事：先选来源（教务系统是主路径，文件 / 剪贴板 / 手动粘贴是行）；
+ * 识别出来后整页换成结果——来源一行（点它回到第一步）、课程预览、导入到哪里、名称 / 第 1 周 / 总周数，
+ * 保存钉在底部。第 1 周直接选整周（[WeekStartSheet]），不再让人选日期再提示「已按周一算起」。
+ */
 class ImportActivity : BaseActivity() {
 
     private lateinit var binding: ActivityImportBinding
@@ -42,6 +48,10 @@ class ImportActivity : BaseActivity() {
     /** 解析出来的是 JSON 备份（v2）时不为 null：保存时连同调课、日程等一起还原成新课表。 */
     private var backup: ScheduleBackup.Backup? = null
     private var semesterStart = ""
+    /** 导入到哪里：true 覆盖 [overwriteTarget]，false 新建。 */
+    private var overwriteSelected = false
+    /** 当前内容来自哪里（「来自教务系统」「来自剪贴板」或文件名），显示在结果页顶部那一行。 */
+    private var sourceLabel = ""
 
     private val dayNames = listOf("一", "二", "三", "四", "五", "六", "日")
 
@@ -53,7 +63,7 @@ class ImportActivity : BaseActivity() {
                 Ui.toastError(this, getString(R.string.import_eams_empty))
             } else {
                 binding.sourceInput.setText(json)
-                showFileInfo(getString(R.string.import_source_eams), json.length)
+                sourceLabel = getString(R.string.import_source_eams)
                 parseSource()
             }
         }
@@ -75,8 +85,16 @@ class ImportActivity : BaseActivity() {
         binding.header.setTitle(getString(R.string.import_title))
         binding.header.setBackVisible(true)
         binding.header.onBackClick = { finish() }
-        binding.newMode.isChecked = true
-        binding.importModeSection.setOnCheckedChangeListener { _, _ -> applyModeDefaults() }
+        binding.overwriteRow.setOnClickListener { selectMode(overwrite = true) }
+        binding.newRow.setOnClickListener { selectMode(overwrite = false) }
+        binding.sourceRow.setOnClickListener { showSourceStep() }
+        binding.pasteRow.setOnClickListener {
+            binding.pasteArea.visibility = View.VISIBLE
+            binding.pasteRow.visibility = View.GONE
+            binding.sourceInput.requestFocus()
+        }
+        binding.nameInput.doAfterTextChanged { updateSaveButton() }
+        binding.weeksStepper.configure(1, MAX_WEEKS, 20, { getString(R.string.import_week_count, it) }) {}
 
         binding.eamsBtn.setOnClickListener { eamsLauncher.launch(Intent(this, EamsWebActivity::class.java)) }
         binding.fileBtn.setOnClickListener { fileLauncher.launch("*/*") }
@@ -91,10 +109,6 @@ class ImportActivity : BaseActivity() {
 
         if (requestedTargetId.isNotBlank()) {
             targetLookupPending = true
-            binding.overwriteMode.apply {
-                visibility = View.VISIBLE
-                isEnabled = false
-            }
             loadOverwriteTarget(showError = explicitTargetId.isNotBlank())
         }
     }
@@ -103,37 +117,43 @@ class ImportActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 val schedule = ApiClient.getSchedule(requestedTargetId)
-                if (!schedule.isOwner) {
-                    binding.overwriteMode.visibility = View.GONE
-                    binding.overwriteWarning.visibility = View.GONE
-                    return@launch
+                // 订阅来的课表没有写权限，不能成为覆盖目标
+                if (schedule.isOwner) {
+                    overwriteTarget = schedule
+                    // 有自己发布的课表时默认覆盖它（备份只能新建，见 renderBackupNote）
+                    overwriteSelected = backup == null
+                    applyModeDefaults()
                 }
-                overwriteTarget = schedule
-                binding.overwriteMode.apply {
-                    visibility = View.VISIBLE
-                    isEnabled = backup == null
-                    text = getString(R.string.import_mode_overwrite, schedule.name)
-                    isChecked = backup == null
-                }
-                binding.overwriteWarning.apply {
-                    visibility = View.VISIBLE
-                    text = if (schedule.adjustments.isEmpty()) {
-                        getString(R.string.import_mode_overwrite_desc)
-                    } else {
-                        getString(R.string.import_mode_overwrite_adjustments, schedule.adjustments.size)
-                    }
-                }
-                updateSaveButton()
-                applyModeDefaults()
             } catch (e: Exception) {
-                binding.overwriteMode.visibility = View.GONE
-                binding.overwriteWarning.visibility = View.GONE
                 if (showError) Ui.toastError(this@ImportActivity, e.message ?: getString(R.string.import_original_failed))
             } finally {
                 targetLookupPending = false
+                renderTarget()
                 updateSaveButton()
             }
         }
+    }
+
+    /** 「导入到哪里」：只有能覆盖的课表时才出现；覆盖会删掉手动调课时在下面写一句后果。 */
+    private fun renderTarget() {
+        val target = overwriteTarget
+        binding.targetGroup.visibility = if (target != null) View.VISIBLE else View.GONE
+        if (target == null) return
+        val canOverwrite = backup == null && !targetLookupPending
+        binding.overwriteText.text = getString(R.string.import_mode_overwrite, target.name)
+        binding.overwriteRow.isEnabled = canOverwrite
+        binding.overwriteRow.alpha = if (canOverwrite) 1f else 0.4f
+        binding.overwriteCheck.visibility = if (overwriteSelected) View.VISIBLE else View.INVISIBLE
+        binding.newCheck.visibility = if (overwriteSelected) View.INVISIBLE else View.VISIBLE
+        val warn = overwriteSelected && target.adjustments.isNotEmpty()
+        binding.overwriteWarning.visibility = if (warn) View.VISIBLE else View.GONE
+        if (warn) binding.overwriteWarning.text = getString(R.string.import_mode_overwrite_adjustments, target.adjustments.size)
+    }
+
+    private fun selectMode(overwrite: Boolean) {
+        if (overwrite == overwriteSelected) return
+        overwriteSelected = overwrite
+        applyModeDefaults()
     }
 
     private fun handleFile(uri: Uri) {
@@ -143,7 +163,7 @@ class ImportActivity : BaseActivity() {
             return
         }
         binding.sourceInput.setText(text)
-        showFileInfo(displayName(uri), text.length)
+        sourceLabel = displayName(uri)
         parseSource()
     }
 
@@ -173,14 +193,8 @@ class ImportActivity : BaseActivity() {
             return
         }
         binding.sourceInput.setText(text)
-        showFileInfo(getString(R.string.import_source_clipboard), text.length)
+        sourceLabel = getString(R.string.import_source_clipboard)
         parseSource()
-    }
-
-    private fun showFileInfo(name: String, length: Int) {
-        binding.fileInfo.visibility = View.VISIBLE
-        binding.fileName.text = name
-        binding.fileChars.text = getString(R.string.import_file_chars, length)
     }
 
     private fun copyHelperUrl() {
@@ -200,7 +214,6 @@ class ImportActivity : BaseActivity() {
             return
         }
         binding.parseBtn.isEnabled = false
-        binding.parseBtn.text = getString(R.string.import_parsing)
         lifecycleScope.launch {
             try {
                 val (result, restored) = withContext(Dispatchers.Default) {
@@ -210,22 +223,36 @@ class ImportActivity : BaseActivity() {
                 }
                 parsed = result
                 backup = restored
+                if (sourceLabel.isBlank()) sourceLabel = getString(R.string.import_source_pasted)
                 renderResult(result)
-                Ui.toastSuccess(this@ImportActivity, getString(R.string.import_parsed_count, result.courses.size))
             } catch (e: Exception) {
                 parsed = null
                 backup = null
-                binding.resultSection.visibility = View.GONE
+                showSourceStep()
                 Ui.alert(this@ImportActivity, getString(R.string.import_parse_failed_title), e.message ?: getString(R.string.import_need_source))
             } finally {
                 binding.parseBtn.isEnabled = true
-                binding.parseBtn.text = getString(R.string.import_parse)
             }
         }
     }
 
+    /** 回到第一步：来源重新选，已识别的结果不清掉（再选一次会覆盖）。 */
+    private fun showSourceStep() {
+        binding.sourceSection.visibility = View.VISIBLE
+        binding.resultSection.visibility = View.GONE
+        binding.saveBar.visibility = View.GONE
+        binding.scroll.scrollTo(0, 0)
+    }
+
     private fun renderResult(p: ParsedSchedule) {
+        Ui.hideKeyboard(binding.root)
+        binding.sourceSection.visibility = View.GONE
         binding.resultSection.visibility = View.VISIBLE
+        binding.saveBar.visibility = View.VISIBLE
+        binding.scroll.scrollTo(0, 0)
+        binding.sourceName.text = sourceLabel
+        // 下一次从文件 / 剪贴板 / 粘贴进来时重新记来源
+        sourceLabel = ""
         binding.resultCount.text = getString(R.string.import_result_count, p.courses.size)
         binding.coursePreview.removeAllViews()
         val preview = p.courses.take(5)
@@ -243,8 +270,8 @@ class ImportActivity : BaseActivity() {
             val more = TextView(this).apply {
                 text = getString(R.string.import_more, p.courses.size - 5)
                 gravity = android.view.Gravity.CENTER
-                setTextColor(getColor(R.color.sub_8a))
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
+                setTextColor(getColor(R.color.text_tertiary))
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 12f)
                 setPadding(0, com.zhusijiao.app.util.Rpx.dp(8f), 0, com.zhusijiao.app.util.Rpx.dp(8f))
             }
             binding.coursePreview.addView(more)
@@ -266,15 +293,15 @@ class ImportActivity : BaseActivity() {
         }
         binding.backupNote.visibility = if (parts.isNotEmpty()) View.VISIBLE else View.GONE
         binding.backupNote.text = if (parts.isNotEmpty()) getString(R.string.import_backup_note, parts) else ""
-        if (restoring != null) binding.newMode.isChecked = true
-        binding.overwriteMode.isEnabled = restoring == null && overwriteTarget != null && !targetLookupPending
+        if (restoring != null) overwriteSelected = false
+        renderTarget()
     }
 
     private fun divider(): View = View(this).apply {
         layoutParams = android.widget.LinearLayout.LayoutParams(
             android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1
         )
-        setBackgroundColor(getColor(R.color.detail_border))
+        setBackgroundColor(getColor(R.color.divider))
     }
 
     private fun weekText(weeks: List<Int>): String =
@@ -282,17 +309,8 @@ class ImportActivity : BaseActivity() {
         else getString(R.string.import_week_list, weeks.joinToString("、"))
 
     private fun pickDate() {
-        val cal = Calendar.getInstance()
-        val parts = semesterStart.split("-").mapNotNull { it.toIntOrNull() }
-        if (parts.size == 3) cal.set(parts[0], parts[1] - 1, parts[2])
-        DatePickerDialog(this, { _, y, m, d ->
-            val picked = "%04d-%02d-%02d".format(y, m + 1, d)
-            setDate(picked)
-            // 选中的不是周一时说一声，别让人以为 App 记错了日子
-            if (!DateUtils.isMonday(picked)) {
-                Ui.toast(this, getString(R.string.import_date_snapped, semesterStart))
-            }
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        Ui.hideKeyboard(binding.root)
+        WeekStartSheet(this, semesterStart) { monday -> setDate(monday) }.show()
     }
 
     /**
@@ -303,25 +321,9 @@ class ImportActivity : BaseActivity() {
     private fun setDate(value: String) {
         val aligned = if (DateUtils.hasSemesterStart(value)) DateUtils.weekStartOf(value) else value
         semesterStart = aligned
-        binding.datePicker.text = aligned.ifBlank { getString(R.string.import_date_hint) }
-        binding.datePicker.setTextColor(getColor(if (aligned.isBlank()) R.color.sub_a0 else R.color.ink))
-        renderWeekOneHint()
-    }
-
-    private fun renderWeekOneHint() {
-        if (!DateUtils.hasSemesterStart(semesterStart)) {
-            binding.dateHint.visibility = View.GONE
-            return
-        }
-        val week1 = DateUtils.datesForWeek(semesterStart, 1)
-        val first = week1.first()
-        val last = week1.last()
-        binding.dateHint.visibility = View.VISIBLE
-        binding.dateHint.text = getString(
-            R.string.import_date_week1,
-            "${first.month}月${first.day}日",
-            "${last.month}月${last.day}日"
-        )
+        binding.dateValue.text = if (DateUtils.hasSemesterStart(aligned)) WeekStartSheet.label(this, aligned)
+        else getString(R.string.import_date_hint)
+        updateSaveButton()
     }
 
     private fun save() {
@@ -339,8 +341,8 @@ class ImportActivity : BaseActivity() {
             Ui.toastError(this, getString(R.string.import_need_date))
             return
         }
-        val weeks = binding.weeksInput.text.toString().toIntOrNull() ?: 20
-        val target = overwriteTarget?.takeIf { binding.overwriteMode.isChecked && backup == null }
+        val weeks = binding.weeksStepper.value
+        val target = overwriteTarget?.takeIf { overwriteSelected && backup == null }
         if (target != null && target.adjustments.isNotEmpty()) {
             Ui.confirm(
                 this,
@@ -391,27 +393,29 @@ class ImportActivity : BaseActivity() {
     }
 
     private fun applyModeDefaults() {
+        renderTarget()
+        updateSaveButton()
         val p = parsed ?: return
-        val target = overwriteTarget?.takeIf { binding.overwriteMode.isChecked }
+        val target = overwriteTarget?.takeIf { overwriteSelected }
         binding.nameInput.setText(target?.name ?: p.name)
         setDate(p.semesterStart.ifBlank { target?.semesterStart.orEmpty() })
-        binding.weeksInput.setText((if (p.totalWeeks > 0) p.totalWeeks else target?.totalWeeks ?: 20).toString())
-        updateSaveButton()
+        val weeks = if (p.totalWeeks > 0) p.totalWeeks else target?.totalWeeks ?: 20
+        binding.weeksStepper.configure(1, MAX_WEEKS, weeks.coerceIn(1, MAX_WEEKS), { getString(R.string.import_week_count, it) }) {}
     }
 
+    /** 按钮文案随选择变；名称、第 1 周没填齐时置灰，不等点了再报错。 */
     private fun updateSaveButton() {
         binding.saveBtn.setText(
-            if (overwriteTarget != null && binding.overwriteMode.isChecked) {
-                R.string.import_save_overwrite
-            } else {
-                R.string.import_save_new
-            }
+            if (overwriteTarget != null && overwriteSelected) R.string.import_save_overwrite else R.string.import_save_new
         )
-        binding.saveBtn.isEnabled = !targetLookupPending
+        binding.saveBtn.isEnabled = !targetLookupPending && parsed != null &&
+            binding.nameInput.text.isNotBlank() && DateUtils.hasSemesterStart(semesterStart)
     }
 
     companion object {
         const val EXTRA_ID = "id"
         private const val MAX_BYTES = (1.8 * 1024 * 1024).toLong()
+        /** 与 ScheduleValidator 的总周数上限一致。 */
+        private const val MAX_WEEKS = 30
     }
 }

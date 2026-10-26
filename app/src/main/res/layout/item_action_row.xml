@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/FormRow"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:textColor="@color/text_primary"
+    android:textSize="@dimen/text_subtitle" />

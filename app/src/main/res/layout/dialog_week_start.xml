@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 选第 1 周：直接滚一列「周一 – 周日」，标题就是当前选的那一周 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="16dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        android:id="@+id/weekStartTitle"
+        style="@style/SheetTitle"
+        android:text="@string/import_date_label" />
+
+    <com.zhusijiao.app.ui.common.WheelView
+        android:id="@+id/weekStartWheel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp" />
+
+    <TextView
+        android:id="@+id/weekStartDone"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="18dp"
+        android:text="@string/common_done" />
+</LinearLayout>

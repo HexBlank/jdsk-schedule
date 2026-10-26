@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通用操作面板：标题是对象名，下面一组行，每行一个操作 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        android:id="@+id/actionSheetTitle"
+        style="@style/SheetTitle" />
+
+    <LinearLayout
+        android:id="@+id/actionSheetRows"
+        style="@style/FormGroup"
+        android:layout_marginTop="16dp" />
+</LinearLayout>

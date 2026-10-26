@@ -18,6 +18,7 @@ import com.zhusijiao.app.databinding.FragmentLibraryBinding
 import com.zhusijiao.app.databinding.ItemScheduleCardBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.ui.common.ActionSheet
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ExportFlow
 import com.zhusijiao.app.ui.common.Refreshable
@@ -104,28 +105,22 @@ class LibraryFragment : Fragment(), Refreshable {
         card.cardName.text = item.name
         card.cardThumb.setSchedule(item)
         card.activeTag.visibility = if (active) View.VISIBLE else View.GONE
-        // 情侣课表：TA 看到的就是当前课表
-        card.coupleTag.visibility = if (active && ApiClient.coupleState().bound) View.VISIBLE else View.GONE
+        // 情侣课表：TA 看到的就是当前课表，并进同一个标签
+        card.activeTag.setText(
+            if (ApiClient.coupleState().bound) R.string.library_active_couple_tag else R.string.library_active_tag
+        )
         card.cardMeta.text = getString(
             R.string.library_meta_format,
-            getString(if (isOwner) R.string.library_meta_owner else R.string.library_meta_sync),
             courseCount,
-            item.totalWeeks
+            item.totalWeeks,
+            DateUtils.relativeTime(item.updatedAt)
         )
-        card.cardSub.text = getString(R.string.library_version_format, item.revision, DateUtils.relativeTime(item.updatedAt))
 
         val shared = ApiClient.isShared(item.id)
         val pending = ApiClient.isSyncPending(item.id)
         val syncError = ApiClient.syncError(item.id)
         val gone = if (isOwner) null else ApiClient.remoteGone(item.id)
         val syncing = if (isOwner) shared && !pending else true
-        card.goneTag.visibility = if (gone != null) View.VISIBLE else View.GONE
-        if (gone != null) {
-            card.goneTag.text = getString(
-                if (gone == ScheduleSyncStore.RemoteGone.DELETED) R.string.library_gone_tag_deleted
-                else R.string.library_gone_tag_not_member
-            )
-        }
         card.syncText.text = if (gone != null) {
             getString(
                 if (gone == ScheduleSyncStore.RemoteGone.DELETED) R.string.library_gone_deleted
@@ -150,10 +145,10 @@ class LibraryFragment : Fragment(), Refreshable {
         )
         if (gone != null) {
             card.syncText.setTextColor(ContextCompat.getColor(requireContext(), R.color.danger))
-            card.syncText.setOnClickListener { showGoneDialog(item, gone) }
+            card.syncRow.setOnClickListener { showGoneDialog(item, gone) }
         } else if (syncError != null) {
             card.syncText.setTextColor(ContextCompat.getColor(requireContext(), R.color.danger))
-            card.syncText.setOnClickListener {
+            card.syncRow.setOnClickListener {
                 Ui.confirm(
                     requireContext(),
                     getString(R.string.sync_failed_title),
@@ -164,21 +159,29 @@ class LibraryFragment : Fragment(), Refreshable {
             }
         }
 
-        card.actionUpdate.visibility = if (isOwner) View.VISIBLE else View.GONE
-        card.actionShare.visibility = if (isOwner && !ApiClient.isLocalMode) View.VISIBLE else View.GONE
-        card.actionRemove.text = getString(if (isOwner) R.string.library_action_delete else R.string.library_action_leave)
-
         card.cardMain.setOnClickListener { openSchedule(item.id) }
-        card.actionUpdate.setOnClickListener {
-            startActivity(Intent(requireContext(), ImportActivity::class.java).putExtra(ImportActivity.EXTRA_ID, item.id))
-        }
-        card.actionShare.setOnClickListener {
-            startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, item.id))
-        }
-        // 导出不分发布者、订阅者：订阅来的课表一样可以导出给自己用
-        card.actionExport.setOnClickListener { exportFlow.show(item.id) }
-        card.actionRemove.setOnClickListener { confirmRemove(item, isOwner) }
+        card.cardMain.setOnLongClickListener { showActions(item, isOwner); true }
+        card.actionMore.setOnClickListener { showActions(item, isOwner) }
         return card.root
+    }
+
+    /** 卡片的操作面板：发布者能重新导入、分享；所有人都能导出、删除（订阅者是移除）。 */
+    private fun showActions(item: Schedule, isOwner: Boolean) {
+        val actions = buildList {
+            if (isOwner) add(ActionSheet.Item(getString(R.string.library_action_update)) {
+                startActivity(Intent(requireContext(), ImportActivity::class.java).putExtra(ImportActivity.EXTRA_ID, item.id))
+            })
+            if (isOwner && !ApiClient.isLocalMode) add(ActionSheet.Item(getString(R.string.library_action_share)) {
+                startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, item.id))
+            })
+            // 导出不分发布者、订阅者：订阅来的课表一样可以导出给自己用
+            add(ActionSheet.Item(getString(R.string.library_action_export)) { exportFlow.show(item.id) })
+            add(ActionSheet.Item(
+                getString(if (isOwner) R.string.library_action_delete else R.string.library_action_leave),
+                danger = true
+            ) { confirmRemove(item, isOwner) })
+        }
+        ActionSheet(requireContext(), item.name, actions).show()
     }
 
     private fun openSchedule(id: String) {

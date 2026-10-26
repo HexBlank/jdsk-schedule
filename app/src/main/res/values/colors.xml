@@ -31,10 +31,8 @@
     <color name="sub_a2">@color/text_disabled</color>
     <color name="sub_a8">@color/text_disabled</color>
     <color name="sub_a0">@color/text_disabled</color>
-    <color name="sub_77">@color/text_secondary</color>
     <color name="sub_6c">@color/text_secondary</color>
     <color name="sub_68">@color/text_secondary</color>
-    <color name="sub_3e">@color/body_ink</color>
     <color name="action_ink">#35403b</color>
 
     <!-- 危险/删除 -->
@@ -86,7 +84,6 @@
     <color name="sheet_close_text">#246f59</color>
     <color name="sheet_close_bg">#edf7f3</color>
     <color name="detail_border">#edf0ee</color>
-    <color name="detail_label">#9aa19e</color>
 
     <!-- 卡片操作/状态 -->
     <color name="card_border_active">#b7d2c8</color>

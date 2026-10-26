@@ -40,14 +40,6 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="PageSubtitle">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/muted</item>
-        <item name="android:textSize">@dimen/text_sub</item>
-        <item name="android:lineSpacingMultiplier">1.4</item>
-    </style>
-
     <style name="FieldLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -92,21 +84,6 @@
         <item name="android:lineSpacingMultiplier">1.4</item>
         <item name="android:gravity">center</item>
     </style>
-    <!-- 课表卡底栏的次级文字操作（更新/分享/删除） -->
-    <style name="CardAction">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">32dp</item>
-        <item name="android:minWidth">48dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:paddingStart">8dp</item>
-        <item name="android:paddingEnd">8dp</item>
-        <item name="android:textSize">@dimen/text_hint</item>
-        <item name="android:textColor">@color/action_ink</item>
-        <item name="android:background">@drawable/bg_menu_row</item>
-        <item name="android:clickable">true</item>
-        <item name="android:focusable">true</item>
-    </style>
-
     <!-- 上课提醒权限检查：标题旁的状态角标（已允许/未允许/建议开启），背景和字色由代码按状态设置 -->
     <style name="ReminderStatusPill">
         <item name="android:layout_width">wrap_content</item>
@@ -188,6 +165,18 @@
         <item name="android:text">›</item>
         <item name="android:textColor">@color/arrow_grey</item>
         <item name="android:textSize">@dimen/text_title</item>
+    </style>
+
+    <!-- 单选行末尾的勾：选中可见，未选中 invisible（占位不变） -->
+    <style name="FormRowCheck">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:text">✓</item>
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <!-- 行内输入：无边框、占满一行，placeholder 就是字段名 -->
