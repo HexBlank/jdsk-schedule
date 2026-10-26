@@ -94,7 +94,7 @@ object Ui {
      * 整页避让软键盘：[view]（页面根布局）底部留白随输入法逐帧增减，中间的滚动区跟着缩短，
      * 同时始终避让手势/导航条。用于 edge-to-edge 下 adjustResize 不再缩窗的场景
      * （API 30+ IME 只发 inset 不触发 resize）。底部弹出的面板不要用它，改继承
-     * [com.zhusijiao.app.ui.common.ImeSheetDialog]。
+     * [com.zhusijiao.app.ui.common.SheetDialog]。
      *
      * API 30+ 在键盘动画开始前会先派发一次终点 insets；动画进行中忽略它、只跟 onProgress 走，
      * 动画结束再按最后一次 insets 落定，避免第一帧先闪到终点再回到起点。

@@ -1,15 +1,12 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import com.zhusijiao.app.R
@@ -21,15 +18,10 @@ import com.zhusijiao.app.util.Ui
  * 只是一个入口，不做任何引导付费的设计：不弹窗提醒、不记录是否打赏、主按钮是「完成」。
  * 微信不允许别的应用直接调起赞赏，所以提供「保存到相册」，用户自己到微信扫一扫里从相册选。
  */
-class SupportSheet(context: Context) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+class SupportSheet(context: Context) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_support)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         // 赞赏码放在 res/raw：保存到相册时要原样写出文件，不能经过解码再压缩

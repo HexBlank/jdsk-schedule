@@ -1,12 +1,10 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -29,15 +27,10 @@ class WeekPickerSheet(
     private val weekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO,
     private val onWeekendModeChanged: ((WeekendDisplayMode) -> Unit)? = null,
     private val onPick: (Int) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_week_picker)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         // 单个开关：开启 = 当周周六日有课时才显示（AUTO），关闭 = 始终显示（ALWAYS）。

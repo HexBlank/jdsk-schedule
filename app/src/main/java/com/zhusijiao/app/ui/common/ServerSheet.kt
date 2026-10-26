@@ -21,7 +21,7 @@ import com.zhusijiao.app.util.Ui
 class ServerSheet(
     context: Context,
     private val onSaved: () -> Unit
-) : ImeSheetDialog(context) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_server)

@@ -25,7 +25,6 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
-import android.view.animation.AnimationUtils
 import android.widget.Button
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -39,7 +38,6 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlin.math.sign
 
 /**
  * 悬浮底栏（Floating Navigation Dock）：一枚浮在页面上的胶囊，页签不到五个时不铺满、居中收窄；
@@ -69,6 +67,9 @@ class BottomNavView @JvmOverloads constructor(
     }
 
     var onTabSelected: ((Tab) -> Unit)? = null
+
+    /** 点了已选中的页签（课表页用它回到本周）。 */
+    var onTabReselected: ((Tab) -> Unit)? = null
 
     private var current: Tab = Tab.SCHEDULE
     private val hidden = mutableSetOf(Tab.COUPLE)
@@ -119,9 +120,7 @@ class BottomNavView @JvmOverloads constructor(
     private val swell = Spring(0f, 0.001f)
     private val stretch = Spring(0f, 0.1f)
     private val springs = arrayOf(lens, lift, swell, stretch)
-    private var lastFrame = 0L
-    private var framing = false
-    private val frame = Runnable { onFrame() }
+    private val driver = SpringDriver(this, springs) { invalidate() }
 
     // 刚出现的页签（「我们」）图标弹一下
     private var popTab: Tab? = null
@@ -156,8 +155,7 @@ class BottomNavView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        removeCallbacks(frame)
-        framing = false
+        driver.stop()
         popAnimator?.cancel()
         releaseTracker()
         springs.forEach { it.finish() }
@@ -197,9 +195,13 @@ class BottomNavView @JvmOverloads constructor(
 
     private fun indexOfCurrent(): Int = tabs.indexOf(current).coerceAtLeast(0)
 
-    private fun select(index: Int) {
+    /** [reselect]：点的就是当前页签时是否算「再点一次」（拖着透镜绕一圈回到原处不算）。 */
+    private fun select(index: Int, reselect: Boolean = true) {
         val tab = tabs.getOrNull(index) ?: return
-        if (tab == current) return
+        if (tab == current) {
+            if (reselect) onTabReselected?.invoke(tab)
+            return
+        }
         current = tab
         accessibility.invalidateRoot()
         onTabSelected?.invoke(tab)
@@ -209,9 +211,10 @@ class BottomNavView @JvmOverloads constructor(
         popAnimator?.cancel()
         if (!animationsEnabled()) return
         popTab = tab
-        popAnimator = ValueAnimator.ofFloat(0.4f, 1f).apply {
+        // 从 0.6 起而不是从一个点长出来；只带一点回弹，提示「多了个入口」即可
+        popAnimator = ValueAnimator.ofFloat(0.6f, 1f).apply {
             duration = 360L
-            interpolator = android.view.animation.OvershootInterpolator(3f)
+            interpolator = android.view.animation.OvershootInterpolator(1.6f)
             addUpdateListener {
                 popScale = it.animatedValue as Float
                 invalidate()
@@ -414,8 +417,8 @@ class BottomNavView @JvmOverloads constructor(
         val last = tabs.lastIndex.toFloat()
         val position = (x - bar.left - barPadding) / extent - 0.5f
         return when {
-            position < 0f -> rubberBand(position, OVERDRAG)
-            position > last -> last + rubberBand(position - last, OVERDRAG)
+            position < 0f -> Motion.rubberBand(position, OVERDRAG)
+            position > last -> last + Motion.rubberBand(position - last, OVERDRAG)
             else -> position
         }
     }
@@ -436,7 +439,7 @@ class BottomNavView @JvmOverloads constructor(
         }
         if (!animationsEnabled()) return
         val overshoot = x - x.coerceIn(bar.left, bar.right)
-        stretch.springTo(rubberBand(overshoot, bar.height() * PULL_LIMIT), TRACK)
+        stretch.springTo(Motion.rubberBand(overshoot, bar.height() * PULL_LIMIT), TRACK)
         lens.springTo(position, TRACK)
         startFrames()
     }
@@ -455,11 +458,12 @@ class BottomNavView @JvmOverloads constructor(
 
     private fun release(commit: Boolean) {
         val index = pressedIndex
+        val wasDragging = dragging
         pressedIndex = -1
         dragging = false
         releaseTracker()
         if (index < 0) return
-        if (commit) select(index)
+        if (commit) select(index, reselect = !wasDragging)
         val target = indexOfCurrent().toFloat()
         if (animationsEnabled()) {
             lift.springTo(0f, SETTLE)
@@ -490,75 +494,9 @@ class BottomNavView @JvmOverloads constructor(
 
     // ===== 弹簧驱动 =====
 
-    private fun animationsEnabled(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+    private fun animationsEnabled(): Boolean = Motion.enabled()
 
-    private fun startFrames() {
-        if (framing) return
-        framing = true
-        lastFrame = AnimationUtils.currentAnimationTimeMillis()
-        postOnAnimation(frame)
-    }
-
-    private fun onFrame() {
-        val now = AnimationUtils.currentAnimationTimeMillis()
-        // 掉帧或刚回到前台时一步不要迈太大，否则弹簧会一下子甩出去
-        val dt = ((now - lastFrame).coerceIn(1L, 34L)) / 1000f
-        lastFrame = now
-        var running = false
-        for (spring in springs) {
-            spring.advance(dt)
-            running = running || spring.running
-        }
-        invalidate()
-        if (running && isAttachedToWindow) postOnAnimation(frame) else framing = false
-    }
-
-    /** 弹簧参数：与 Flutter 的 SpringDescription.withDurationAndBounce 同一套换算（质量为 1）。 */
-    private class SpringSpec(durationSeconds: Float, bounce: Float = 0f) {
-        val stiffness = (2f * Math.PI.toFloat() / durationSeconds).let { it * it }
-        val damping = 4f * Math.PI.toFloat() * (1f - bounce) / durationSeconds
-    }
-
-    /** 目标可以每一帧都变的弹簧：换目标时保留当前速度，所以跟手拖动和松手回弹之间没有顿挫。 */
-    private class Spring(var value: Float, private val restDelta: Float) {
-        var velocity = 0f
-            private set
-        var target = value
-            private set
-        var running = false
-            private set
-        private var spec: SpringSpec? = null
-
-        fun springTo(target: Float, spec: SpringSpec) {
-            this.target = target
-            this.spec = spec
-            running = true
-        }
-
-        fun jumpTo(value: Float) {
-            this.value = value
-            target = value
-            velocity = 0f
-            running = false
-        }
-
-        fun finish() = jumpTo(if (running) target else value)
-
-        fun advance(dt: Float) {
-            val s = spec
-            if (!running || s == null) return
-            var remaining = dt
-            // 半隐式欧拉，步长不超过 4ms：最硬的那根弹簧（跟手用的 120ms）也不会发散
-            while (remaining > 0f) {
-                val h = min(remaining, 0.004f)
-                velocity += (-s.stiffness * (value - target) - s.damping * velocity) * h
-                value += velocity * h
-                remaining -= h
-            }
-            if (abs(value - target) < restDelta && abs(velocity) < restDelta * 10f) jumpTo(target)
-        }
-    }
+    private fun startFrames() = driver.start()
 
     // ===== 无障碍：每个页签是一个可聚焦、可点击的虚拟按钮 =====
 
@@ -651,12 +589,6 @@ class BottomNavView @JvmOverloads constructor(
         private val TRACK = SpringSpec(0.12f)
         private val LIFT = SpringSpec(0.28f, bounce = 0.2f)
         private val SETTLE = SpringSpec(0.5f, bounce = 0.32f)
-
-        private fun rubberBand(overshoot: Float, limit: Float): Float {
-            if (limit <= 0f) return 0f
-            val pull = 1f - 1f / (abs(overshoot) * 0.55f / limit + 1f)
-            return limit * pull * sign(overshoot)
-        }
 
         /** 栏底到屏幕底边的距离：至少 21dp；有三键导航条时坐在导航条上方。 */
         private fun bottomMarginPx(navInset: Int): Float =

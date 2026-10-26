@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  按压反馈：按下缩到 0.97、松开回到原样。只用缓出曲线、不回弹（点按不是手势动量，不奖励回弹）；
+  0.96~0.97 就足够被感知，再小像是被吸进去。用于主要/次要按钮等独立的可点块，整行宽的列表行不用。
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="90"
+                android:interpolator="@android:interpolator/decelerate_quad"
+                android:propertyName="scaleX"
+                android:valueTo="0.97"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="90"
+                android:interpolator="@android:interpolator/decelerate_quad"
+                android:propertyName="scaleY"
+                android:valueTo="0.97"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="220"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="scaleX"
+                android:valueTo="1"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="220"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="scaleY"
+                android:valueTo="1"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

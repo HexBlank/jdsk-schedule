@@ -98,6 +98,7 @@ class MainActivity : BaseActivity() {
         }
 
         binding.bottomNav.onTabSelected = { showTab(it) }
+        binding.bottomNav.onTabReselected = { if (it == BottomNavView.Tab.SCHEDULE) scheduleFragment.onReselected() }
         syncCoupleTab()
         if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_OPEN_COUPLE, false)) openCoupleTab()
         maybeCheckUpdateOnLaunch()

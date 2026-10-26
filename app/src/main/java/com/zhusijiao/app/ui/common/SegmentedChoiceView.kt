@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -56,7 +57,11 @@ class SegmentedChoiceView @JvmOverloads constructor(
                 layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
                     if (index > 0) marginStart = Rpx.dp(5f)
                 }
-                setOnClickListener { setSelection(index, notify = true) }
+                setOnClickListener {
+                    // 换了选项才轻震：点已选中的那一段没有变化，不给反馈
+                    if (index != selectedIndex) performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    setSelection(index, notify = true)
+                }
             })
         }
         setSelection(initialIndex, notify = false)

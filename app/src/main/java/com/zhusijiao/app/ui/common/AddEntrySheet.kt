@@ -1,10 +1,7 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import com.zhusijiao.app.R
 
@@ -20,15 +17,10 @@ class AddEntrySheet(
     title: String,
     private val onCourse: () -> Unit,
     private val onEvent: () -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_add_entry)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
         findViewById<TextView>(R.id.addEntryTitle).text = title
         findViewById<View>(R.id.addEntryCourse).setOnClickListener {

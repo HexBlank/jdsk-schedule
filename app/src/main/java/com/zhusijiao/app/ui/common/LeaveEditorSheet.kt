@@ -25,7 +25,7 @@ class LeaveEditorSheet(
     initialEnd: String,
     private val onSave: (LeaveDraft) -> Unit,
     private val onDelete: (() -> Unit)? = null
-) : ImeSheetDialog(context) {
+) : SheetDialog(context) {
 
     private var type = existing?.type ?: LeaveType.PERSONAL
     private var start = existing?.start ?: initialStart

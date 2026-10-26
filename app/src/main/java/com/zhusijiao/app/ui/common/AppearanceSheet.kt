@@ -1,11 +1,8 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
@@ -29,7 +26,7 @@ class AppearanceSheet(
     /** 打开后直接滚到「状态显示」分组（从「换了新样式」提示的「改回」进来时）。 */
     private val focusStateStyle: Boolean = false,
     private val onChanged: (TimetableAppearance) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet_Clear) {
+) : SheetDialog(context, SheetDialog.SCRIM_CLEAR) {
 
     private var current = initial
 
@@ -48,11 +45,6 @@ class AppearanceSheet(
 
     init {
         setContentView(R.layout.dialog_appearance)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         heightChoice = findViewById(R.id.heightChoice)

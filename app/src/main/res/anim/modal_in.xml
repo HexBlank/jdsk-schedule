@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 弹窗出现：先开始放大、透明度稍后跟上（出现时透明度后变化）；从 0.92 起而不是从一个点长出来 -->
 <set xmlns:android="http://schemas.android.com/apk/res/android">
     <alpha
-        android:duration="160"
+        android:duration="150"
         android:fromAlpha="0.0"
+        android:interpolator="@android:interpolator/decelerate_quad"
+        android:startOffset="30"
         android:toAlpha="1.0" />
     <scale
-        android:duration="180"
+        android:duration="240"
         android:fromXScale="0.92"
         android:fromYScale="0.92"
         android:interpolator="@android:interpolator/decelerate_quint"

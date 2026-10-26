@@ -1,8 +1,5 @@
 package com.zhusijiao.app.ui.common
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -10,12 +7,12 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
-import android.view.animation.DecelerateInterpolator
 import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
 import kotlin.math.abs
@@ -24,7 +21,8 @@ import kotlin.math.roundToInt
 
 /**
  * 单列滚轮选择器：居中一行为选中项（大字、强调色，上下两条细线框出选择区），
- * 相邻项渐小渐淡。拖动跟手、松手按速度惯性滑动并吸附到最近一项。
+ * 相邻项渐小渐淡。拖动跟手、松手按速度惯性滑动并吸附到最近一项；
+ * 吸附由弹簧驱动并继承松手速度（甩得远走得快），滑动途中按住即停；每滑过一项轻震一下。
  *
  * 自绘实现，不依赖 Material / RecyclerView / 系统 NumberPicker——
  * 后者的外观会随 Android 版本和厂商 ROM 变化（同 D17 的理由）。
@@ -46,7 +44,17 @@ class WheelView @JvmOverloads constructor(
     /** 滚动位置，单位 px；offset = selectedIndex * itemHeight 时该项正好居中。 */
     private var offset = 0f
     private var itemHeightPx = 0f
-    private var animator: ValueAnimator? = null
+
+    private val spring = Spring(0f, 0.3f)
+    private val driver = SpringDriver(this, arrayOf(spring)) {
+        offset = spring.value
+        tickIfCrossed()
+        invalidate()
+    }.also { it.onSettled = { settled?.invoke() } }
+    /** 这次吸附落定后要做的事（提交选中项）。 */
+    private var settled: (() -> Unit)? = null
+    /** 上一次轻震时居中的是哪一项。 */
+    private var tickIndex = 0
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -80,6 +88,7 @@ class WheelView @JvmOverloads constructor(
         this.onSelected = onSelected
         selectedIndex = initialIndex.coerceIn(0, maxOf(0, labels.lastIndex))
         offset = selectedIndex * itemHeight()
+        tickIndex = selectedIndex
         updateDescription()
         requestLayout()
         invalidate()
@@ -91,8 +100,9 @@ class WheelView @JvmOverloads constructor(
         if (animate) {
             animateTo(target * itemHeight()) { commit(target, notify) }
         } else {
-            animator?.cancel()
+            stopSettle()
             offset = target * itemHeight()
+            tickIndex = target
             commit(target, notify)
             invalidate()
         }
@@ -161,7 +171,8 @@ class WheelView @JvmOverloads constructor(
         if (labels.isEmpty()) return false
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                animator?.cancel()
+                // 惯性滑动中按住即停在原地，不提交半路的值
+                stopSettle()
                 velocityTracker?.recycle()
                 velocityTracker = VelocityTracker.obtain().also { it.addMovement(event) }
                 downY = event.y
@@ -175,9 +186,14 @@ class WheelView @JvmOverloads constructor(
                 velocityTracker?.addMovement(event)
                 val dy = event.y - lastY
                 lastY = event.y
-                if (!dragging && abs(event.y - downY) > touchSlop) dragging = true
+                if (!dragging && abs(event.y - downY) > touchSlop) {
+                    dragging = true
+                    dragRaw = unRubberBand(offset)
+                }
                 if (dragging) {
-                    offset = rubberBand(offset - dy)
+                    dragRaw -= dy
+                    offset = rubberBand(dragRaw)
+                    tickIfCrossed()
                     invalidate()
                 }
                 return true
@@ -193,7 +209,7 @@ class WheelView @JvmOverloads constructor(
                 } else {
                     velocityTracker?.computeCurrentVelocity(1000)
                     val velocityY = velocityTracker?.yVelocity ?: 0f
-                    settleTo(offset - velocityY * FLING_FACTOR)
+                    settleTo(offset - velocityY * FLING_FACTOR, -velocityY)
                 }
                 releaseTracker()
                 return true
@@ -219,42 +235,67 @@ class WheelView @JvmOverloads constructor(
         dragging = false
     }
 
-    /** 拖到两端之外时阻尼回拉，给出「到头了」的手感而不是硬停。 */
+    /** 手指要求的滚动位置（未加阻尼）；拖到两端之外时由 [rubberBand] 换算成实际位置。 */
+    private var dragRaw = 0f
+
+    /** 拖到两端之外时越拉越重，最多再走一行，给出「到头了」的手感而不是硬停。 */
     private fun rubberBand(value: Float): Float {
         val max = labels.lastIndex * itemHeight()
         return when {
-            value < 0f -> value / 3f
-            value > max -> max + (value - max) / 3f
+            value < 0f -> Motion.rubberBand(value, itemHeight())
+            value > max -> max + Motion.rubberBand(value - max, itemHeight())
             else -> value
         }
     }
 
-    /** 惯性落点吸附到最近一项。 */
-    private fun settleTo(rawTarget: Float) {
+    /** [rubberBand] 的反函数：从当前（可能已在界外的）位置接着拖时，换算回手指位置。 */
+    private fun unRubberBand(value: Float): Float {
+        val max = labels.lastIndex * itemHeight()
+        return when {
+            value < 0f -> Motion.rubberBandInverse(value, itemHeight())
+            value > max -> max + Motion.rubberBandInverse(value - max, itemHeight())
+            else -> value
+        }
+    }
+
+    /** 惯性落点吸附到最近一项；[velocity] 为松手时的滚动速度（px/s），交给弹簧作初速。 */
+    private fun settleTo(rawTarget: Float, velocity: Float = 0f) {
         val step = itemHeight()
         val max = labels.lastIndex * step
         val clamped = rawTarget.coerceIn(0f, max)
         val index = (clamped / step).roundToInt().coerceIn(0, labels.lastIndex)
-        animateTo(index * step) { commit(index, notify = true) }
+        animateTo(index * step, velocity) { commit(index, notify = true) }
     }
 
-    private fun animateTo(target: Float, onEnd: () -> Unit) {
-        animator?.cancel()
-        if (abs(target - offset) < 0.5f) {
+    private fun animateTo(target: Float, velocity: Float = 0f, onEnd: () -> Unit) {
+        stopSettle()
+        if (abs(target - offset) < 0.5f || !Motion.enabled()) {
             offset = target
+            tickIfCrossed()
             invalidate()
             onEnd()
             return
         }
-        animator = ValueAnimator.ofFloat(offset, target).apply {
-            duration = SETTLE_MS
-            interpolator = DecelerateInterpolator()
-            addUpdateListener { offset = it.animatedValue as Float; invalidate() }
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) = onEnd()
-            })
-            start()
-        }
+        settled = onEnd
+        // 落点已经按速度投射选好了，多余的速度只会让它冲过头再回来，削到刚好不冲过头
+        val limit = kotlin.math.sqrt(SETTLE.stiffness) * abs(target - offset)
+        spring.jumpTo(offset)
+        spring.springTo(target, SETTLE, velocity.coerceIn(-limit, limit))
+        driver.start()
+    }
+
+    private fun stopSettle() {
+        driver.stop()
+        settled = null
+    }
+
+    /** 居中项变了就轻震一下，像拨动实体滚轮的齿。 */
+    private fun tickIfCrossed() {
+        if (labels.isEmpty()) return
+        val index = (offset / itemHeight()).roundToInt().coerceIn(0, labels.lastIndex)
+        if (index == tickIndex) return
+        tickIndex = index
+        performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
     }
 
     private fun commit(index: Int, notify: Boolean) {
@@ -270,7 +311,7 @@ class WheelView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        animator?.cancel()
+        stopSettle()
         releaseTracker()
     }
 
@@ -303,6 +344,7 @@ class WheelView @JvmOverloads constructor(
         private const val SELECTED_SP = 27f
         private const val NORMAL_SP = 20f
         private const val FLING_FACTOR = 0.22f
-        private const val SETTLE_MS = 220L
+        /** 吸附弹簧：无回弹，长距离惯性也走得顺，不会被压在固定时长里一闪而过。 */
+        private val SETTLE = SpringSpec(0.4f)
     }
 }

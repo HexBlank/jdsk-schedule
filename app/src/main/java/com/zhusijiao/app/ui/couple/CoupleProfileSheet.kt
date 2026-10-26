@@ -14,7 +14,7 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.CouplePalette
 import com.zhusijiao.app.domain.CoupleState
 import com.zhusijiao.app.ui.common.ColorPickerSheet
-import com.zhusijiao.app.ui.common.ImeSheetDialog
+import com.zhusijiao.app.ui.common.SheetDialog
 
 /**
  * 改名字和颜色：点日视图顶部的名字、周视图左上角的图例，或设置里的「名字和颜色」进入。
@@ -26,7 +26,7 @@ class CoupleProfileSheet(
     private val who: String,
     state: CoupleState,
     private val onSave: (nickname: String, color: String) -> Unit
-) : ImeSheetDialog(context) {
+) : SheetDialog(context) {
 
     private val isMe = who == "me"
     private val member = requireNotNull(if (isMe) state.me else state.partner)

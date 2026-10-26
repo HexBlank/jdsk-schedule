@@ -1,10 +1,7 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.DateUtils
@@ -25,15 +22,10 @@ class DateTimeSheet(
     /** 初始值 "YYYY-MM-DD HH:mm"；日期不在候选里时落到最近的一天。 */
     initial: String,
     private val onConfirm: (moment: String) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_date_time)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
         findViewById<TextView>(R.id.dateTimeTitle).text = title
 

@@ -26,7 +26,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.VelocityTracker
 import android.view.ViewConfiguration
-import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.view.animation.PathInterpolator
@@ -57,6 +56,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * 周课表视图：
@@ -152,6 +152,12 @@ class TimetableView @JvmOverloads constructor(
     var onDayClick: ((DayClick) -> Unit)? = null
     var onWeekChanged: ((week: Int, isFirst: Boolean, isLast: Boolean) -> Unit)? = null
 
+    /**
+     * 翻页过程中逐帧回调：[shownWeek] 是此刻露出更多的那一页，[local] 是它偏离居中的比例
+     * （-0.5..0.5，负数表示往左移）。页头的「第 N 周」据此跟着页面一起滑动、渐隐、换字。
+     */
+    var onPageScroll: ((shownWeek: Int, local: Float) -> Unit)? = null
+
     private var schedule: Schedule? = null
     private var events: List<PersonalEvent> = emptyList()
     /** 本机的请假记录：请假时段内自己的课画成「今天不上」的样式并标「请假 / 公假」。 */
@@ -171,10 +177,29 @@ class TimetableView @JvmOverloads constructor(
     /** 课表在页面里的可视高度（px），由外层滚动容器告知，只有「铺满一屏」用得到。 */
     private var viewportHeightPx = 0
 
-    // 分页状态：pageOffset 为当前页的水平平移量；secondaryWeek 为并排显示的相邻页
+    // 分页状态：pageOffset 为当前页的水平平移量；secondaryWeek 为并排显示的相邻页。
+    // 松手后的吸附、箭头跳转、碰壁回弹都由同一根弹簧驱动，随时可以被手指接住。
     private var pageOffset = 0f
     private var secondaryWeek: Int? = null
-    private var offsetAnimator: ValueAnimator? = null
+    private val pageSpring = Spring(0f, 0.5f)
+    private val pageDriver = SpringDriver(this, arrayOf(pageSpring)) {
+        pageOffset = pageSpring.value
+        dispatchPageScroll()
+        invalidate()
+    }.also {
+        it.onSettled = {
+            secondaryWeek = null
+            dispatchPageScroll()
+            invalidate()
+        }
+    }
+
+    // 按压反馈：按下的课程块轻轻缩小，松手弹回（0 = 原样，1 = 按到底）
+    private var pressedBlock: Block? = null
+    private val pressSpring = Spring(0f, 0.002f)
+    private val pressDriver = SpringDriver(this, arrayOf(pressSpring)) { invalidate() }.also {
+        it.onSettled = { if (pressSpring.value == 0f) pressedBlock = null }
+    }
 
     // 每周渲染缓存（日期、课程块及其文本排版）
     private val weekCache = object : LinkedHashMap<Int, WeekRender>(8, 0.75f, true) {
@@ -301,6 +326,11 @@ class TimetableView @JvmOverloads constructor(
     // 手势
     private var downX = 0f; private var downY = 0f
     private var dragging = false
+    /** 按下时页面已有的平移量（接住滑动中的页面时非 0）与当时露出更多的那一页。 */
+    private var dragBase = 0f
+    private var anchorWeek = 1
+    /** 本次拖动是否已越过翻页阈值（只在越过的那一刻震一下）。 */
+    private var pastCommit = false
     private var velocityTracker: VelocityTracker? = null
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
     // 接近拾光 HorizontalPager 的轻扫手感：短距离甩动也翻页，慢拖约 12% 即提交。
@@ -406,9 +436,7 @@ class TimetableView @JvmOverloads constructor(
         this.events = events
         this.leaves = leaves
         weekendDisplayMode = weekendMode
-        pageOffset = 0f
-        secondaryWeek = null
-        offsetAnimator?.cancel()
+        stopPaging()
         weekCache.clear()
         accessibilityHelper.invalidateRoot()
         if (schedule == null) {
@@ -532,74 +560,122 @@ class TimetableView @JvmOverloads constructor(
 
     // ===== 分页动画 =====
 
-    /** 非拖拽式跳转（箭头 / 周次面板）：旧页作为相邻页一起滑出，新页滑入，保持连贯。 */
+    /**
+     * 非拖拽式跳转（箭头 / 周次面板）：旧页作为相邻页一起滑出，新页滑入，保持连贯。
+     * 上一次翻页还没落定时从当前位置接着走，不先跳回原位。
+     */
     private fun jumpTo(target: Int) {
         val old = week
-        offsetAnimator?.cancel()
+        val w = width.toFloat()
+        pageDriver.stop()
         applyDayCountForWeek(target)
         secondaryWeek = old
         week = target
-        val w = width.toFloat()
-        pageOffset = if (target > old) w else -w
-        invalidate()
+        pageOffset = (pageOffset + if (target > old) w else -w).coerceIn(-w, w)
         notifyWeek()
-        animateOffsetTo(0f, 240) {
-            secondaryWeek = null
-            invalidate()
-        }
+        settleTo(0f, pageSpring.velocity, PAGE_JUMP)
     }
 
+    /** 首/末周再点箭头：给页面一个朝外的初速，弹簧自己推出去一小段再拉回来。 */
     private fun edgeBounce(direction: Int) {
-        val shift = (if (direction > 0) -1 else 1) * width * 0.06f
-        offsetAnimator?.cancel()
-        animateOffsetTo(shift, 110) { animateOffsetTo(0f, 170) }
+        if (!Motion.enabled() || width == 0) return
+        pageDriver.stop()
+        // 临界阻尼弹簧从 0 出发的最远位移 = v / (ω·e)，据此反推出走到 6% 页宽所需的初速
+        val omega = sqrt(PAGE_EDGE.stiffness)
+        val push = width * EDGE_BOUNCE_FRACTION * omega * Math.E.toFloat()
+        settleTo(0f, if (direction > 0) -push else push, PAGE_EDGE)
     }
 
+    /**
+     * 松手：以按下时露出更多的那一页为起点，按位移或甩动方向决定落到哪一页；
+     * 手指的速度原样交给弹簧，甩得快落得快，慢慢拖就柔和落位。
+     */
     private fun settleAfterDrag(velocityX: Float) {
         val w = width.toFloat()
-        val distanceCommit = min(w * 0.12f, 48f * resources.displayMetrics.density)
         val sec = secondaryWeek
+        val distanceCommit = commitDistance()
+        val delta = pageOffset - restOffsetOf(anchorWeek)
         val flingNext = velocityX < -flingThresholdPx
         val flingPrev = velocityX > flingThresholdPx
-        val commitNext = sec != null && sec > week && (pageOffset <= -distanceCommit || flingNext)
-        val commitPrev = sec != null && sec < week && (pageOffset >= distanceCommit || flingPrev)
-        if (sec != null && (commitNext || commitPrev)) {
-            val targetWeek = sec
-            val target = if (commitNext) -w else w
-            applyDayCountForWeek(targetWeek)
-            animateOffsetTo(target, 170) {
-                week = targetWeek
-                secondaryWeek = null
-                pageOffset = 0f
-                notifyWeek()
-                invalidate()
-            }
-        } else {
-            animateOffsetTo(0f, 150) {
-                secondaryWeek = null
-                invalidate()
-            }
+        val goNext = flingNext || (delta <= -distanceCommit && !flingPrev)
+        val goPrev = flingPrev || (delta >= distanceCommit && !flingNext)
+        val wanted = when {
+            goNext -> anchorWeek + 1
+            goPrev -> anchorWeek - 1
+            else -> anchorWeek
         }
+        val target = if (wanted == week || wanted == sec) wanted else anchorWeek
+        if (target != week && sec != null) {
+            // 换「当前页」：把坐标系挪到目标页上，画面不动，接着弹到 0
+            val old = week
+            applyDayCountForWeek(target)
+            pageOffset += if (target > old) w else -w
+            secondaryWeek = old
+            week = target
+            notifyWeek()
+        }
+        settleTo(0f, velocityX, PAGE_SETTLE)
     }
 
-    private fun animateOffsetTo(target: Float, duration: Long, onEnd: (() -> Unit)? = null) {
-        offsetAnimator?.cancel()
-        offsetAnimator = ValueAnimator.ofFloat(pageOffset, target).apply {
-            this.duration = duration
-            interpolator = DecelerateInterpolator()
-            addUpdateListener { pageOffset = it.animatedValue as Float; invalidate() }
-            if (onEnd != null) {
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) { onEnd() }
-                })
-            }
-            start()
+    /**
+     * 从 [pageOffset] 弹向 [target]。朝目标的速度只保留「不会冲过头」的那部分：
+     * 冲过 0 会露出另一侧没有画的空白（碰壁回弹本来就是朝外推，不受此限）。
+     */
+    private fun settleTo(target: Float, velocity: Float, spec: SpringSpec) {
+        if (!Motion.enabled()) {
+            stopPaging()
+            dispatchPageScroll()
+            invalidate()
+            return
         }
+        val distance = target - pageOffset
+        val v = if (velocity * distance <= 0f) {
+            velocity
+        } else {
+            val limit = sqrt(spec.stiffness) * abs(distance)
+            velocity.coerceIn(-limit, limit)
+        }
+        pageSpring.jumpTo(pageOffset)
+        pageSpring.springTo(target, spec, v)
+        pageDriver.start()
+    }
+
+    /** 停下所有翻页动画并回到静止状态（换课表、关掉动画时用）。 */
+    private fun stopPaging() {
+        pageDriver.stop()
+        pageSpring.jumpTo(0f)
+        pageOffset = 0f
+        secondaryWeek = null
+    }
+
+    /** 某一页落定时 [pageOffset] 的值：当前页在 0，相邻页在 ±页宽。 */
+    private fun restOffsetOf(page: Int): Float = when {
+        page == week -> 0f
+        page > week -> -width.toFloat()
+        else -> width.toFloat()
+    }
+
+    /** 此刻露出更多的那一页。 */
+    private fun shownWeek(): Int {
+        val sec = secondaryWeek ?: return week
+        return if (abs(pageOffset) > width / 2f) sec else week
+    }
+
+    private fun commitDistance(): Float = min(width * 0.12f, 48f * resources.displayMetrics.density)
+
+    private fun dispatchPageScroll() {
+        val cb = onPageScroll ?: return
+        val w = width.toFloat()
+        if (w <= 0f || schedule == null) return
+        val shown = shownWeek()
+        cb(shown, (pageOffset - restOffsetOf(shown)) / w)
     }
 
     private fun notifyWeek() {
         val s = schedule ?: return
         onWeekChanged?.invoke(week, week <= 1, week >= s.totalWeeks)
+        // 页头文字跟随的是「露出更多的那一页」，可能还不是刚提交的这一周
+        dispatchPageScroll()
         accessibilityHelper.invalidateRoot()
     }
 
@@ -1342,6 +1418,12 @@ class TimetableView @JvmOverloads constructor(
             if (b.buried) return@forEach
             if (intro != null && drawIntroBlock(canvas, b, intro)) return@forEach
             if (effects != null && effects.hides(b)) return@forEach
+            val press = if (b === pressedBlock && render.week == week) pressSpring.value else 0f
+            if (press != 0f) {
+                val scale = 1f - PRESS_SHRINK * press
+                canvas.save()
+                canvas.scale(scale, scale, (b.left + b.right) / 2f, (b.top + b.bottom) / 2f)
+            }
             val appear = effects?.appearAlpha(b) ?: 1f
             if (appear < 1f) {
                 if (appear > 0f) withBlockAlpha(canvas, b, appear) { drawBlock(canvas, b) }
@@ -1351,6 +1433,7 @@ class TimetableView @JvmOverloads constructor(
             // 刚设为停课的块：先画新样式，再把原来的实心样式叠在上面逐渐淡出
             val solid = effects?.solidOverlay(b) ?: 0f
             if (solid > 0f) withBlockAlpha(canvas, b, solid) { drawBlock(canvas, b, STYLE_SOLID) }
+            if (press != 0f) canvas.restore()
         }
         effects?.let { drawFlight(canvas, it) }
     }
@@ -1542,17 +1625,17 @@ class TimetableView @JvmOverloads constructor(
             return 1f - ((elapsed - index * HOLIDAY_STAGGER_MS) / HOLIDAY_FADE_MS).coerceIn(0f, 1f)
         }
 
-        /** 表头「休」的缩放：0 → 1 并略微回弹；不在这次停课的列返回 null。 */
+        /** 表头「休」的缩放：0.5 → 1 并略微回弹（不从一个点长出来）；不在这次停课的列返回 null。 */
         fun markScale(day: Int): Float? {
             if (day !in holidayColumns) return null
-            return markInterpolator.getInterpolation((elapsed / MARK_POP_MS).coerceIn(0f, 1f))
+            return 0.5f + 0.5f * markInterpolator.getInterpolation((elapsed / MARK_POP_MS).coerceIn(0f, 1f))
         }
     }
 
     private var stateEffects: StateEffects? = null
     private var effectsAnimator: ValueAnimator? = null
     private val flyInterpolator = PathInterpolator(0.45f, 0f, 0.2f, 1f)
-    private val markInterpolator = OvershootInterpolator(2.2f)
+    private val markInterpolator = OvershootInterpolator(1.6f)
 
     private fun startStateEffects(old: Schedule, new: Schedule, oldRender: WeekRender, newRender: WeekRender) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !ValueAnimator.areAnimatorsEnabled()) return
@@ -1723,7 +1806,32 @@ class TimetableView @JvmOverloads constructor(
                 velocityTracker = VelocityTracker.obtain().also { it.addMovement(event) }
                 downX = event.x; downY = event.y
                 dragging = false
-                offsetAnimator?.cancel()
+                // 接住正在滑动的页面：停在当前位置，之后从这里继续跟手
+                val wasSettling = pageDriver.running
+                pageDriver.stop()
+                pageSpring.jumpTo(pageOffset)
+                // 首/末周碰壁回弹途中被接住：位置是阻尼过的，换算回手指位置再接着拖
+                dragBase = if (secondaryWeek == null && pageOffset != 0f) {
+                    Motion.rubberBandInverse(pageOffset, width * EDGE_PULL_FRACTION)
+                } else {
+                    pageOffset
+                }
+                anchorWeek = shownWeek()
+                pastCommit = false
+                if (wasSettling && abs(pageOffset) > 0.5f) {
+                    // 翻页途中按下是为了接住页面，不当作点课程
+                    dragging = true
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                } else if (wasSettling) {
+                    // 只差不到半个像素就落定了：直接落定，这次按下照常当作点击
+                    pageSpring.jumpTo(0f)
+                    pageOffset = 0f
+                    dragBase = 0f
+                    secondaryWeek = null
+                    dispatchPageScroll()
+                    invalidate()
+                }
+                if (!dragging) pressBlockAt(downX - pageOffset, downY)
                 longPressFired = false
                 longPressHandler.postDelayed(longPressRunnable, ViewConfiguration.getLongPressTimeout().toLong())
                 return true
@@ -1732,13 +1840,16 @@ class TimetableView @JvmOverloads constructor(
                 velocityTracker?.addMovement(event)
                 val dx = event.x - downX
                 val dy = event.y - downY
-                if (abs(dx) > touchSlop || abs(dy) > touchSlop) cancelLongPressCheck()
+                if (abs(dx) > touchSlop || abs(dy) > touchSlop) {
+                    cancelLongPressCheck()
+                    releasePress()
+                }
                 // 横向意图稍占优即认领手势，避免被竖向滚动提前抢走导致“滑一半被打断”
                 if (!dragging && abs(dx) > touchSlop && abs(dx) >= abs(dy) * 0.8f) {
                     dragging = true
                     parent?.requestDisallowInterceptTouchEvent(true)
                 }
-                if (dragging) dragTo(dx)
+                if (dragging) dragTo(dragBase + dx)
                 return true
             }
             MotionEvent.ACTION_UP -> {
@@ -1749,6 +1860,7 @@ class TimetableView @JvmOverloads constructor(
                 val dx = event.x - downX
                 val dy = event.y - downY
                 cancelLongPressCheck()
+                releasePress()
                 if (dragging) settleAfterDrag(velX)
                 else if (!longPressFired && abs(dx) <= touchSlop && abs(dy) <= touchSlop) {
                     performClick()
@@ -1765,7 +1877,8 @@ class TimetableView @JvmOverloads constructor(
                 velocityTracker?.recycle()
                 velocityTracker = null
                 cancelLongPressCheck()
-                animateOffsetTo(0f, 150) { secondaryWeek = null; invalidate() }
+                releasePress()
+                settleAfterDrag(0f)
                 return true
             }
         }
@@ -1779,6 +1892,13 @@ class TimetableView @JvmOverloads constructor(
         removeCallbacks(nowTick)
         cancelStateEffects()
         cancelIntro()
+        if (pageDriver.running) {
+            // 翻页途中离开窗口：直接落到终点
+            pageDriver.stop()
+            pageSpring.jumpTo(0f)
+            pageOffset = 0f
+            secondaryWeek = null
+        }
     }
 
     /** 息屏或切后台期间定时器可能延后，回到前台时重绘一次，按当前时间补上「已上」。 */
@@ -1797,21 +1917,47 @@ class TimetableView @JvmOverloads constructor(
         return true
     }
 
-    /** 拖拽时整体平移：当前页跟随手指，相邻页从对应侧进入；到头则橡皮筋回拉。 */
-    private fun dragTo(dx: Float) {
+    /**
+     * 拖拽时整体平移：当前页跟随手指，相邻页从对应侧进入；到头则橡皮筋回拉，越拉越重。
+     * [raw] 是手指要求的平移量（相对当前页）；越过翻页阈值时轻震一下，告诉用户「松手就翻」。
+     */
+    private fun dragTo(raw: Float) {
         val s = schedule ?: return
         val w = width.toFloat()
         val neighbor = when {
-            dx < 0 -> week + 1
-            dx > 0 -> week - 1
+            raw < 0 -> week + 1
+            raw > 0 -> week - 1
             else -> week
         }
         val inRange = neighbor in 1..s.totalWeeks && neighbor != week
-        var off = dx.coerceIn(-w, w)
-        if (!inRange) off *= 0.35f
-        pageOffset = off
+        pageOffset = if (inRange) raw.coerceIn(-w, w) else Motion.rubberBand(raw, w * EDGE_PULL_FRACTION)
         secondaryWeek = if (inRange) neighbor else null
+        val beyond = inRange && abs(pageOffset - restOffsetOf(anchorWeek)) >= commitDistance()
+        if (beyond != pastCommit) {
+            pastCommit = beyond
+            if (beyond) performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        }
+        dispatchPageScroll()
         invalidate()
+    }
+
+    /**
+     * 按下课程块就开始缩小：横向拖动在越过 touchSlop 前只走了几十毫秒，缩放还看不出来，
+     * 所以不必像系统那样延迟显示按压态，点按的反馈也就不会慢半拍。
+     */
+    private fun pressBlockAt(x: Float, y: Float) {
+        if (!Motion.enabled() || y <= headerHeightPx || schedule == null) return
+        val hit = renderFor(week).blocks.lastOrNull { !it.buried && x in it.left..it.right && y in it.top..it.bottom } ?: return
+        if (hit !== pressedBlock) pressSpring.jumpTo(0f)
+        pressedBlock = hit
+        pressSpring.springTo(1f, SpringSpec.PRESS)
+        pressDriver.start()
+    }
+
+    private fun releasePress() {
+        if (pressedBlock == null) return
+        pressSpring.springTo(0f, SpringSpec.PRESS)
+        pressDriver.start()
     }
 
     private fun handleClick(x: Float, y: Float) {
@@ -1964,6 +2110,18 @@ class TimetableView @JvmOverloads constructor(
         /** 七列模式下分栏块的额外字号收缩系数；五列分栏只降到七列档，不再乘。 */
         const val SPLIT_DENSE_SCALE = 0.85f
         const val MIN_SECTIONS = 8
+
+        /** 松手吸附：无回弹，起步速度来自手指。 */
+        private val PAGE_SETTLE = SpringSpec(0.36f)
+        /** 箭头 / 周次面板跳转：整页位移更长，稍慢一点。 */
+        private val PAGE_JUMP = SpringSpec(0.42f)
+        /** 首/末周点箭头的碰壁回弹。 */
+        private val PAGE_EDGE = SpringSpec(0.34f)
+        private const val EDGE_BOUNCE_FRACTION = 0.06f
+        /** 首/末周往外拖最多走多远（页宽比例），越拉越重。 */
+        private const val EDGE_PULL_FRACTION = 0.18f
+        /** 课程块按到底缩小的比例：0.96 就够，再小像是被吸进去。 */
+        private const val PRESS_SHRINK = 0.04f
         /** 「已上」定时重绘比下课时刻晚一点点，避免因计时误差提前触发而白跑一次。 */
         const val FINISHED_TICK_SLACK_MS = 200L
         const val WEEKDAY_COUNT = WeekendDisplay.WEEKDAY_COUNT

@@ -24,7 +24,7 @@ import kotlin.math.roundToInt
 class ChannelSheet(
     context: Context,
     private val onChanged: () -> Unit
-) : ImeSheetDialog(context) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_channel)

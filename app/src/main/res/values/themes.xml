@@ -32,34 +32,17 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- 底部抽屉（课程详情）：透明、无标题、从底部弹出 -->
+    <!--
+        底部面板（SheetDialog）：窗口铺满全屏，遮罩、进出场动画与下拉关闭都由面板自己做，
+        所以关掉系统压暗和窗口动画，避免与面板自身的动画叠加
+    -->
     <style name="Theme.Zhusijiao.Sheet" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">false</item>
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.45</item>
-        <item name="android:windowAnimationStyle">@style/SheetAnimation</item>
-        <item name="android:windowSoftInputMode">adjustResize</item>
-    </style>
-
-    <!-- 课表外观面板专用：几乎不压暗背景，让用户一边调档位一边看到上半屏的真实课表 -->
-    <style name="Theme.Zhusijiao.Sheet.Clear" parent="Theme.Zhusijiao.Sheet">
-        <item name="android:backgroundDimAmount">0.12</item>
-    </style>
-
-    <!--
-        带输入框的底部面板（ImeSheetDialog）：窗口铺满全屏，遮罩和进出场动画由面板自己画，
-        所以关掉系统压暗和窗口动画，避免与面板自身的动画叠加
-    -->
-    <style name="Theme.Zhusijiao.Sheet.Ime" parent="Theme.Zhusijiao.Sheet">
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:windowAnimationStyle">@null</item>
-    </style>
-
-    <style name="SheetAnimation" parent="@android:style/Animation.Dialog">
-        <item name="android:windowEnterAnimation">@anim/sheet_up</item>
-        <item name="android:windowExitAnimation">@anim/sheet_down</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
     <!-- 通用自定义模态弹窗：透明窗口 + 居中 + 缩放淡入淡出 -->

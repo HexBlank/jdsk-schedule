@@ -1,13 +1,11 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.TextView
@@ -38,7 +36,7 @@ class ColorPickerSheet(
     /** 预览：参数为要试的手动色，null 表示试「跟随自动配色」。 */
     private val onPreview: ((String?) -> Unit)? = null,
     private val onPreviewCancel: (() -> Unit)? = null
-) : Dialog(context, if (onPreview != null) R.style.Theme_Zhusijiao_Sheet_Clear else R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context, if (onPreview != null) SheetDialog.SCRIM_CLEAR else SheetDialog.SCRIM_DEFAULT) {
 
     private val previewMode = onPreview != null
 
@@ -48,11 +46,6 @@ class ColorPickerSheet(
 
     init {
         setContentView(R.layout.dialog_course_color)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         findViewById<TextView>(R.id.colorPickerCourse).text =

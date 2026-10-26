@@ -24,9 +24,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityManager
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.LinearInterpolator
-import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -371,7 +369,7 @@ object AppToast {
             capsule.scaleX = 0.97f
             capsule.scaleY = 0.97f
             capsule.animate().scaleX(1f).scaleY(1f).setDuration(REPLACE_IN_MS + REPLACE_OUT_MS)
-                .setInterpolator(OvershootInterpolator(1.5f)).start()
+                .setInterpolator(Motion.EASE_OUT).start()
         }
 
         private fun maxTextWidth(spec: Spec): Int {
@@ -392,7 +390,7 @@ object AppToast {
             capsule.scaleX = 0.94f
             capsule.scaleY = 0.94f
             capsule.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f)
-                .setDuration(ENTER_MS).setInterpolator(OvershootInterpolator(1.1f)).start()
+                .setDuration(ENTER_MS).setInterpolator(Motion.EASE_OUT).start()
         }
 
         fun pulse() {
@@ -400,7 +398,7 @@ object AppToast {
             capsule.scaleX = 1.04f
             capsule.scaleY = 1.04f
             capsule.animate().scaleX(1f).scaleY(1f).setDuration(PULSE_MS)
-                .setInterpolator(OvershootInterpolator(2f)).start()
+                .setInterpolator(Motion.EASE_OUT).start()
         }
 
         fun exit() {
@@ -408,7 +406,7 @@ object AppToast {
             val dy = dp(8f).toFloat() * if (top) -1 else 1
             capsule.animate().cancel()
             capsule.animate().alpha(0f).translationY(capsule.translationY + dy)
-                .setDuration(EXIT_MS).setInterpolator(AccelerateInterpolator())
+                .setDuration(EXIT_MS).setInterpolator(Motion.EASE_OUT)
                 .withEndAction { removeNow() }.start()
         }
 
@@ -459,7 +457,8 @@ object AppToast {
                                 dismiss()
                             }
                             else -> {
-                                capsule.animate().translationY(0f).alpha(1f).setDuration(PULSE_MS).start()
+                                capsule.animate().translationY(0f).alpha(1f).setDuration(PULSE_MS)
+                                    .setInterpolator(Motion.EASE_OUT).start()
                                 resumeTimer()
                             }
                         }

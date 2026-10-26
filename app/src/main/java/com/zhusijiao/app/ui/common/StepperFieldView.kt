@@ -8,6 +8,7 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
@@ -94,7 +95,10 @@ class StepperFieldView @JvmOverloads constructor(
 
     private fun changeBy(delta: Int) {
         val next = (value + delta).coerceIn(minimum, maximum)
-        if (next != value) setValue(next, notify = true)
+        if (next == value) return
+        // 每走一格轻震一下，长按连发时也能「数」出走了几格
+        performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        setValue(next, notify = true)
     }
 
     /**

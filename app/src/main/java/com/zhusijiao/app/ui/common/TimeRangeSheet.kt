@@ -1,10 +1,7 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import com.zhusijiao.app.R
 
@@ -19,7 +16,7 @@ class TimeRangeSheet(
     private val initialStart: Int,
     private val initialEnd: Int,
     private val onConfirm: (startMinutes: Int, endMinutes: Int) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context) {
 
     private val startHour by lazy { findViewById<WheelView>(R.id.startHourWheel) }
     private val startMinute by lazy { findViewById<WheelView>(R.id.startMinuteWheel) }
@@ -28,11 +25,6 @@ class TimeRangeSheet(
 
     init {
         setContentView(R.layout.dialog_time_range)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         val hours = (0..23).map { "%02d".format(it) }

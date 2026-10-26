@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  课表外观面板：只占屏幕下半部分，背景几乎不压暗（Theme.Zhusijiao.Sheet.Clear），
+  课表外观面板：只占屏幕下半部分，背景几乎不压暗（SheetDialog.SCRIM_CLEAR），
   用户一边点档位一边能看到上半屏真实课表的变化，因此没有「确定」按钮——改一下即时生效。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"

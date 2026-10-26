@@ -23,7 +23,7 @@ class RescheduleSheet(
     private val schedule: Schedule,
     private val click: TimetableView.CourseClick,
     private val onSave: (CourseAdjustmentDraft) -> Unit
-) : ImeSheetDialog(context) {
+) : SheetDialog(context) {
 
     private val adjustment = click.adjustment
     private val duration = (adjustment?.let { it.sourceEndSection - it.sourceStartSection + 1 }

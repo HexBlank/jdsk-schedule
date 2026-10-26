@@ -1,11 +1,9 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.Typeface
 import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -42,7 +40,7 @@ class HolidaySheet(
     private val onDeleteHoliday: (DayHoliday) -> Unit,
     private val onAddMakeup: (DayMakeupDraft) -> Unit,
     private val onDeleteMakeup: (DayMakeup) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context) {
 
     private var schedule = schedule
 
@@ -72,13 +70,8 @@ class HolidaySheet(
 
     init {
         setContentView(R.layout.dialog_holiday)
-        window?.apply {
-            // 日历需要成片的纵向空间，这里用固定高度面板，底部动作区才能始终留在手边。
-            val height = (context.resources.displayMetrics.heightPixels * SHEET_HEIGHT_RATIO).toInt()
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, height)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
+        // 日历需要成片的纵向空间，这里用固定高度面板，底部动作区才能始终留在手边
+        setPanelHeight((context.resources.displayMetrics.heightPixels * SHEET_HEIGHT_RATIO).toInt())
         setCanceledOnTouchOutside(true)
 
         selected = indexOf(

@@ -1,12 +1,9 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
@@ -30,15 +27,10 @@ class CourseDetailSheet(
     onEditExtra: (() -> Unit)? = null,
     onDeleteExtra: (() -> Unit)? = null
 ) :
-    Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+    SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_course_detail)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         // 头部配色：课程色朝白色混出浅底，文字朝墨色加深，浅色课程（如麦黄）上也清楚

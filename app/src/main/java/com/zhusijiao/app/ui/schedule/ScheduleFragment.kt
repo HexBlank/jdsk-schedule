@@ -58,6 +58,7 @@ import kotlinx.coroutines.withContext
 import com.zhusijiao.app.util.Rpx
 import com.zhusijiao.app.util.Ui
 import java.util.Calendar
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** 周课表页：应用主界面。 */
@@ -111,6 +112,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.onEventClick = { click -> showEvent(click) }
         binding.timetable.onEmptySlotClick = { week, day, section -> showAddChoice(week, day, section) }
         binding.timetable.onWeekChanged = { week, isFirst, isLast -> updateWeekBar(week, isFirst, isLast) }
+        binding.timetable.onPageScroll = { shown, local -> followPage(shown, local) }
         binding.prevWeek.setOnClickListener { binding.timetable.previousWeek() }
         binding.nextWeek.setOnClickListener { binding.timetable.nextWeek() }
         binding.weekCenter.setOnClickListener { showWeekPicker() }
@@ -239,12 +241,38 @@ class ScheduleFragment : Fragment(), Refreshable {
 
     private fun updateWeekBar(week: Int, isFirst: Boolean, isLast: Boolean) {
         currentWeek = week
-        binding.weekTitle.text = getString(R.string.index_week_title, week)
-        binding.weekCaption.text = captionForWeek(week)
+        showWeekTitle(week)
         tint(binding.prevIcon, if (isFirst) R.color.tt_chevron_off else R.color.tt_chevron)
         tint(binding.nextIcon, if (isLast) R.color.tt_chevron_off else R.color.tt_chevron)
         binding.backToCurrentWeek.visibility = if (week != currentWeekNumber) View.VISIBLE else View.GONE
         updateNextClass()
+    }
+
+    /** 页头正在显示哪一周（翻页途中跟随露出更多的那一页，可能还不是 [currentWeek]）。 */
+    private var titleWeek = 0
+
+    private fun showWeekTitle(week: Int) {
+        titleWeek = week
+        binding.weekTitle.text = getString(R.string.index_week_title, week)
+        binding.weekCaption.text = captionForWeek(week)
+    }
+
+    /**
+     * 页头「第 N 周」与课表页面同一个进度：页面往左翻，标题也往左滑并淡出，
+     * 过了一半换成下一周的字、从右侧滑回居中——两者步调一致，而不是翻完才突然变字。
+     */
+    private fun followPage(shown: Int, local: Float) {
+        if (shown != titleWeek) showWeekTitle(shown)
+        val center = binding.weekCenter
+        center.translationX = local * WEEK_TITLE_SHIFT_DP * resources.displayMetrics.density
+        center.alpha = (1f - abs(local) * 2f).coerceIn(0f, 1f)
+    }
+
+    /** 已在课表页时再点底栏的「课表」：回到本周；已经在本周就滚回顶部。 */
+    fun onReselected() {
+        if (_binding == null || schedule == null) return
+        if (currentWeek != currentWeekNumber) binding.timetable.goToWeek(currentWeekNumber)
+        else binding.scroll.smoothScrollTo(0, 0)
     }
 
     // ===== 请假 =====
@@ -937,6 +965,8 @@ class ScheduleFragment : Fragment(), Refreshable {
         private const val STATE_EMPTY = 2
         private const val STATE_ERROR = 3
         private const val STATE_WEEK = "selectedWeek"
+        /** 翻过半页时页头标题最多跟着平移多远。 */
+        private const val WEEK_TITLE_SHIFT_DP = 48f
 
         /** 本进程内已弹过「课表已失效」的课表，跨 Fragment 重建保留。 */
         private val promptedGone = mutableSetOf<String>()

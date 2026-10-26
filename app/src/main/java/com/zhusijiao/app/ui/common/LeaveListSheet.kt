@@ -1,11 +1,8 @@
 package com.zhusijiao.app.ui.common
 
-import android.app.Dialog
 import android.content.Context
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -27,15 +24,10 @@ class LeaveListSheet(
     leaves: List<Leave>,
     private val onAdd: () -> Unit,
     private val onEdit: (Leave) -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_leave_list)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
         findViewById<View>(R.id.leaveAdd).setOnClickListener { onAdd() }
         findViewById<View>(R.id.leaveListClose).setOnClickListener { dismiss() }

@@ -1,12 +1,10 @@
 package com.zhusijiao.app.ui.couple
 
-import android.app.Dialog
 import android.content.Context
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import com.zhusijiao.app.R
+import com.zhusijiao.app.ui.common.SheetDialog
 import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.domain.CoupleState
 import com.zhusijiao.app.ui.common.ToggleView
@@ -23,15 +21,10 @@ class CoupleSettingsSheet(
     private val onDisplayChanged: () -> Unit,
     private val onEditProfile: () -> Unit,
     private val onUnbind: () -> Unit
-) : Dialog(context, R.style.Theme_Zhusijiao_Sheet_Clear) {
+) : SheetDialog(context, SheetDialog.SCRIM_CLEAR) {
 
     init {
         setContentView(R.layout.dialog_couple_settings)
-        window?.apply {
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
-            setGravity(Gravity.BOTTOM)
-            setBackgroundDrawableResource(android.R.color.transparent)
-        }
         setCanceledOnTouchOutside(true)
 
         bindToggle(R.id.nowLineRow, R.id.nowLineToggle, Prefs.coupleShowNowLine) { Prefs.coupleShowNowLine = it }
