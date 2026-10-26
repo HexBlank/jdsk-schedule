@@ -13,6 +13,8 @@ captures/
 .cxx/
 *.apk
 *.aab
+# 测试包输出目录（scripts/build-apks.ps1）
+dist/
 *.hprof
 *.keystore
 *.jks
