@@ -10,6 +10,7 @@ import com.zhusijiao.app.domain.DayMakeup
 import com.zhusijiao.app.domain.DayMakeupDraft
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleValidator
+import com.zhusijiao.app.domain.export.ScheduleBackup
 import com.zhusijiao.app.reminder.ClassReminders
 import org.json.JSONArray
 import java.text.SimpleDateFormat
@@ -86,6 +87,40 @@ object LocalScheduleStore {
         write(schedules)
         saved
     }
+
+    /**
+     * 从 JSON 备份新建一份本机课表：课程、调课、停课、补课、配色在一次落盘里写完，
+     * 不逐条调 [saveAdjustment] 等接口——那样每条都要自增 revision，中途失败还会只恢复一半。
+     * [input] 是导入页上用户确认过的课表包（名称、开学日期、总周数可能改过）。
+     */
+    fun restoreBackup(input: ParsedSchedule, backup: ScheduleBackup.Backup): ScheduleBackup.Restored<Schedule> =
+        synchronized(lock) {
+            val normalized = try {
+                ScheduleValidator.normalize(input)
+            } catch (error: IllegalArgumentException) {
+                throw ApiException(error.message ?: "课表数据不完整")
+            }
+            val timestamp = now()
+            val base = Schedule(
+                id = "local-${UUID.randomUUID()}",
+                name = normalized.name,
+                school = normalized.school,
+                semesterStart = normalized.semesterStart,
+                totalWeeks = normalized.totalWeeks,
+                shareCode = null,
+                revision = 1,
+                createdAt = timestamp,
+                updatedAt = timestamp,
+                subscriberCount = 0,
+                role = "owner",
+                courseCount = normalized.courses.size,
+                timeSlots = normalized.timeSlots,
+                courses = normalized.courses
+            )
+            val restored = ScheduleBackup.applyArrangements(base, backup)
+            write(read() + restored.items)
+            restored
+        }
 
     fun deleteSchedule(id: String) = synchronized(lock) {
         val schedules = read().filterNot { it.id == id }

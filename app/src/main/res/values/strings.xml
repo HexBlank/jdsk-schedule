@@ -240,6 +240,7 @@
     <string name="join_missing_local">本机没有找到这份课表，请重新输入分享码加入。</string>
     <string name="library_action_update">更新</string>
     <string name="library_action_share">分享</string>
+    <string name="library_action_export">导出</string>
     <string name="library_action_delete">删除</string>
     <string name="library_action_leave">移除</string>
     <string name="library_delete_title">删除课表？</string>
@@ -369,6 +370,10 @@
     <string name="import_save_failed">保存失败</string>
     <string name="import_created">课表已创建</string>
     <string name="import_updated">课表已更新</string>
+    <string name="import_backup_note">另含%1$s</string>
+    <string name="import_backup_part">%1$s %2$d 条</string>
+    <string name="import_backup_restored">已恢复</string>
+    <string name="import_backup_restored_skipped">已恢复，跳过 %1$d 条</string>
     <string name="import_need_source">请先选择文件或粘贴内容</string>
     <string name="import_clip_empty">剪贴板是空的</string>
     <string name="import_file_too_large">文件不能超过 1.8MB</string>
@@ -712,4 +717,29 @@
     <string name="weeks_preset_only">仅第%1$d周</string>
     <string name="settings_open_source_value">GitHub</string>
     <string name="settings_footer">几点上课 %1$s · 非官方工具，课程以教务系统为准</string>
+
+    <!-- 导出课表 -->
+    <string name="settings_export_row">导出课表</string>
+    <string name="export_title">导出「%1$s」</string>
+    <string name="export_format_xlsx">Excel</string>
+    <string name="export_format_ics">日历</string>
+    <string name="export_format_json">备份</string>
+    <string name="export_format_prefix">导出格式：</string>
+    <string name="export_weeks_label">周次</string>
+    <string name="export_weeks_all">整个学期</string>
+    <string name="export_alarm_label">提醒</string>
+    <string name="export_alarm_none">不提醒</string>
+    <string name="export_alarm_minutes">%1$d分钟</string>
+    <string name="export_alarm_prefix">提前提醒：</string>
+    <string name="export_include_extras">自加课程</string>
+    <string name="export_include_events">日程</string>
+    <string name="export_include_leaves">请假</string>
+    <string name="export_save">保存到…</string>
+    <string name="export_share">分享</string>
+    <string name="export_share_chooser">分享课表</string>
+    <string name="export_saved">已保存</string>
+    <string name="export_failed">导出失败</string>
+    <string name="export_need_dates">没有开学日期，不能导出日历</string>
+    <string name="export_expired">导出中断，请重试</string>
+    <string name="export_no_schedule">还没有课表</string>
 </resources>

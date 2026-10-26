@@ -90,6 +90,14 @@ object ExtraCourseStore {
         write(all)
     }
 
+    /** 从备份还原：整组写进新课表名下（调用方已校验、换好 id、裁到上限）。 */
+    fun putAll(scheduleId: String, extras: List<ExtraCourse>) = synchronized(lock) {
+        if (extras.isEmpty()) return@synchronized
+        val all = read().toMutableMap()
+        all[scheduleId] = extras.take(ExtraCourses.MAX_PER_SCHEDULE)
+        write(all)
+    }
+
     /** 课表被删除或退出时清理它名下自己加的课。 */
     fun removeSchedule(scheduleId: String) = synchronized(lock) {
         val all = read().toMutableMap()

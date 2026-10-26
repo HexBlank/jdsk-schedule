@@ -10,7 +10,9 @@ import com.zhusijiao.app.domain.CourseAdjustmentDraft
 import com.zhusijiao.app.domain.DayHolidayDraft
 import com.zhusijiao.app.domain.DayMakeupDraft
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.SharePreview
+import com.zhusijiao.app.domain.export.ScheduleBackup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -105,6 +107,30 @@ object ApiClient {
             val saved = LocalScheduleStore.saveSchedule(input, id, expectedRevision)
             before?.let { markDirtyIfShared(it) }
             saved
+        }
+    }
+
+    /**
+     * 从 JSON 备份还原成一份新的本机课表，连同它名下自己加的课、日程，以及（全局的）请假。
+     * 返回新课表和被跳过（不合法、超出学期范围、超出条数上限）的条数。
+     */
+    suspend fun restoreBackup(input: ParsedSchedule, backup: ScheduleBackup.Backup): ScheduleBackup.Restored<Schedule> {
+        migrateReadOnlyCache()
+        return withContext(Dispatchers.IO) {
+            val restored = LocalScheduleStore.restoreBackup(input, backup)
+            val schedule = restored.items
+            val extras = ScheduleBackup.restoreExtras(backup, schedule.totalWeeks)
+            ExtraCourseStore.putAll(schedule.id, extras.items)
+            val events = ScheduleBackup.restoreEvents(
+                backup,
+                schedule.totalWeeks,
+                ScheduleTime.slotsOf(schedule.timeSlots),
+                PersonalEventStore.MAX_PER_SCHEDULE
+            )
+            PersonalEventStore.putAll(schedule.id, events.items)
+            val leaves = ScheduleBackup.restoreLeaves(backup, LeaveStore.list(), LeaveStore.MAX_LEAVES)
+            LeaveStore.addAll(leaves.items)
+            ScheduleBackup.Restored(schedule, restored.skipped + extras.skipped + events.skipped + leaves.skipped)
         }
     }
 

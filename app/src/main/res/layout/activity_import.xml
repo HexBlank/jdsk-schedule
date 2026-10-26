@@ -208,6 +208,17 @@
                         android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
+                <!-- JSON 备份：课程以外还会一并恢复的内容（值），没有就不显示 -->
+                <TextView
+                    android:id="@+id/backupNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingMultiplier="1.35"
+                    android:textColor="@color/sub_8a"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
+
                 <LinearLayout
                     android:id="@+id/coursePreview"
                     android:layout_width="match_parent"

@@ -111,6 +111,14 @@ object PersonalEventStore {
         write(all)
     }
 
+    /** 从备份还原：整组写进新课表名下（调用方已校验、去掉同时段重复、换好 id）。 */
+    fun putAll(scheduleId: String, events: List<PersonalEvent>) = synchronized(lock) {
+        if (events.isEmpty()) return@synchronized
+        val all = read().toMutableMap()
+        all[scheduleId] = events.take(MAX_PER_SCHEDULE)
+        write(all)
+    }
+
     /** 课表被删除或退出时清理它名下的日程。 */
     fun removeSchedule(scheduleId: String) = synchronized(lock) {
         val all = read().toMutableMap()

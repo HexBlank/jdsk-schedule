@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 导出课表「分享」时，只对外开放缓存里的 export 目录（见 ExportFlow） -->
+<paths>
+    <cache-path
+        name="export"
+        path="export/" />
+</paths>

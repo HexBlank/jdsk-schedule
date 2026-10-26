@@ -77,6 +77,14 @@ object LeaveStore {
         write(all + leave)
     }
 
+    /** 从备份还原：并入新的请假（调用方已按 id 去重、校验、裁到上限），本机已有的不动。 */
+    fun addAll(leaves: List<Leave>) = synchronized(lock) {
+        if (leaves.isEmpty()) return@synchronized
+        val all = read()
+        val ids = all.mapTo(mutableSetOf()) { it.id }
+        write((all + leaves.filterNot { it.id in ids }).take(MAX_LEAVES))
+    }
+
     fun clear() = synchronized(lock) {
         file().delete()
         tempFile().delete()

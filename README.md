@@ -61,7 +61,7 @@
 app/                 原生 Android 应用（Kotlin + XML Views，AppCompat-only）
   src/main/java/com/zhusijiao/app/
     AppConfig.kt       全局配置：后端域名（唯一变量）、教务入口
-    domain/            模型、日期、配色/周次、EAMS 解析器、日程、请假、自己加的课、情侣课表（按人分栏、当天安排、都有空）
+    domain/            模型、日期、配色/周次、EAMS 解析器、日程、请假、自己加的课、情侣课表（按人分栏、当天安排、都有空）、导出（Excel / ICS / JSON 备份）
     data/              ApiClient（OkHttp）、原子本机存储、离线缓存、情侣状态、Prefs
     ui/common/         AppHeader、BottomNavView（悬浮底栏）、TimetableView、情侣日视图、各类底部面板、BaseActivity
     reminder/          上课提醒：排下一次定时、发通知、开机/改时间后重排、系统授权检测

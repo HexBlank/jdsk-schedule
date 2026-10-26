@@ -167,6 +167,11 @@
             android:textColor="@color/tag_text" />
 
         <TextView
+            android:id="@+id/actionExport"
+            style="@style/CardAction"
+            android:text="@string/library_action_export" />
+
+        <TextView
             android:id="@+id/actionRemove"
             style="@style/CardAction"
             android:text="@string/library_action_delete"

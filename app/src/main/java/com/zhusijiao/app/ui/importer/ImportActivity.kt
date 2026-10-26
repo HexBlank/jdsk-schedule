@@ -21,6 +21,7 @@ import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.EamsParser
 import com.zhusijiao.app.domain.ParsedSchedule
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.domain.export.ScheduleBackup
 import com.zhusijiao.app.ui.common.BaseActivity
 import com.zhusijiao.app.ui.eams.EamsWebActivity
 import com.zhusijiao.app.ui.schedule.ScheduleFragment
@@ -38,6 +39,8 @@ class ImportActivity : BaseActivity() {
     private var overwriteTarget: Schedule? = null
     private var targetLookupPending = false
     private var parsed: ParsedSchedule? = null
+    /** 解析出来的是 JSON 备份（v2）时不为 null：保存时连同调课、日程等一起还原成新课表。 */
+    private var backup: ScheduleBackup.Backup? = null
     private var semesterStart = ""
 
     private val dayNames = listOf("一", "二", "三", "四", "五", "六", "日")
@@ -108,9 +111,9 @@ class ImportActivity : BaseActivity() {
                 overwriteTarget = schedule
                 binding.overwriteMode.apply {
                     visibility = View.VISIBLE
-                    isEnabled = true
+                    isEnabled = backup == null
                     text = getString(R.string.import_mode_overwrite, schedule.name)
-                    isChecked = true
+                    isChecked = backup == null
                 }
                 binding.overwriteWarning.apply {
                     visibility = View.VISIBLE
@@ -200,12 +203,18 @@ class ImportActivity : BaseActivity() {
         binding.parseBtn.text = getString(R.string.import_parsing)
         lifecycleScope.launch {
             try {
-                val result = withContext(Dispatchers.Default) { EamsParser.parseImportContent(source) }
+                val (result, restored) = withContext(Dispatchers.Default) {
+                    val decoded = ScheduleBackup.decode(source)
+                    if (decoded != null) decoded.toParsedSchedule() to decoded
+                    else EamsParser.parseImportContent(source) to null
+                }
                 parsed = result
+                backup = restored
                 renderResult(result)
                 Ui.toastSuccess(this@ImportActivity, getString(R.string.import_parsed_count, result.courses.size))
             } catch (e: Exception) {
                 parsed = null
+                backup = null
                 binding.resultSection.visibility = View.GONE
                 Ui.alert(this@ImportActivity, getString(R.string.import_parse_failed_title), e.message ?: getString(R.string.import_need_source))
             } finally {
@@ -241,7 +250,24 @@ class ImportActivity : BaseActivity() {
             binding.coursePreview.addView(more)
         }
 
+        renderBackupNote()
         applyModeDefaults()
+    }
+
+    /**
+     * 备份只能恢复成新课表：「覆盖」会清空调课，订阅来的课表覆盖后再同步还会冲突。
+     * 所以解析出备份时锁定「新建课表」，换成别的内容再解析时恢复原样。
+     */
+    private fun renderBackupNote() {
+        val restoring = backup
+        // 课程以外还会恢复的内容是个值（「另含调课 3 条、日程 2 条」），没有就不显示
+        val parts = restoring?.let { ScheduleBackup.summaryParts(it) }.orEmpty().joinToString("、") { (label, count) ->
+            getString(R.string.import_backup_part, label, count)
+        }
+        binding.backupNote.visibility = if (parts.isNotEmpty()) View.VISIBLE else View.GONE
+        binding.backupNote.text = if (parts.isNotEmpty()) getString(R.string.import_backup_note, parts) else ""
+        if (restoring != null) binding.newMode.isChecked = true
+        binding.overwriteMode.isEnabled = restoring == null && overwriteTarget != null && !targetLookupPending
     }
 
     private fun divider(): View = View(this).apply {
@@ -314,7 +340,7 @@ class ImportActivity : BaseActivity() {
             return
         }
         val weeks = binding.weeksInput.text.toString().toIntOrNull() ?: 20
-        val target = overwriteTarget?.takeIf { binding.overwriteMode.isChecked }
+        val target = overwriteTarget?.takeIf { binding.overwriteMode.isChecked && backup == null }
         if (target != null && target.adjustments.isNotEmpty()) {
             Ui.confirm(
                 this,
@@ -332,16 +358,25 @@ class ImportActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 val payload = p.copy(name = name, semesterStart = semesterStart, totalWeeks = weeks)
-                val saved = ApiClient.saveSchedule(payload, target?.id, target?.revision)
+                val restoring = backup
+                var skipped = 0
+                val saved = if (restoring != null) {
+                    ApiClient.restoreBackup(payload, restoring).also { skipped = it.skipped }.items
+                } else {
+                    ApiClient.saveSchedule(payload, target?.id, target?.revision)
+                }
                 val switched = Prefs.activeScheduleId != saved.id
                 Prefs.activeScheduleId = saved.id
                 ScheduleFragment.requestIntro(saved.id)
                 // 情侣课表：TA 看到的是当前课表，切换了要让用户知道（轻提示同时只显示一条，所以二选一）
-                if (switched && ApiClient.coupleState().bound) {
-                    Ui.toastSuccess(this@ImportActivity, getString(R.string.library_couple_switch_toast))
-                } else {
-                    Ui.toastSuccess(this@ImportActivity, getString(if (target != null) R.string.import_updated else R.string.import_created))
+                val message = when {
+                    switched && ApiClient.coupleState().bound -> getString(R.string.library_couple_switch_toast)
+                    restoring != null && skipped > 0 -> getString(R.string.import_backup_restored_skipped, skipped)
+                    restoring != null -> getString(R.string.import_backup_restored)
+                    target != null -> getString(R.string.import_updated)
+                    else -> getString(R.string.import_created)
                 }
+                Ui.toastSuccess(this@ImportActivity, message)
                 val intent = Intent(this@ImportActivity, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                     putExtra(MainActivity.EXTRA_OPEN_SCHEDULE, true)

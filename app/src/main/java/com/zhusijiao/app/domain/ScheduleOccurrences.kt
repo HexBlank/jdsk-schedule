@@ -12,9 +12,21 @@ package com.zhusijiao.app.domain
  */
 object ScheduleOccurrences {
 
+    /** 一次课是怎么来到这一天的：照常上、调课调进来、补课日从来源日搬过来。 */
+    enum class Source { REGULAR, ADJUSTED, MAKEUP }
+
+    data class Occurrence(val course: Course, val source: Source)
+
     /** 第 [week] 周周 [day] 实际会发生的课。 */
-    fun coursesOn(schedule: Schedule, week: Int, day: Int): List<Course> {
-        val result = mutableListOf<Course>()
+    fun coursesOn(schedule: Schedule, week: Int, day: Int): List<Course> =
+        occurrencesOn(schedule, week, day).map { it.course }
+
+    /**
+     * 同 [coursesOn]，但带上每次课的来历，导出课表时用来标「调课」「补课」。
+     * 补课日搬来的课保留来源日的 day，节次不变。
+     */
+    fun occurrencesOn(schedule: Schedule, week: Int, day: Int): List<Occurrence> {
+        val result = mutableListOf<Occurrence>()
         val movedOut = schedule.adjustments.map { it.courseId to it.sourceWeek }.toSet()
         val suspended = schedule.holidays.any { it.week == week && it.day == day }
         // 补课来源日：当天课表已整体搬到补课日，本日不上课
@@ -23,25 +35,31 @@ object ScheduleOccurrences {
         if (!suspended && !movedAway) {
             schedule.courses.forEach { course ->
                 if (course.day == day && course.weeks.contains(week) && (course.id to week) !in movedOut) {
-                    result += course
+                    result += Occurrence(course, Source.REGULAR)
                 }
             }
         }
         schedule.adjustments.filter { it.targetWeek == week && it.targetDay == day }.forEach { adjustment ->
-            result += adjustment.targetCourse(schedule.courses.find { it.id == adjustment.courseId })
+            result += Occurrence(
+                adjustment.targetCourse(schedule.courses.find { it.id == adjustment.courseId }),
+                Source.ADJUSTED
+            )
         }
         schedule.makeups.filter { it.targetWeek == week && it.targetDay == day }.forEach { makeup ->
             schedule.courses.forEach { course ->
                 if (course.day == makeup.sourceDay && course.weeks.contains(makeup.sourceWeek) &&
                     (course.id to makeup.sourceWeek) !in movedOut
                 ) {
-                    result += course
+                    result += Occurrence(course, Source.MAKEUP)
                 }
             }
             schedule.adjustments.filter {
                 it.targetWeek == makeup.sourceWeek && it.targetDay == makeup.sourceDay
             }.forEach { adjustment ->
-                result += adjustment.targetCourse(schedule.courses.find { it.id == adjustment.courseId })
+                result += Occurrence(
+                    adjustment.targetCourse(schedule.courses.find { it.id == adjustment.courseId }),
+                    Source.MAKEUP
+                )
             }
         }
         return result

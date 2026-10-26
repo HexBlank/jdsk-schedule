@@ -19,6 +19,7 @@ import com.zhusijiao.app.databinding.ItemScheduleCardBinding
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.ui.common.BottomNavView
+import com.zhusijiao.app.ui.common.ExportFlow
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
@@ -33,6 +34,7 @@ class LibraryFragment : Fragment(), Refreshable {
     private var _binding: FragmentLibraryBinding? = null
     private val binding get() = _binding!!
     private var syncRunning = false
+    private val exportFlow = ExportFlow(this)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLibraryBinding.inflate(inflater, container, false)
@@ -53,6 +55,7 @@ class LibraryFragment : Fragment(), Refreshable {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        exportFlow.dismiss()
         _binding = null
     }
 
@@ -172,6 +175,8 @@ class LibraryFragment : Fragment(), Refreshable {
         card.actionShare.setOnClickListener {
             startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, item.id))
         }
+        // 导出不分发布者、订阅者：订阅来的课表一样可以导出给自己用
+        card.actionExport.setOnClickListener { exportFlow.show(item.id) }
         card.actionRemove.setOnClickListener { confirmRemove(item, isOwner) }
         return card.root
     }

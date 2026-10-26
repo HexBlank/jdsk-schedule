@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 导出课表：标题是课表名，选格式，其余是带默认值的行，底部保存或分享 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="16dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        android:id="@+id/exportTitle"
+        style="@style/SheetTitle" />
+
+    <com.zhusijiao.app.ui.common.MaxHeightScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                android:id="@+id/exportFormat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- 只在真的导不了时出现一行 -->
+            <TextView
+                android:id="@+id/exportError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/export_need_dates"
+                android:textColor="@color/danger"
+                android:textSize="@dimen/text_caption"
+                android:visibility="gone" />
+
+            <LinearLayout
+                style="@style/FormGroup"
+                android:layout_marginTop="16dp">
+
+                <LinearLayout
+                    android:id="@+id/exportWeeksRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:text="@string/export_weeks_label" />
+
+                    <TextView
+                        android:id="@+id/exportWeeksValue"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/exportWeeksDivider"
+                    style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/exportAlarmRow"
+                    style="@style/FormRow"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:text="@string/export_alarm_label" />
+
+                    <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                        android:id="@+id/exportAlarm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/exportAlarmDivider"
+                    style="@style/FormDivider"
+                    android:visibility="gone" />
+
+                <!-- 开关行：整行可点只是放大触摸区，焦点 / 无障碍控件是行内的 ToggleView -->
+                <LinearLayout
+                    android:id="@+id/exportExtrasRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/export_include_extras" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/exportExtrasToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/export_include_extras" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/exportEventsRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/export_include_events" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/exportEventsToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/export_include_events" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/exportLeavesRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/export_include_leaves" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/exportLeavesToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/export_include_leaves" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </com.zhusijiao.app.ui.common.MaxHeightScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/exportSave"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_ghost_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/export_save"
+            android:textColor="@color/action_ink"
+            android:textSize="@dimen/text_body" />
+
+        <TextView
+            android:id="@+id/exportShare"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="@string/export_share"
+            android:textSize="@dimen/text_body" />
+    </LinearLayout>
+</LinearLayout>

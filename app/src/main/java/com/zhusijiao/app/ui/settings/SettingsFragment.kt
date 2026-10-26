@@ -30,6 +30,7 @@ import com.zhusijiao.app.reminder.ReminderPermissions
 import com.zhusijiao.app.ui.common.AppearanceSheet
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ChannelSheet
+import com.zhusijiao.app.ui.common.ExportFlow
 import com.zhusijiao.app.ui.common.LeaveFlow
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.ServerSheet
@@ -64,6 +65,7 @@ class SettingsFragment : Fragment(), Refreshable {
         bindReminderRow()
         bindLeaveRow()
         bindAppearanceRow()
+        bindExportRow()
         bindUpdateSection()
         bindServerRow()
         bindChannelRow()
@@ -113,6 +115,7 @@ class SettingsFragment : Fragment(), Refreshable {
     override fun onDestroyView() {
         super.onDestroyView()
         leaveFlow.dismiss()
+        exportFlow.dismiss()
         _binding = null
     }
 
@@ -196,6 +199,23 @@ class SettingsFragment : Fragment(), Refreshable {
     private fun bindAppearanceRow() {
         binding.menuAppearance.setOnClickListener {
             (activity as? MainActivity)?.openTimetableAppearance()
+        }
+    }
+
+    private val exportFlow = ExportFlow(this)
+
+    /** 「导出课表」行：导出当前课表（与课表页同一口径）；别的课表在课表库卡片上导出。 */
+    private fun bindExportRow() {
+        binding.menuExport.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val scheduleId = withContext(Dispatchers.IO) { ClassReminders.currentSchedule()?.id }
+                if (_binding == null) return@launch
+                if (scheduleId == null) {
+                    Ui.toastError(requireContext(), getString(R.string.export_no_schedule))
+                } else {
+                    exportFlow.show(scheduleId)
+                }
+            }
         }
     }
 
