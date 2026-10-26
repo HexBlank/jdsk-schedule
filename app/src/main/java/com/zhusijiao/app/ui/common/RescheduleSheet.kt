@@ -99,7 +99,6 @@ class RescheduleSheet(
         room.setText(adjustment?.targetPosition.orEmpty())
         updateSummary()
 
-        findViewById<View>(R.id.rescheduleCancel).setOnClickListener { dismiss() }
         findViewById<View>(R.id.rescheduleSave).setOnClickListener {
             val draft = draft()
             val base = runCatching {

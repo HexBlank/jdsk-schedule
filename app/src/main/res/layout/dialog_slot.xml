@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 选星期与节次：标题就是当前选择，没有提示文字 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingStart="18dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="16dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        android:id="@+id/slotTitle"
+        style="@style/SheetTitle" />
+
+    <TextView
+        android:id="@+id/slotClock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:textColor="@color/text_tertiary"
+        android:textSize="@dimen/text_small" />
+
+    <com.zhusijiao.app.ui.common.SegmentedChoiceView
+        android:id="@+id/slotDay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp" />
+
+    <com.zhusijiao.app.ui.common.SectionPickerView
+        android:id="@+id/slotSections"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/slotDone"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="20dp"
+        android:text="@string/common_done" />
+</LinearLayout>

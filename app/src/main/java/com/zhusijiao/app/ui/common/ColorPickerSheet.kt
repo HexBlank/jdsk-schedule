@@ -49,7 +49,7 @@ class ColorPickerSheet(
         setCanceledOnTouchOutside(true)
 
         findViewById<TextView>(R.id.colorPickerCourse).text =
-            if (previewMode) context.getString(R.string.color_picker_preview_hint, courseName) else courseName
+            courseName
         if (title != null) findViewById<TextView>(R.id.colorPickerTitle).text = title
         buildGrid()
         buildCustomGrid()

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">几点上课</string>
-    <string name="app_tagline">面向同学的非官方共享课表</string>
 
     <!-- 底部导航 -->
     <string name="nav_schedule">课表</string>
@@ -22,7 +21,6 @@
     <string name="index_loading">正在加载课表…</string>
     <string name="index_load_failed_title">课表加载失败</string>
     <string name="index_empty_title">还没有课表</string>
-    <string name="index_empty_desc">登录教务系统一键导入，或者输入同学给你的 8 位分享码。</string>
     <string name="index_import">导入课表</string>
     <string name="index_use_code">使用分享码</string>
     <string name="index_week_title">第 %1$d 周</string>
@@ -37,7 +35,6 @@
     <string name="next_class_now">马上开始</string>
     <string name="next_class_starts_at">%1$s 开始</string>
     <string name="index_week_empty">本周没有课程</string>
-    <string name="index_unofficial_note">非官方工具 · 课程安排以教务系统为准</string>
     <string name="index_prev_week">上一周</string>
     <string name="index_next_week">下一周</string>
     <string name="week_picker_title">选择周次</string>
@@ -47,16 +44,11 @@
     <string name="week_picker_chip_plain">第 %1$d 周</string>
 
     <!-- 课程详情抽屉 -->
-    <string name="detail_weeks">周次</string>
-    <string name="detail_time">时间</string>
-    <string name="detail_room">教室</string>
-    <string name="detail_teacher">教师</string>
     <string name="detail_done">完成</string>
     <string name="detail_place_pending">地点待定</string>
     <string name="detail_day_fallback">上课日</string>
     <string name="detail_time_pending">时间待定</string>
     <string name="detail_room_pending">待定</string>
-    <string name="detail_teacher_empty">未填写</string>
     <string name="detail_sections">第 %1$d–%2$d 节 · %3$s</string>
 
     <!-- 单次调课 -->
@@ -65,14 +57,12 @@
     <string name="reschedule_action">调课</string>
     <string name="reschedule_edit_action">修改调课</string>
     <string name="reschedule_undo">撤销调课</string>
-    <string name="reschedule_intro">在日历上点要调到哪一天，课程时长会自动保持不变。</string>
     <string name="reschedule_source_label">原安排</string>
     <string name="reschedule_date_label">目标日期</string>
     <string name="reschedule_no_calendar">当前课表缺少开学日期，无法使用日历选日期，将保持原上课日期。</string>
     <string name="reschedule_week_value">第 %1$d 周</string>
     <string name="reschedule_section">目标节次</string>
-    <string name="reschedule_room_label">新教室（可选）</string>
-    <string name="reschedule_room_hint">新教室（不变可留空）</string>
+    <string name="reschedule_room_hint">新教室</string>
     <string name="reschedule_summary_label">调整后</string>
     <string name="reschedule_summary_time"> · %1$s–%2$s</string>
     <string name="reschedule_decrease">减少</string>
@@ -96,8 +86,7 @@
 
     <!-- 停课与补课（假期调休）：日历直选，不再让用户心算「第几周周几」 -->
     <string name="holiday_title">调休安排</string>
-    <string name="holiday_intro">在日历上点一天，再选要停课还是补课</string>
-    <string name="holiday_week_notice">开学日期填的是 %1$s（周%2$s），第 1 周已按所在周的周一 %3$s 起算，日历上的星期与真实日历一致。若周次对不上，可在导入页重新设置开学日期。</string>
+    <string name="holiday_week_notice">第 1 周从 %1$s（周一）算起</string>
     <string name="holiday_list_label">已有安排</string>
     <string name="holiday_list_count">已有安排 · %1$d</string>
     <string name="holiday_empty">暂无安排</string>
@@ -115,16 +104,15 @@
     <string name="holiday_calendar_description">学期日历，点选日期设置停课或补课</string>
     <string name="holiday_calendar_month">%1$d年%2$d月</string>
     <string name="holiday_calendar_count">%1$d课</string>
-    <string name="holiday_calendar_hint">灰底「休」＝停课 · 橙底「补」＝补课 · 橙点＝这天的课已补走 · 小字＝当天课程数</string>
 
     <!-- 所选日期 -->
-    <string name="holiday_pick_hint">在上方日历点一天开始设置</string>
+    <string name="holiday_pick_hint">选择日期</string>
     <string name="holiday_no_selection">还没有选日期</string>
     <string name="holiday_selected_title">%1$s · 第%2$d周</string>
     <string name="holiday_selected_courses">这一天有 %1$d 门课：%2$s</string>
     <string name="holiday_selected_more">等</string>
     <string name="holiday_selected_none">这一天没有课</string>
-    <string name="holiday_state_suspended">已停课 · 这一天的课都不上</string>
+    <string name="holiday_state_suspended">已停课</string>
     <string name="holiday_state_makeup_target">补课日 · 这天上 %1$s 的课</string>
     <string name="holiday_state_makeup_source">这天的课已补到 %1$s</string>
 
@@ -145,10 +133,10 @@
     <string name="holiday_action_remove_makeup">取消这次补课</string>
     <string name="holiday_action_remove_makeup_source">取消补到 %1$s 的安排</string>
     <string name="holiday_makeup_title">把 %1$s 的课补到…</string>
-    <string name="holiday_makeup_pick_hint">在上方日历再点一天，作为补课日</string>
+    <string name="holiday_makeup_pick_hint">选择补课日</string>
     <string name="holiday_makeup_chosen">补课日：%1$s</string>
-    <string name="holiday_makeup_target_courses">这天原本有 %1$d 门课，补课后一起上</string>
-    <string name="holiday_makeup_target_free">这天原本没有课</string>
+    <string name="holiday_makeup_target_courses">当天已有 %1$d 门课</string>
+    <string name="holiday_makeup_target_free">当天无课</string>
     <string name="holiday_makeup_need_target">请先在日历上点选补课日</string>
 
     <string name="holiday_date_label">%1$s 周%2$s</string>
@@ -156,13 +144,12 @@
     <string name="holiday_saved">调休已保存</string>
     <string name="holiday_deleted">已删除</string>
     <string name="holiday_invalid">调休设置无效</string>
-    <string name="detail_suspended_notice">这一天已停课（假期调休），本节课不上了。</string>
-    <string name="detail_makeup_notice">补课：本节是第 %1$d 周周%2$s 的课，调整到这一天上了。</string>
-    <string name="color_picker_preview_hint">%1$s · 点选即预览，点「完成」保存</string>
+    <string name="detail_suspended_notice">当天停课</string>
+    <string name="detail_makeup_notice">补第 %1$d 周周%2$s 的课</string>
     <string name="color_picker_title">课程颜色</string>
     <string name="color_picker_follow_default">跟随默认配色</string>
     <string name="color_picker_presets">预设颜色</string>
-    <string name="color_picker_mine">我的颜色 · 长按删除</string>
+    <string name="color_picker_mine">我的颜色</string>
     <string name="color_picker_add_custom">+ 自定义</string>
     <string name="color_picker_custom">自定义颜色</string>
     <string name="color_picker_save_custom">保存并使用</string>
@@ -170,13 +157,11 @@
     <string name="color_picker_removed">已删除自定义颜色</string>
     <string name="course_colors_updated">颜色已更新</string>
     <string name="course_colors_owner_only">课程颜色由发布者统一设置</string>
-    <string name="week_picker_weekend_section">周末显示</string>
-    <string name="week_picker_auto_weekend">当周周六日有课时才显示</string>
+    <string name="week_picker_auto_weekend">周末无课时隐藏</string>
 
     <!-- 课表外观：格子高度/留白/文字大小，纯本机显示偏好 -->
     <string name="appearance_title">课表外观</string>
     <string name="appearance_action">课表外观</string>
-    <string name="appearance_hint">调完立刻生效，只改这台手机的显示</string>
     <string name="appearance_reset">恢复默认</string>
     <string name="appearance_row_height">格子高度</string>
     <string name="appearance_height_1">最矮</string>
@@ -185,9 +170,7 @@
     <string name="appearance_height_4">偏高</string>
     <string name="appearance_height_5">最高</string>
     <string name="appearance_fit_screen">自动铺满一屏</string>
-    <string name="appearance_fit_screen_sub">按节次数平分高度，一屏看全不用滚；手动选高度即关闭</string>
     <string name="appearance_padding">格子留白</string>
-    <string name="appearance_padding_sub">整周一屏，列宽不可调；留白越大，格子看起来越瘦</string>
     <string name="appearance_padding_1">紧凑</string>
     <string name="appearance_padding_2">标准</string>
     <string name="appearance_padding_3">宽松</string>
@@ -198,24 +181,15 @@
     <string name="appearance_desc_height">格子高度：</string>
     <string name="appearance_desc_padding">格子留白：</string>
     <string name="appearance_desc_text">文字大小：</string>
-    <string name="appearance_summary_fit">铺满一屏</string>
-    <string name="appearance_summary_height">格子%1$s</string>
-    <string name="appearance_summary">%1$s · 留白%2$s · 文字%3$s</string>
-    <string name="appearance_summary_with_finished">%1$s · 显示已上</string>
     <string name="appearance_show_finished">显示已上状态</string>
-    <string name="appearance_show_finished_sub">下课后（精确到分钟）的课变灰并标「已上」</string>
     <string name="appearance_show_now_line">显示当前时间线</string>
-    <string name="appearance_show_now_line_sub">今天那一列用红色横线标出此刻的位置</string>
     <string name="appearance_show_next_class">显示下一节课提示</string>
-    <string name="appearance_show_next_class_sub">课表页顶部的「下一节 · 几分钟后」提示条</string>
     <string name="appearance_group_state">状态显示</string>
     <string name="appearance_state_style">停课与日程的样式</string>
     <string name="appearance_state_modern">新版</string>
     <string name="appearance_state_classic">经典</string>
-    <string name="appearance_state_hint">新版：停课空心虚线加删除线，日程浅底实线。经典：和 1.2.29 及之前一样。</string>
     <string name="appearance_state_modern_desc">新版样式：停课的课画成空心虚线并划掉课程名，日程画成浅底实线框</string>
     <string name="appearance_state_classic_desc">经典样式：停课的课变成灰色，日程画成深色实心块</string>
-    <string name="appearance_summary_classic">%1$s · 经典样式</string>
     <string name="state_style_preview_course">体育</string>
     <string name="state_style_preview_event">社团</string>
     <string name="state_style_preview_suspended">停课</string>
@@ -224,15 +198,13 @@
 
     <!-- 课表库 library -->
     <string name="library_title">课表库</string>
-    <string name="library_intro">管理保存在本机和通过分享码加入的课表。</string>
     <string name="library_import">导入课表</string>
     <string name="library_join">输入分享码</string>
     <string name="library_join_offline">分享码（需数据服务）</string>
-    <string name="local_sharing_unavailable">当前是本机模式，课表只保存在这台设备。配置 HTTPS 数据服务并重新构建后才能使用分享码和跨设备同步。</string>
+    <string name="local_sharing_unavailable">本机模式下不能分享和同步</string>
     <string name="library_all">全部课表</string>
     <string name="library_count">%1$d 份</string>
     <string name="library_empty_title">暂无课表</string>
-    <string name="library_empty_desc">可以导入自己的课表，或输入同学发来的分享码。</string>
     <string name="library_active_tag">当前</string>
     <string name="library_meta_owner">我的课表</string>
     <string name="library_meta_sync">同步课表</string>
@@ -249,18 +221,19 @@
     <string name="library_gone_tag_deleted">已删除</string>
     <string name="library_gone_tag_not_member">已停止同步</string>
     <string name="gone_deleted_title">发布者已删除这份课表</string>
-    <string name="gone_deleted_content">「%1$s」已被发布者删除，之后不会再有任何更新。本机保留的是删除前的最后一版。\n\n建议从课表库移除，移除后无法恢复。</string>
+    <string name="gone_deleted_content">「%1$s」已被发布者删除，不会再更新。移除后无法恢复。</string>
     <string name="gone_not_member_title">这份课表已停止同步</string>
-    <string name="gone_not_member_content">「%1$s」还在，但你已不在它的同步名单里（例如换过手机或重装过 App），之后收不到更新。本机保留的是最后同步的一版。\n\n建议移除后，向发布者要分享码重新加入。</string>
+    <string name="gone_not_member_content">你已不在「%1$s」的同步名单里，收不到更新。可移除后用分享码重新加入。</string>
     <string name="gone_remove">从课表库移除</string>
     <string name="gone_keep">暂不移除</string>
     <string name="gone_removed">已从课表库移除</string>
     <string name="sync_failed_title">同步失败</string>
     <string name="sync_copy_log">复制日志</string>
-    <string name="sync_log_copied">日志已复制，可直接粘贴发给开发者</string>
+    <string name="sync_log_copied">日志已复制</string>
     <string name="settings_sync_log">复制同步日志</string>
-    <string name="settings_sync_log_sub">课表同步出问题时，复制后发给开发者排查</string>
-    <string name="sync_failed_detail">%1$s\n\n本机数据不受影响，App 每次打开都会自动重试。</string>
+    <string name="sync_failed_detail">%1$s
+
+下次打开时会自动重试。</string>
     <string name="schedule_missing_title">课表不存在</string>
     <string name="schedule_missing_generic">要打开的课表已不在本机，可能已被移除。</string>
     <string name="schedule_missing_switched">现在显示的是「%1$s」。</string>
@@ -273,15 +246,14 @@
     <string name="library_leave_title">移除订阅课表？</string>
     <string name="library_delete_content">从本机删除「%1$s」？如果它已分享，联网后也会删除共享版本。</string>
     <string name="library_delete_content_shared">「%1$s」仍有 %2$d 人订阅，删除后大家的这份课表会一起消失，且无法恢复。确定要删除吗？</string>
-    <string name="library_leave_content">把「%1$s」从你的课表库移除？云端课表和其他成员不受影响，之后仍可用分享码重新加入。</string>
+    <string name="library_leave_content">「%1$s」将从课表库移除，之后可用分享码重新加入。</string>
     <string name="library_deleted">已从本机删除</string>
     <string name="library_left">已从课表库移除</string>
-    <string name="detail_read_only_hint">这是通过分享码加入的课表，只有发布者可以修改和调课。需要一份自己的版本？在「导入课表」页选择「新建课表」即可创建副本。</string>
+    <string name="detail_read_only_hint">仅发布者可修改</string>
 
     <!-- 加入 join -->
     <string name="join_title">加入课表</string>
     <string name="join_input_title">输入分享码</string>
-    <string name="join_input_desc">加入后，发布者每次更新课表都会自动同步给你。</string>
     <string name="join_paste">粘贴剪贴板</string>
     <string name="join_lookup">查找课表</string>
     <string name="join_stat_sync">人同步</string>
@@ -292,7 +264,6 @@
     <string name="join_tag_owned">我发布的</string>
     <string name="join_tag_joined">已加入</string>
     <string name="join_meta_format">v%1$d · %2$s · %3$s 开学</string>
-    <string name="join_tip">分享码只用于找到这份课表，不包含任何教务账号信息。</string>
     <string name="join_need_full">请输入完整分享码</string>
     <string name="join_clip_empty">剪贴板里没有分享码</string>
     <string name="join_success">已加入同步</string>
@@ -301,14 +272,11 @@
     <!-- 分享 share -->
     <string name="share_title">分享课表</string>
     <string name="share_loading">正在加载…</string>
-    <string name="share_intro_desc">同学用这个分享码加入后，会持续同步这份课表的最新版本。</string>
     <string name="share_code_label">分享码</string>
-    <string name="share_code_hint">大小写不敏感，输入时无需空格</string>
     <string name="share_stat_version">当前版本</string>
     <string name="share_main">分享课表给同学</string>
     <string name="share_copy">复制分享码</string>
     <string name="share_rotate">更换分享码</string>
-    <string name="share_tip">分享码不包含身份、教务账号或密码。更换后旧码立即失效，已加入的同学不受影响。</string>
     <string name="share_copied">分享码已复制</string>
     <string name="share_rotate_title">换一个分享码？</string>
     <string name="share_rotate_content">旧分享码会立即失效，已经加入课表的人不受影响。</string>
@@ -322,23 +290,14 @@
 
     <!-- 设置 settings -->
     <string name="settings_title">设置</string>
-    <string name="settings_status">服务状态</string>
-    <string name="settings_status_service">数据服务</string>
     <string name="settings_status_local_mode">本机模式</string>
     <string name="settings_status_online">已连接</string>
     <string name="settings_status_checking">检测中</string>
-    <string name="settings_status_unavailable">同步服务暂不可用，本地功能正常</string>
-    <string name="settings_status_scope">适用范围</string>
-    <string name="settings_status_scope_value">学校教务系统导出的课表</string>
-    <string name="settings_section_display">显示</string>
+    <string name="settings_status_unavailable">连不上</string>
     <string name="settings_appearance_row">课表外观</string>
-    <string name="settings_section_update">应用更新</string>
     <string name="settings_update_auto">自动检查更新</string>
-    <string name="settings_update_auto_sub">启动时检测新版本并提醒</string>
-    <string name="settings_update_on">已开启</string>
-    <string name="settings_update_off">已关闭</string>
     <string name="settings_update_check">检查更新</string>
-    <string name="settings_update_current">当前版本 %1$s</string>
+    <string name="settings_update_current">v%1$s</string>
     <string name="update_title">发现新版本 %1$s</string>
     <string name="update_action">立即更新</string>
     <string name="update_later">下次再说</string>
@@ -347,22 +306,15 @@
     <string name="update_latest_already">当前已是最新版本</string>
     <string name="update_check_failed">检查更新失败，请稍后重试</string>
     <string name="update_open_failed">无法打开下载链接，请稍后重试</string>
-    <string name="settings_section_data">说明与数据</string>
-    <string name="settings_privacy">隐私与数据</string>
-    <string name="settings_privacy_sub">查看数据处理说明</string>
-    <string name="settings_about">关于几点上课</string>
-    <string name="settings_about_sub">应用介绍与非官方声明</string>
-    <string name="settings_qq_group">用户交流 QQ 群</string>
+    <string name="settings_privacy">隐私说明</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_qq_group">交流群</string>
     <string name="settings_qq_group_number">1121973736</string>
-    <string name="settings_qq_group_sub">群号 1121973736，点击复制</string>
     <string name="settings_qq_group_copied">群号已复制：%1$s</string>
-    <string name="settings_open_source">开源项目地址</string>
-    <string name="settings_open_source_sub">GitHub · 欢迎提 Issue 和 PR</string>
+    <string name="settings_open_source">开源地址</string>
     <string name="settings_open_source_url">https://github.com/HexBlank/jdsk-schedule</string>
     <string name="settings_open_source_failed">无法打开浏览器，可手动访问项目主页</string>
     <string name="settings_delete_account">删除全部数据</string>
-    <string name="settings_delete_account_sub">删除课表、订阅和登录标识</string>
-    <string name="settings_compliance">几点上课不是学校官方产品，课程安排以教务系统通知为准。</string>
     <string name="settings_privacy_title">隐私说明</string>
     <string name="settings_privacy_content">几点上课仅用一个匿名登录标识区分用户，并保存你主动发布或订阅的课表。不会要求或存储教务账号、密码、WebVPN Cookie。教师姓名、教室与课程信息会随课表保存到服务器，请只分享你有权分享的内容。</string>
     <string name="settings_about_title">关于几点上课</string>
@@ -439,7 +391,7 @@
 
     <!-- 教务系统 WebView -->
     <string name="eams_title">教务系统登录</string>
-    <string name="eams_guide">在下方网页登录教务系统并进入学生课表页面，然后点击右下角「导入课表」。账号密码只留在网页里，不会被上传。</string>
+    <string name="eams_guide">登录后进入「学生课表」，点右下角「导入课表」</string>
     <string name="eams_inject">导入课表</string>
     <string name="eams_mode_desktop">电脑模式</string>
     <string name="eams_mode_mobile">手机模式</string>
@@ -455,12 +407,9 @@
     <string name="eams_untrusted_page">请先回到学校教务页面再导入</string>
     <string name="eams_result_too_large">页面返回的课表数据超过 1.8MB，已拒绝导入。</string>
     <!-- 服务器地址与更新通道 -->
-    <string name="settings_server_row">服务器地址</string>
-    <string name="settings_server_sub_default">默认：%1$s</string>
+    <string name="settings_server_row">服务器</string>
     <string name="settings_server_local_default">本机模式（未内置服务器）</string>
-    <string name="settings_server_sub_custom">自定义：%1$s</string>
     <string name="server_dialog_title">数据服务器</string>
-    <string name="server_dialog_desc">课表数据保存在所选服务器上，默认地址由发布者提供、仅供同学内部使用。更换地址后会退出当前登录并清除同步绑定：本机课表保留，已分享/已加入的课表需要重新发布或用分享码重新加入。</string>
     <string name="server_input_hint">https://api.example.com</string>
     <string name="server_invalid_url">地址无效：请输入完整域名，例如 https://api.example.com</string>
     <string name="server_default_label">默认地址：%1$s（随 App 内置）</string>
@@ -473,10 +422,8 @@
     <string name="server_reset_message">将恢复内置默认地址 %1$s：退出当前登录并清除同步绑定，本机课表保留。</string>
     <string name="server_reset_confirm">恢复默认</string>
     <string name="settings_channel_row">更新通道</string>
-    <string name="settings_channel_sub">当前：%1$s</string>
     <string name="channel_stable">正式版</string>
     <string name="channel_dialog_title">更新通道</string>
-    <string name="channel_dialog_desc">只影响「检查更新」读取的版本信息，不影响课表数据。测试版可能包含尚未正式发布的改动；自定义通道需提供 release.json 完整地址。</string>
     <string name="channel_add">＋ 添加自定义通道</string>
     <string name="channel_name_hint">通道名称（如：内测）</string>
     <string name="channel_url_hint">https://…/release.json</string>
@@ -489,22 +436,10 @@
     <string name="event_badge">日程</string>
     <string name="event_new_title">添加日程</string>
     <string name="event_edit_title">编辑日程</string>
-    <string name="event_privacy">只存在这台手机，不会分享给加入课表的同学</string>
-    <string name="event_headline">%1$s · %2$s</string>
-    <string name="event_headline_pending">先点下面的格子，选这条日程占用的节次</string>
-    <string name="event_name_label">日程名称</string>
-    <string name="event_name_hint">例如：街舞社活动</string>
-    <string name="event_place_label">地点</string>
-    <string name="event_place_hint">例如：大学生活动中心 301</string>
-    <string name="event_note_label">备注</string>
-    <string name="event_note_hint">想记的其它信息</string>
-    <string name="event_time_label">占用节次</string>
-    <string name="event_section_hint_start">点一格选开始的节次</string>
-    <string name="event_section_hint_end">再点一格可以选到第几节结束，例如第 10–11 节</string>
-    <string name="event_section_hint_done">已选第 %1$s 节 · %2$s。点任意一格可重选</string>
-    <string name="event_exact_label">精确到分钟</string>
-    <string name="event_exact_desc">活动不是整节次开始时打开，例如 18:30–20:30</string>
-    <string name="event_clock_change">修改</string>
+    <string name="event_name_hint">日程名称</string>
+    <string name="event_place_hint">地点</string>
+    <string name="event_note_hint">备注</string>
+    <string name="event_exact_label">精确时间</string>
     <string name="event_overlap_exists">这个时段已经有日程「%1$s」了</string>
     <string name="time_range_title">自定义时间</string>
     <string name="time_range_start">开始时间</string>
@@ -515,66 +450,39 @@
     <string name="time_range_minute_unit">分</string>
     <string name="time_range_invalid">结束时间要晚于开始时间</string>
     <string name="time_range_confirm">确定</string>
-    <string name="event_clock_note">课表里仍显示在第 %1$s 节的格子里</string>
-    <string name="event_clock_suggest">这个时间更接近第 %1$s 节，点这里把格子改过去</string>
-    <string name="event_repeat_label">重复</string>
-    <string name="event_repeat_once">仅这一周</string>
     <string name="event_repeat_weekly">每周</string>
     <string name="event_repeat_odd">单周</string>
     <string name="event_repeat_even">双周</string>
-    <string name="event_repeat_end_label">重复到</string>
-    <string name="event_repeat_end_value">第 %1$d 周</string>
-    <string name="event_repeat_summary">%1$s，共 %2$d 次</string>
-    <string name="event_more_label">更多：地点、备注、颜色</string>
     <string name="event_color_label">颜色</string>
-    <string name="event_color_pick">选择颜色</string>
-    <string name="event_avoid_hint">这个时段与「%1$s」重叠，点这里改到第 %2$d 节可以避开</string>
-    <string name="event_save">保存日程</string>
+    <string name="event_avoid_hint">与「%1$s」重叠 · 改到第 %2$d 节</string>
+    <string name="event_save">保存</string>
     <string name="event_saved">日程已保存</string>
     <string name="event_deleted">日程已删除</string>
     <string name="event_delete">删除日程</string>
     <string name="event_delete_title">删除这条日程？</string>
     <string name="event_delete_content">删除后不可恢复。</string>
-    <string name="event_edit_action">编辑日程</string>
-    <string name="event_conflict_title">这个时段有课</string>
-    <string name="event_conflict_content">%1$s\n\n日程仍会加上，与课并排显示在同一格里。要继续吗？</string>
-    <string name="event_conflict_line">· %1$s（第 %2$s 周）</string>
-    <string name="event_conflict_continue">仍然添加</string>
-    <string name="event_no_section">请先点选这条日程占用的节次</string>
-    <string name="event_local_only">日程只存在这台手机，不会分享给加入这份课表的同学。</string>
-    <string name="event_detail_sections">第 %1$d–%2$d 节%3$s</string>
-    <string name="event_detail_note">备注</string>
 
     <!-- 上课通知提醒（对用户一律称「提醒」「通知」，只在指引授权时照实写出系统里的权限名「闹钟和提醒」） -->
-    <string name="settings_section_reminder">提醒</string>
     <string name="reminder_title">上课提醒</string>
     <string name="reminder_settings_sub_off">已关闭</string>
-    <string name="reminder_settings_sub_on">已开启 · 课前 %1$d 分钟</string>
-    <string name="reminder_settings_sub_on_events">已开启 · 课前 %1$d 分钟 · 含日程</string>
-    <string name="reminder_settings_sub_no_notification">已开启，但通知未允许，收不到提醒</string>
-    <string name="reminder_intro">在当前课表的每节课开始前发一条通知提醒你。只提醒当前课表的课，切换课表后自动按新课表提醒。</string>
-    <string name="reminder_enabled_sub">按下面选的时间，在上课前发通知</string>
-    <string name="reminder_lead_label">提前多久提醒</string>
+    <string name="reminder_settings_sub_on">课前 %1$d 分钟</string>
+    <string name="reminder_settings_sub_no_notification">通知未允许</string>
+    <string name="reminder_lead_label">提前</string>
     <string name="reminder_lead_option">%1$d 分钟</string>
     <string name="reminder_lead_prefix">提前</string>
-    <string name="reminder_events">同时提醒我的日程</string>
-    <string name="reminder_events_sub">自己添加的日程开始前也发通知</string>
+    <string name="reminder_events">日程也提醒</string>
     <string name="reminder_next_loading">正在计算下一次提醒…</string>
-    <string name="reminder_next_off">开启后，会在当前课表的每节课开始前提醒你。</string>
-    <string name="reminder_next_no_schedule">还没有课表。导入或加入课表后才会有上课提醒。</string>
-    <string name="reminder_next_no_semester">「%1$s」没有设置开学日期，推算不出每节课是哪一天，暂时无法提醒。</string>
-    <string name="reminder_next_semester_over">「%1$s」本学期已经结束，没有要提醒的课了。</string>
-    <string name="reminder_next_nothing">「%1$s」接下来没有要提醒的课。</string>
-    <string name="reminder_next">按「%1$s」提醒。下一次：%2$s · %3$s</string>
+    <string name="reminder_next_no_schedule">还没有课表</string>
+    <string name="reminder_next_no_semester">课表没有开学日期，无法提醒</string>
+    <string name="reminder_next_semester_over">本学期已结束</string>
+    <string name="reminder_next_nothing">接下来没有要提醒的课</string>
+    <string name="reminder_next">下次提醒：%1$s · %2$s</string>
     <string name="reminder_next_more">%1$s 等 %2$d 项</string>
     <string name="reminder_perm_section">权限检查</string>
-    <string name="reminder_perm_section_sub">提醒能不能按时收到，取决于下面几项系统设置。从系统设置返回后，这里会自动刷新。</string>
     <string name="reminder_perm_notification">通知</string>
-    <string name="reminder_perm_notification_desc">必需。系统里的权限名就是「通知」；本应用的通知里还有一个「上课提醒」类别，两者都要开着才收得到。</string>
     <string name="reminder_perm_exact">闹钟和提醒</string>
-    <string name="reminder_perm_exact_desc">决定提醒准不准时。Android 12 起系统设置里有这一项，名称就叫「闹钟和提醒」，进入后打开开关即可。本应用只用它准时发通知，不会设置响铃闹钟；不开启时提醒可能提前或推迟几分钟。</string>
     <string name="reminder_perm_background">后台运行</string>
-    <string name="reminder_perm_background_desc">建议开启，防止系统在后台拦下提醒。点「去设置」后系统会弹窗询问是否允许本应用一直在后台运行，选「允许」即可，系统里对应的设置叫「电池优化」。部分手机还要在应用信息里允许「自启动」（华为、荣耀叫「应用启动管理」）。</string>
+    <string name="reminder_perm_background_desc">部分手机还要在应用信息里允许「自启动」</string>
     <string name="reminder_status_allowed">已允许</string>
     <string name="reminder_status_denied">未允许</string>
     <string name="reminder_status_suggest">建议开启</string>
@@ -589,8 +497,7 @@
     <string name="reminder_dialog_later">暂不</string>
     <string name="reminder_open_settings_failed">无法打开系统设置，请到手机「设置」里找到本应用手动开启</string>
     <string name="reminder_test">发送测试通知</string>
-    <string name="reminder_test_sent">测试通知已发送，请下拉通知栏查看</string>
-    <string name="reminder_test_tip">测试通知会立刻发出，样式和正式提醒一样。如果能收到测试通知、正式提醒却没来，多半是系统在后台拦下了本应用：请开启上面的「后台运行」，并在应用信息里允许自启动。</string>
+    <string name="reminder_test_sent">已发送测试通知</string>
     <string name="reminder_open_app_details">打开本应用的应用信息 ›</string>
     <string name="reminder_test_sample_course">示例课程</string>
     <string name="reminder_test_sample_position">教学楼 A101</string>
@@ -628,39 +535,32 @@
     <string name="couple_only_partner">只看 TA</string>
     <string name="couple_week_title">第%1$d周</string>
     <string name="couple_unbound_title">还没有绑定 TA</string>
-    <string name="couple_unbound_desc">绑定后，就能在这里同时看两个人的课表</string>
     <string name="couple_go_bind">去绑定</string>
     <string name="couple_badge_now">上课中</string>
     <string name="couple_badge_done">已上</string>
     <string name="couple_badge_suspended">停课</string>
-    <string name="couple_detail_partner_readonly">这是%1$s的课，只能查看。</string>
-    <string name="couple_detail_mine_hint">这里只能查看，调课请到「课表」页。</string>
+    <string name="couple_detail_partner_readonly">%1$s的课</string>
+    <string name="couple_detail_mine_hint">调课请到课表页</string>
     <string name="couple_block_desc">%1$s，%2$s，%3$s，%4$s</string>
     <string name="couple_free_desc">两人都有空：%1$s</string>
 
     <string name="couple_settings_title">情侣课表</string>
     <string name="couple_settings_display">显示</string>
     <string name="couple_setting_now_line">显示当前时间线</string>
-    <string name="couple_setting_now_line_sub">日视图里画出现在的时间</string>
     <string name="couple_setting_highlight">高亮都有空的时段</string>
-    <string name="couple_setting_highlight_sub">日视图和周视图都生效，两人都没课才算</string>
     <string name="couple_setting_free_label">显示「都有空」时长</string>
-    <string name="couple_setting_free_label_sub">日视图中间时间轴上标出「都有空 2小时30分」</string>
     <string name="couple_settings_binding">绑定</string>
     <string name="couple_setting_profile">名字和颜色</string>
     <string name="couple_setting_schedule">TA 看到的课表</string>
-    <string name="couple_setting_schedule_value">你的当前课表 · %1$s</string>
-    <string name="couple_setting_schedule_hint">在课表库切换当前课表，TA 这边会跟着变</string>
     <string name="couple_setting_synced">上次同步：%1$s</string>
     <string name="couple_setting_never_synced">还没有同步过</string>
     <string name="couple_unbind">解除绑定</string>
     <string name="couple_unbind_title">解除情侣绑定？</string>
-    <string name="couple_unbind_content">解除后你们双方都会立刻看不到对方的课表，名字和颜色也会清空。之后可以重新邀请绑定。</string>
+    <string name="couple_unbind_content">双方会立刻看不到对方的课表。</string>
     <string name="couple_unbound_toast">已解除绑定</string>
 
     <string name="couple_profile_title_me">我的名字和颜色</string>
     <string name="couple_profile_title_partner">TA 的名字和颜色</string>
-    <string name="couple_profile_sub">改好后，你们两个人的手机上都会一起变</string>
     <string name="couple_profile_hint_me">TA 的手机上也会这样显示你</string>
     <string name="couple_profile_hint_partner">TA 自己的手机上也会这样显示</string>
     <string name="couple_profile_name">名字</string>
@@ -669,21 +569,19 @@
     <string name="couple_profile_color">颜色</string>
     <string name="couple_profile_custom">自定义颜色</string>
     <string name="couple_profile_custom_title">%1$s的颜色</string>
-    <string name="couple_profile_clash">和%1$s的颜色太像了，同一时段的课只能靠左右位置区分</string>
+    <string name="couple_profile_clash">和%1$s的颜色太接近</string>
     <string name="couple_profile_save">保存</string>
-    <string name="couple_profile_saved">已保存，TA 那边稍后也会更新</string>
+    <string name="couple_profile_saved">已保存</string>
     <string name="couple_profile_preview_course">高等数学</string>
     <string name="couple_profile_preview_room">教学楼A 301</string>
 
     <string name="couple_bind_title">绑定情侣课表</string>
     <string name="couple_bind_heading">和 TA 一起看课表</string>
-    <string name="couple_bind_desc">一个人生成邀请码，另一个人输入，就能在「我们」里同时看到两个人的课表。</string>
     <string name="couple_invite_title">邀请 TA</string>
-    <string name="couple_invite_desc">生成邀请码发给 TA，24 小时内有效，只能用一次</string>
     <string name="couple_invite_generate">生成邀请码</string>
     <string name="couple_invite_regenerate">换一个邀请码</string>
     <string name="couple_invite_expires">有效期至 %1$s</string>
-    <string name="couple_invite_waiting">等 TA 输入邀请码…绑定成功后这里会自动跳转</string>
+    <string name="couple_invite_waiting">等待 TA 输入…</string>
     <string name="couple_invite_copy">复制</string>
     <string name="couple_invite_share">发给 TA</string>
     <string name="couple_invite_copied">邀请码已复制</string>
@@ -694,26 +592,21 @@
     <string name="couple_accept_button">绑定</string>
     <string name="couple_accept_incomplete">邀请码是 8 位，请检查后再试</string>
     <string name="couple_paste_empty">剪贴板里没有邀请码</string>
-    <string name="couple_bind_privacy">绑定后：你当前使用的课表会上传到服务器，只有 TA 能看到；你们都能修改双方的名字和颜色；任何一方都可以随时解除绑定，解除后双方立刻看不到对方的课表。</string>
+    <string name="couple_bind_privacy">绑定后 TA 能看到你当前的课表，任何一方都可随时解除。</string>
     <string name="couple_bound_toast">绑定成功</string>
 
-    <string name="settings_section_couple">情侣</string>
     <string name="settings_couple_row">情侣课表</string>
-    <string name="settings_couple_sub_bound">已和%1$s绑定</string>
-    <string name="settings_couple_sub_unbound">绑定后可以和 TA 一起看课表</string>
+    <string name="settings_couple_sub_bound">%1$s</string>
 
     <string name="library_couple_visible_tag">TA 可见</string>
-    <string name="library_couple_switch_toast">已切换当前课表，TA 那边也会看到这份课表</string>
+    <string name="library_couple_switch_toast">已切换，TA 也会看到这份课表</string>
 
     <!-- 支持开发（完全自愿，文案不催促） -->
     <string name="support_title">支持开发</string>
-    <string name="support_row_sub">完全自愿，不打赏也能用全部功能</string>
-    <string name="support_message">几点上课是课余时间做的小工具，所有功能都免费，也没有广告，以后也会这样。
-
-如果它帮你省了点事、你又刚好想请作者喝杯奶茶，可以用微信扫下面的赞赏码。不打赏完全没关系，放心用就好。</string>
+    <string name="support_message">所有功能免费、没有广告。如果它帮到了你，可以请作者喝杯奶茶。</string>
     <string name="support_qr_description">微信赞赏码</string>
-    <string name="support_hint_save">保存到相册后，在微信「扫一扫」里从相册选取</string>
-    <string name="support_hint_screenshot">截图后，在微信「扫一扫」里从相册选取</string>
+    <string name="support_hint_save">保存后在微信「扫一扫」里从相册选取</string>
+    <string name="support_hint_screenshot">截图后在微信「扫一扫」里从相册选取</string>
     <string name="support_save">保存到相册</string>
     <string name="support_saved">赞赏码已保存到相册</string>
     <string name="support_save_failed">保存失败，可以截图后再到微信里扫</string>
@@ -721,13 +614,10 @@
 
     <!-- 请假（本机私有，不随课表同步） -->
     <string name="leave_title">请假</string>
-    <string name="leave_list_desc">请假只记在这台手机上，不会同步给用同一份课表的同学。请假时段内的课会标成「请假」或「公假」，也不再提醒。只请一节课的话，在课表上点那节课更快。</string>
     <string name="leave_list_empty">还没有请假记录</string>
     <string name="leave_add">新增请假</string>
     <string name="leave_new_title">新增请假</string>
     <string name="leave_edit_title">修改请假</string>
-    <string name="leave_editor_desc">选好从什么时候到什么时候，精确到分钟，可以跨天。和这段时间有重叠的课都算请假。</string>
-    <string name="leave_type_label">类别</string>
     <string name="leave_type_desc_prefix">类别：</string>
     <string name="leave_span_label">请假时间</string>
     <string name="leave_whole_day">按整天</string>
@@ -736,8 +626,7 @@
     <string name="leave_pick_start">从什么时候开始</string>
     <string name="leave_pick_end">到什么时候结束</string>
     <string name="leave_today">今天</string>
-    <string name="leave_note_label">事由（选填）</string>
-    <string name="leave_note_hint">比如：感冒发烧、校运会志愿者</string>
+    <string name="leave_note_hint">事由</string>
     <string name="leave_preview_label">涉及的课</string>
     <string name="leave_preview_none">这段时间内没有课</string>
     <string name="leave_preview_count">涉及 %1$d 节课</string>
@@ -754,10 +643,9 @@
     <string name="leave_row_classes">涉及 %1$d 节课</string>
     <string name="leave_row_no_classes">时段内没有课</string>
     <string name="leave_need_semester_title">暂时不能请假</string>
-    <string name="leave_need_semester">这份课表没有开学日期，算不出每节课是哪一天，所以没法按时间请假。</string>
+    <string name="leave_need_semester">这份课表没有开学日期，无法按时间请假</string>
     <string name="detail_leave_action">这节课请假</string>
-    <string name="settings_leave_sub">记录请假或公假，时段内的课不再提醒</string>
-    <string name="settings_leave_sub_active">有 %1$d 条还没结束的请假</string>
+    <string name="settings_leave_sub_active">%1$d 条进行中</string>
     <string name="settings_leave_no_schedule_title">还没有课表</string>
     <string name="settings_leave_no_schedule">先导入或加入一份课表，才能按课表请假。</string>
     <string name="detail_leave_active">%1$s · %2$s</string>
@@ -796,43 +684,32 @@
     <string name="widget_section_day">%1$s · %2$s</string>
 
     <!-- 自己加课（本机私有，并进当前课表一起显示） -->
-    <string name="add_entry_title">在%1$s第 %2$d 节添加</string>
-    <string name="add_entry_course">一节课</string>
-    <string name="add_entry_course_desc">课表里没有的选修、重修、实验课。和导入的课一样提醒、请假、进桌面小部件</string>
-    <string name="add_entry_event">一条日程</string>
-    <string name="add_entry_event_desc">社团、兼职这类课以外的安排，可以精确到分钟</string>
-    <string name="course_new_title">自己加课</string>
+    <string name="add_entry_title">%1$s · 第 %2$d 节</string>
+    <string name="add_entry_course">课程</string>
+    <string name="add_entry_event">日程</string>
+    <string name="course_new_title">添加课程</string>
     <string name="course_edit_title">修改课程</string>
-    <string name="course_extra_privacy">自己加的课只存在这台手机，不会同步给用同一份课表的同学；重新导入课表也不会丢。</string>
-    <string name="course_headline">%1$s · %2$s</string>
-    <string name="course_headline_pending">先点下面的格子，选这门课上第几节</string>
-    <string name="course_name_label">课程名称</string>
-    <string name="course_name_hint">例如：大学物理实验</string>
-    <string name="course_day_label">星期</string>
+    <string name="course_name_hint">课程名称</string>
     <string name="course_day_prefix">周</string>
-    <string name="course_sections_label">节次</string>
     <string name="course_sections_value">第 %1$s 节</string>
-    <string name="course_section_hint_end">再点一格可以选到第几节结束，例如第 3–4 节</string>
-    <string name="course_weeks_label">上课周次</string>
-    <string name="course_weeks_to">到</string>
-    <string name="course_week_value">第 %1$d 周</string>
-    <string name="course_start_week_label">从第几周开始</string>
-    <string name="course_end_week_label">到第几周结束</string>
-    <string name="course_weeks_empty">这个范围里没有符合的周次，换一下起止周或单双周</string>
-    <string name="course_position_label">教室（选填）</string>
-    <string name="course_position_hint">例如：实验楼 B204</string>
-    <string name="course_teacher_label">教师（选填）</string>
-    <string name="course_teacher_hint">例如：王老师</string>
-    <string name="course_conflict_hint">和 %1$s 时间重叠。可以照常保存，课表上会并排显示。</string>
-    <string name="course_conflict_item">「%1$s」（第 %2$s 周）</string>
+    <string name="course_position_hint">教室</string>
+    <string name="course_teacher_hint">教师</string>
+    <string name="course_conflict_hint">与%1$s重叠</string>
+    <string name="course_conflict_item">「%1$s」第 %2$s 周</string>
     <string name="course_save">保存</string>
     <string name="course_saved">课程已保存</string>
-    <string name="course_no_section">请先点选这门课上第几节</string>
-    <string name="course_extra_note">这是你自己加的课，只存在这台手机上，不会同步给同学。长按课表上的这门课可以换颜色。</string>
-    <string name="course_color_auto">跟随自动配色</string>
-    <string name="course_color_manual">自己选的颜色</string>
+    <string name="course_extra_note">自己加的课</string>
     <string name="course_extra_edit">编辑</string>
     <string name="course_extra_delete">删除</string>
     <string name="course_extra_deleted">课程已删除</string>
     <string name="course_extra_restored">课程已恢复</string>
+    <string name="event_overlap_course">与「%1$s」重叠</string>
+    <string name="form_time">时间</string>
+    <string name="form_weeks">周次</string>
+    <string name="slot_day">周%1$s</string>
+    <string name="slot_value">%1$s · 第 %2$s 节</string>
+    <string name="weeks_none">未选周次</string>
+    <string name="weeks_preset_only">仅第%1$d周</string>
+    <string name="settings_open_source_value">GitHub</string>
+    <string name="settings_footer">几点上课 %1$s · 非官方工具，课程以教务系统为准</string>
 </resources>

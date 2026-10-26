@@ -586,10 +586,6 @@
                 android:text="@string/couple_unbound_title" />
 
             <TextView
-                style="@style/EmptyDesc"
-                android:text="@string/couple_unbound_desc" />
-
-            <TextView
                 android:id="@+id/bindButton"
                 style="@style/PrimaryButton"
                 android:text="@string/couple_go_bind" />

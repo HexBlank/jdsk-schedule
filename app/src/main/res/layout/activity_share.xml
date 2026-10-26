@@ -34,11 +34,6 @@
                     style="@style/PageTitle"
                     android:layout_marginTop="20dp" />
 
-                <TextView
-                    style="@style/PageSubtitle"
-                    android:layout_marginTop="7dp"
-                    android:text="@string/share_intro_desc" />
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -64,14 +59,6 @@
                         android:layout_height="48dp"
                         android:layout_marginTop="11dp"
                         android:orientation="horizontal" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="11dp"
-                        android:text="@string/share_code_hint"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -234,16 +221,6 @@
                         android:textColor="@color/action_ink"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center"
-                    android:lineSpacingMultiplier="1.5"
-                    android:text="@string/share_tip"
-                    android:textColor="@color/sub_a8"
-                    android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 

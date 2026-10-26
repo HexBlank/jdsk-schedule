@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 点空格子后先问一句：加一节课，还是加一条日程 -->
+<!-- 点空格子后二选一：课程 / 日程。两块并排，色块预览它在课表上的样子，不写说明 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -8,119 +8,76 @@
     android:paddingStart="18dp"
     android:paddingTop="8dp"
     android:paddingEnd="18dp"
-    android:paddingBottom="16dp">
+    android:paddingBottom="20dp">
 
-    <View
-        android:layout_width="38dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="15dp"
-        android:background="@drawable/bg_sheet_handle" />
+    <View style="@style/SheetHandle" />
 
     <TextView
         android:id="@+id/addEntryTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:includeFontPadding="false"
-        android:textColor="@color/heading_ink"
-        android:textSize="@dimen/text_title"
-        android:textStyle="bold" />
+        style="@style/SheetTitle" />
 
     <LinearLayout
-        android:id="@+id/addEntryCourse"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:background="@drawable/bg_card"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:minHeight="62dp"
-        android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="10dp">
+        android:layout_marginTop="20dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
         <LinearLayout
+            android:id="@+id/addEntryCourse"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:background="@drawable/bg_choice_tile"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:minHeight="96dp"
+            android:orientation="vertical"
+            android:stateListAnimator="@animator/press_scale">
+
+            <View
+                android:id="@+id/addEntryCourseSwatch"
+                android:layout_width="36dp"
+                android:layout_height="24dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:text="@string/add_entry_course"
-                android:textColor="@color/ink"
-                android:textSize="@dimen/text_body"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_subtitle"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:lineSpacingMultiplier="1.3"
-                android:text="@string/add_entry_course_desc"
-                android:textColor="@color/sub_8a"
-                android:textSize="@dimen/text_hint" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="›"
-            android:textColor="@color/arrow_grey"
-            android:textSize="@dimen/text_title" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/addEntryEvent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_card"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:minHeight="62dp"
-        android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="10dp">
-
         <LinearLayout
+            android:id="@+id/addEntryEvent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:background="@drawable/bg_choice_tile"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:minHeight="96dp"
+            android:orientation="vertical"
+            android:stateListAnimator="@animator/press_scale">
+
+            <View
+                android:id="@+id/addEntryEventSwatch"
+                android:layout_width="36dp"
+                android:layout_height="24dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:text="@string/add_entry_event"
-                android:textColor="@color/ink"
-                android:textSize="@dimen/text_body"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_subtitle"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:lineSpacingMultiplier="1.3"
-                android:text="@string/add_entry_event_desc"
-                android:textColor="@color/sub_8a"
-                android:textSize="@dimen/text_hint" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="›"
-            android:textColor="@color/arrow_grey"
-            android:textSize="@dimen/text_title" />
     </LinearLayout>
 </LinearLayout>

@@ -33,29 +33,11 @@
             android:textSize="@dimen/text_display"
             android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:lineSpacingMultiplier="1.35"
-            android:text="@string/leave_editor_desc"
-            android:textColor="@color/sub_8a"
-            android:textSize="@dimen/text_hint" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/leave_type_label"
-            android:textColor="@color/field_label"
-            android:textSize="@dimen/text_hint"
-            android:textStyle="bold" />
-
         <com.zhusijiao.app.ui.common.SegmentedChoiceView
             android:id="@+id/leaveType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" />
+            android:layout_marginTop="16dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -181,15 +163,6 @@
             android:textSize="@dimen/text_hint"
             android:visibility="gone" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/leave_note_label"
-            android:textColor="@color/field_label"
-            android:textSize="@dimen/text_hint"
-            android:textStyle="bold" />
-
         <EditText
             android:id="@+id/leaveNote"
             style="@style/FieldInput"
@@ -258,17 +231,5 @@
                 android:layout_weight="2"
                 android:text="@string/leave_save" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/leaveCancel"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_menu_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/common_cancel"
-            android:textColor="@color/sub_68"
-            android:textSize="@dimen/text_body" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

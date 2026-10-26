@@ -4,9 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
-import android.widget.EditText
-import android.widget.TextView
+import android.view.WindowManager
 import androidx.lifecycle.lifecycleScope
 import com.zhusijiao.app.R
 import com.zhusijiao.app.data.ExtraCourseStore
@@ -24,7 +25,9 @@ import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimeSlot
 import com.zhusijiao.app.ui.common.BaseActivity
 import com.zhusijiao.app.ui.common.ColorPickerSheet
+import com.zhusijiao.app.ui.common.SlotSheet
 import com.zhusijiao.app.ui.common.TimeRangeSheet
+import com.zhusijiao.app.ui.common.WeeksSheet
 import com.zhusijiao.app.util.Ui
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,13 +36,12 @@ import kotlinx.coroutines.withContext
 /**
  * 自定义日程编辑页。
  *
- * 独立成页而不是底部面板：字段多（名称、12 节网格、精确时间、重复、地点/备注/颜色），
- * 塞进抽屉会把屏幕撑满还要反复滚动，保存按钮也钉不住。
+ * 与加课同一套结构（iOS 日历「新建事件」的路数）：唯一要填的是名称；时间、周次按点的那一格给好默认值，
+ * 以「字段名 —— 当前值 ›」的行列出，点开是各自的底部面板（[SlotSheet] / [WeeksSheet]）。
  *
- * 主路径只有三件事：起个名字、在节次网格上点出占用哪几节、选重复方式。
- * 「精确到分钟」是可选开关，打开后点一行弹滚轮选起止时间；它**只改显示文案**，
- * 块画在哪一格始终由用户点的节次决定。时间被改到明显属于别的节次时给一条可点的
- * 建议把格子挪过去，避免「写早上 8 点、块却画在晚上」。见 docs/DECISIONS.md D18。
+ * 「精确时间」是可选开关，打开后多一行钟点，点它弹滚轮。钟点**只改块上的文案**，块画在哪一格由节次决定；
+ * 改了钟点就自动把节次挪到最接近的那一段，不再让用户确认。见 docs/DECISIONS.md D18。
+ * 与课重叠时下面出现一行提示，有空位就整行可点、直接挪过去；保存时不再二次确认。
  */
 class EventEditorActivity : BaseActivity() {
 
@@ -51,6 +53,8 @@ class EventEditorActivity : BaseActivity() {
     private var slots: List<TimeSlot> = emptyList()
 
     private var day = 1
+    private var sections = 1..1
+    private var weeks: List<Int> = emptyList()
     private var anchorWeek = 1
     private var totalWeeks = 20
     private var exact = false
@@ -65,9 +69,7 @@ class EventEditorActivity : BaseActivity() {
         setContentView(binding.root)
         binding.header.setBackVisible(true)
         binding.header.onBackClick = { finish() }
-        // 与其它页面一致：安全区留在根布局上。
-        // 不能用 padBottomNav(底栏)——它是覆盖写 paddingBottom，会把底栏自己的留白顶掉，
-        // 保存按钮就贴到屏幕最底边。liftAboveIme 额外保证键盘弹出时按钮仍在输入法上方。
+        // 安全区留在根布局上；键盘弹出时保存按钮仍在输入法上方
         Ui.liftAboveIme(binding.root)
 
         val scheduleId = intent.getStringExtra(EXTRA_SCHEDULE_ID).orEmpty()
@@ -75,6 +77,13 @@ class EventEditorActivity : BaseActivity() {
         val initialWeek = intent.getIntExtra(EXTRA_WEEK, 1)
         val initialDay = intent.getIntExtra(EXTRA_DAY, 1)
         val initialSection = intent.getIntExtra(EXTRA_SECTION, 1)
+        binding.header.setTitle(getString(if (eventId == null) R.string.event_new_title else R.string.event_edit_title))
+        binding.eventSave.isEnabled = false
+        if (eventId == null) {
+            // 新建时名称是唯一必填项，直接把键盘给出来
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+            binding.eventName.requestFocus()
+        }
 
         lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
@@ -98,105 +107,38 @@ class EventEditorActivity : BaseActivity() {
 
     private fun bind(initialWeek: Int, initialDay: Int, initialSection: Int) {
         val current = schedule ?: return
+        val old = editing
         slots = ScheduleTime.slotsOf(current.timeSlots)
         totalWeeks = current.totalWeeks.coerceAtLeast(1)
-        day = (editing?.day ?: initialDay).coerceIn(1, 7)
-        anchorWeek = (editing?.weeks?.minOrNull() ?: initialWeek).coerceIn(1, totalWeeks)
-        exact = editing?.startTime != null
-        color = editing?.color
-
-        binding.header.setTitle(
-            getString(if (editing == null) R.string.event_new_title else R.string.event_edit_title)
-        )
-        binding.eventName.setText(editing?.title.orEmpty())
-        binding.eventPlace.setText(editing?.position.orEmpty())
-        binding.eventNote.setText(editing?.note.orEmpty())
-
-        configureSections(initialSection)
-        configureClock()
-        configureRepeat()
-        configureMore()
-        ready = true
-        refresh()
-
-        binding.eventSave.setOnClickListener { submit() }
-    }
-
-    // ===== 各段输入 =====
-
-    private fun configureSections(initialSection: Int) {
-        val initial = editing?.let { it.startSection..it.endSection }
+        day = (old?.day ?: initialDay).coerceIn(1, 7)
+        sections = old?.let { it.startSection..it.endSection }
             ?: initialSection.coerceIn(1, ScheduleTime.MAX_SECTION).let { it..it }
-        binding.eventSections.configure(slots, initial) { refresh() }
-    }
+        anchorWeek = (old?.weeks?.minOrNull() ?: initialWeek).coerceIn(1, totalWeeks)
+        // 新建默认从这一周起每周；编辑沿用原来的周次
+        weeks = old?.weeks?.filter { it in 1..totalWeeks }?.takeIf { it.isNotEmpty() }
+            ?: (anchorWeek..totalWeeks).toList()
+        exact = old?.startTime != null
+        color = old?.color
 
-    private fun configureClock() {
-        val range = binding.eventSections.selection
-        startMinutes = ScheduleTime.minutesOf(editing?.startTime)
-            ?: ScheduleTime.minutesOf(slots.find { it.number == range?.first }?.startTime)
-            ?: (19 * 60)
-        endMinutes = ScheduleTime.minutesOf(editing?.endTime)
-            ?: ScheduleTime.minutesOf(slots.find { it.number == range?.last }?.endTime)
-            ?: (startMinutes + 90)
-        binding.eventExactToggle.setChecked(exact, animate = false)
-        binding.eventExactToggle.onCheckedChange = { checked ->
-            exact = checked
-            // 刚打开时按当前所选节次预填，多数人不用再动
-            if (checked) prefillClockFromSections()
-            refresh()
-        }
-        binding.eventExactRow.setOnClickListener { binding.eventExactToggle.toggle() }
-        binding.eventClockRow.setOnClickListener { openTimeSheet() }
-        binding.eventClockSuggest.setOnClickListener {
-            suggestedRange()?.let { binding.eventSections.setSelection(it); refresh() }
-        }
-    }
+        binding.eventName.setText(old?.title.orEmpty())
+        binding.eventPlace.setText(old?.position.orEmpty())
+        binding.eventNote.setText(old?.note.orEmpty())
+        binding.eventName.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = refresh()
+        })
 
-    private fun openTimeSheet() {
-        TimeRangeSheet(this, startMinutes, endMinutes) { start, end ->
-            startMinutes = start
-            endMinutes = end
-            refresh()
-        }.show()
-    }
-
-    private fun prefillClockFromSections() {
-        val range = binding.eventSections.selection ?: return
-        ScheduleTime.minutesOf(slots.find { it.number == range.first }?.startTime)
-            ?.let { startMinutes = it }
-        ScheduleTime.minutesOf(slots.find { it.number == range.last }?.endTime)
-            ?.let { endMinutes = it }
-    }
-
-    private fun configureRepeat() {
-        binding.eventRepeat.configure(
-            items = listOf(
-                getString(R.string.event_repeat_once),
-                getString(R.string.event_repeat_weekly),
-                getString(R.string.event_repeat_odd),
-                getString(R.string.event_repeat_even)
-            ),
-            initialIndex = repeatIndexOf(editing),
-            contentDescriptionPrefix = getString(R.string.event_repeat_label)
-        ) { refresh() }
-        val end = (editing?.weeks?.maxOrNull() ?: totalWeeks).coerceIn(anchorWeek, totalWeeks)
-        binding.eventEndWeek.contentDescription = getString(R.string.event_repeat_end_label)
-        binding.eventEndWeek.configure(anchorWeek, totalWeeks, end, {
-            getString(R.string.event_repeat_end_value, it)
-        }) { refresh() }
-    }
-
-    private fun configureMore() {
-        // 编辑已有日程时这些字段有值就直接展开，免得用户以为内容丢了
-        val hasContent = !editing?.position.isNullOrBlank() ||
-            !editing?.note.isNullOrBlank() || editing?.color != null
-        binding.eventMoreArea.visibility = if (hasContent) View.VISIBLE else View.GONE
-        binding.eventMoreToggle.visibility = if (hasContent) View.GONE else View.VISIBLE
-        binding.eventMoreToggle.setOnClickListener {
-            binding.eventMoreArea.visibility = View.VISIBLE
-            binding.eventMoreToggle.visibility = View.GONE
+        configureTime()
+        binding.eventWeeksRow.setOnClickListener {
+            Ui.hideKeyboard(binding.root)
+            WeeksSheet(this, totalWeeks, from = anchorWeek, initial = weeks, onlyWeek = anchorWeek) { picked ->
+                weeks = picked
+                refresh()
+            }.show()
         }
         binding.eventColorRow.setOnClickListener {
+            Ui.hideKeyboard(binding.root)
             ColorPickerSheet(
                 this,
                 courseName = binding.eventName.text.toString().trim()
@@ -207,7 +149,60 @@ class EventEditorActivity : BaseActivity() {
                 onReset = { color = null; paintSwatch() }
             ).show()
         }
-        paintSwatch()
+        binding.eventSave.setOnClickListener { submit() }
+        ready = true
+        refresh()
+    }
+
+    // ===== 时间 =====
+
+    private fun configureTime() {
+        startMinutes = ScheduleTime.minutesOf(editing?.startTime) ?: slotStart(sections) ?: (19 * 60)
+        endMinutes = ScheduleTime.minutesOf(editing?.endTime) ?: slotEnd(sections) ?: (startMinutes + 90)
+        binding.eventTimeRow.setOnClickListener {
+            Ui.hideKeyboard(binding.root)
+            SlotSheet(this, slots, day, sections) { pickedDay, range ->
+                val moved = range != sections
+                day = pickedDay
+                sections = range
+                // 节次是粗调、钟点是细调：换了节次就让钟点跟着新节次重来
+                if (moved && exact) prefillClockFromSections()
+                refresh()
+            }.show()
+        }
+        binding.eventExactToggle.setChecked(exact, animate = false)
+        binding.eventExactToggle.onCheckedChange = { checked ->
+            exact = checked
+            // 刚打开时按当前所选节次预填，多数人不用再动
+            if (checked) prefillClockFromSections()
+            refresh()
+        }
+        binding.eventExactRow.setOnClickListener { binding.eventExactToggle.toggle() }
+        binding.eventClockRow.setOnClickListener {
+            Ui.hideKeyboard(binding.root)
+            TimeRangeSheet(this, startMinutes, endMinutes) { start, end ->
+                startMinutes = start
+                endMinutes = end
+                // 钟点决定块该画在哪几节：自动挪过去，不让用户再确认一次
+                sections = ScheduleTime.sectionSpanFor(
+                    ScheduleTime.formatTime(start),
+                    ScheduleTime.formatTime(end),
+                    slots
+                )
+                refresh()
+            }.show()
+        }
+    }
+
+    private fun slotStart(range: IntRange) =
+        ScheduleTime.minutesOf(slots.find { it.number == range.first }?.startTime)
+
+    private fun slotEnd(range: IntRange) =
+        ScheduleTime.minutesOf(slots.find { it.number == range.last }?.endTime)
+
+    private fun prefillClockFromSections() {
+        slotStart(sections)?.let { startMinutes = it }
+        slotEnd(sections)?.let { endMinutes = it }
     }
 
     private fun paintSwatch() {
@@ -222,99 +217,41 @@ class EventEditorActivity : BaseActivity() {
 
     private fun refresh() {
         if (!ready) return
-        val range = binding.eventSections.selection
-        updateHeadline(range)
-        updateSectionHint(range)
-        updateClockArea(range)
-        updateRepeatArea()
-        updateAvoidHint()
-    }
-
-    private fun updateHeadline(range: IntRange?) {
-        if (range == null) {
-            binding.eventHeadline.setText(R.string.event_headline_pending)
-            return
-        }
-        binding.eventHeadline.text =
-            getString(R.string.event_headline, "周" + dayName(day), timeSummary(range))
-    }
-
-    /** 顶部摘要里的时间部分：开了精确时间就用它，否则用节次作息。 */
-    private fun timeSummary(range: IntRange): String {
-        val sections = sectionText(range)
-        val clock = if (exact) currentTimeText()
-        else ScheduleTime.rangeText(slots, range.first, range.last)
-        return if (clock.isNullOrEmpty()) "第 $sections 节" else "第 $sections 节 · $clock"
-    }
-
-    private fun updateSectionHint(range: IntRange?) {
-        binding.eventSectionHint.text = when {
-            range == null -> getString(R.string.event_section_hint_start)
-            binding.eventSections.awaitingEnd -> getString(R.string.event_section_hint_end)
-            else -> getString(
-                R.string.event_section_hint_done,
-                sectionText(range),
-                ScheduleTime.rangeText(slots, range.first, range.last).orEmpty()
-            )
-        }
-    }
-
-    private fun updateClockArea(range: IntRange?) {
+        binding.eventTimeValue.text = getString(
+            R.string.slot_value,
+            getString(R.string.slot_day, SlotSheet.DAY_NAMES[day - 1]),
+            SlotSheet.sectionText(sections)
+        )
         binding.eventClockArea.visibility = if (exact) View.VISIBLE else View.GONE
-        if (!exact || range == null) return
         binding.eventClockValue.text = currentTimeText()
-        binding.eventClockNote.text = getString(R.string.event_clock_note, sectionText(range))
-        val suggestion = suggestedRange()
-        if (suggestion == null || suggestion == range) {
-            binding.eventClockSuggest.visibility = View.GONE
-            return
-        }
-        binding.eventClockSuggest.visibility = View.VISIBLE
-        binding.eventClockSuggest.text =
-            getString(R.string.event_clock_suggest, sectionText(suggestion))
-    }
-
-    /** 当前钟点按作息应当落在的节次区间；与所选节次不一致时用来给建议。 */
-    private fun suggestedRange(): IntRange? {
-        if (!exact || endMinutes <= startMinutes) return null
-        return ScheduleTime.sectionSpanFor(
-            ScheduleTime.formatTime(startMinutes),
-            ScheduleTime.formatTime(endMinutes),
-            slots
-        )
-    }
-
-    private fun updateRepeatArea() {
-        val once = binding.eventRepeat.selectedIndex == REPEAT_ONCE
-        binding.eventRepeatEndArea.visibility = if (once) View.GONE else View.VISIBLE
-        val weeks = weeks()
-        binding.eventRepeatSummary.text = if (weeks.isEmpty()) "" else getString(
-            R.string.event_repeat_summary,
-            ScheduleView.formatWeekSummary(weeks),
-            weeks.size
-        )
+        binding.eventWeeksValue.text = ScheduleView.formatWeekSummary(weeks)
+        binding.eventSave.isEnabled = binding.eventName.text.isNotBlank()
+        paintSwatch()
+        updateAvoidHint()
     }
 
     private fun updateAvoidHint() {
         val current = schedule
         val draft = normalized()
-        if (current == null || draft == null) {
-            binding.eventAvoid.visibility = View.GONE
-            return
-        }
-        val conflicts = ScheduleOccurrences.conflictsForEvent(current, draft)
-        val free = if (conflicts.isEmpty()) null
-        else ScheduleOccurrences.nearestFreeStartSection(current, draft)
-        if (free == null) {
+        val conflicts = if (current == null || draft == null) emptyList()
+        else ScheduleOccurrences.conflictsForEvent(current, draft)
+        if (current == null || draft == null || conflicts.isEmpty()) {
             binding.eventAvoid.visibility = View.GONE
             return
         }
         binding.eventAvoid.visibility = View.VISIBLE
-        binding.eventAvoid.text =
-            getString(R.string.event_avoid_hint, conflicts.first().courseName, free)
+        val name = conflicts.first().courseName
+        val free = ScheduleOccurrences.nearestFreeStartSection(current, draft)
+        if (free == null) {
+            binding.eventAvoid.text = getString(R.string.event_overlap_course, name)
+            binding.eventAvoid.setOnClickListener(null)
+            binding.eventAvoid.isClickable = false
+            return
+        }
+        binding.eventAvoid.text = getString(R.string.event_avoid_hint, name, free)
         binding.eventAvoid.setOnClickListener {
             val span = draft.endSection - draft.startSection
-            binding.eventSections.setSelection(free..(free + span))
+            sections = free..(free + span)
             if (exact) prefillClockFromSections()
             refresh()
         }
@@ -323,51 +260,31 @@ class EventEditorActivity : BaseActivity() {
     // ===== 草稿 =====
 
     private fun currentTimeText() = ScheduleTime.formatTime(startMinutes) +
-        "–" + ScheduleTime.formatTime(endMinutes)
+        " – " + ScheduleTime.formatTime(endMinutes)
 
-    private fun weeks(): List<Int> {
-        val end = binding.eventEndWeek.value.coerceIn(anchorWeek, totalWeeks)
-        return when (binding.eventRepeat.selectedIndex) {
-            REPEAT_ONCE -> listOf(anchorWeek)
-            REPEAT_WEEKLY -> (anchorWeek..end).toList()
-            REPEAT_ODD -> (anchorWeek..end).filter { it % 2 == 1 }
-            REPEAT_EVEN -> (anchorWeek..end).filter { it % 2 == 0 }
-            else -> listOf(anchorWeek)
-        }
-    }
-
-    private fun draft(): PersonalEventDraft? {
-        val range = binding.eventSections.selection ?: return null
-        return PersonalEventDraft(
-            title = binding.eventName.text.toString(),
-            position = binding.eventPlace.text.toString(),
-            note = binding.eventNote.text.toString(),
-            day = day,
-            startSection = range.first,
-            endSection = range.last,
-            startTime = if (exact) ScheduleTime.formatTime(startMinutes) else null,
-            endTime = if (exact) ScheduleTime.formatTime(endMinutes) else null,
-            weeks = weeks(),
-            color = color
-        )
-    }
+    private fun draft() = PersonalEventDraft(
+        title = binding.eventName.text.toString(),
+        position = binding.eventPlace.text.toString(),
+        note = binding.eventNote.text.toString(),
+        day = day,
+        startSection = sections.first,
+        endSection = sections.last,
+        startTime = if (exact) ScheduleTime.formatTime(startMinutes) else null,
+        endTime = if (exact) ScheduleTime.formatTime(endMinutes) else null,
+        weeks = weeks,
+        color = color
+    )
 
     /** 校验通过的草稿；不合法时返回 null（实时反馈用，不弹提示）。 */
     private fun normalized(): PersonalEventDraft? = runCatching {
-        PersonalEventValidator.normalize(draft() ?: return null, totalWeeks, slots)
+        PersonalEventValidator.normalize(draft(), totalWeeks, slots)
     }.getOrNull()
 
     // ===== 保存 =====
 
     private fun submit() {
-        val current = schedule ?: return
-        val raw = draft()
-        if (raw == null) {
-            Ui.toastError(this, getString(R.string.event_no_section))
-            return
-        }
         val normalized = try {
-            PersonalEventValidator.normalize(raw, totalWeeks, slots)
+            PersonalEventValidator.normalize(draft(), totalWeeks, slots)
         } catch (error: IllegalArgumentException) {
             Ui.toastError(this, error.message ?: getString(R.string.common_load_failed))
             return
@@ -376,24 +293,8 @@ class EventEditorActivity : BaseActivity() {
             Ui.toastError(this, getString(R.string.event_overlap_exists, existing.title))
             return
         }
-        val conflicts = ScheduleOccurrences.conflictsForEvent(current, normalized)
-        if (conflicts.isEmpty()) {
-            persist(normalized)
-            return
-        }
-        val lines = conflicts.joinToString(System.lineSeparator()) { conflict ->
-            getString(
-                R.string.event_conflict_line,
-                conflict.courseName,
-                ScheduleView.consecutiveRanges(conflict.weeks).joinToString("、")
-            )
-        }
-        Ui.confirm(
-            this,
-            getString(R.string.event_conflict_title),
-            getString(R.string.event_conflict_content, lines),
-            confirmText = getString(R.string.event_conflict_continue)
-        ) { persist(normalized) }
+        // 和课重叠已经在页面上提示过了，这里不再弹确认：日程会和课并排显示
+        persist(normalized)
     }
 
     private fun persist(draft: PersonalEventDraft) {
@@ -421,34 +322,12 @@ class EventEditorActivity : BaseActivity() {
         }
     }
 
-    private fun sectionText(range: IntRange): String =
-        if (range.first == range.last) range.first.toString()
-        else range.first.toString() + "–" + range.last.toString()
-
-    private fun repeatIndexOf(event: PersonalEvent?): Int {
-        val weeks = event?.weeks ?: return REPEAT_WEEKLY
-        if (weeks.size <= 1) return REPEAT_ONCE
-        return when (ScheduleView.alternatingWeekBadge(weeks)) {
-            "单周" -> REPEAT_ODD
-            "双周" -> REPEAT_EVEN
-            else -> REPEAT_WEEKLY
-        }
-    }
-
-    private fun dayName(value: Int) = listOf("一", "二", "三", "四", "五", "六", "日")
-        .getOrElse(value - 1) { "?" }
-
     companion object {
         private const val EXTRA_SCHEDULE_ID = "scheduleId"
         private const val EXTRA_EVENT_ID = "eventId"
         private const val EXTRA_WEEK = "week"
         private const val EXTRA_DAY = "day"
         private const val EXTRA_SECTION = "section"
-
-        private const val REPEAT_ONCE = 0
-        private const val REPEAT_WEEKLY = 1
-        private const val REPEAT_ODD = 2
-        private const val REPEAT_EVEN = 3
 
         /** 与 TimetableView 的默认日程色保持一致（冷灰蓝）。 */
         const val DEFAULT_EVENT_COLOR = 0xFF4A5A72.toInt()

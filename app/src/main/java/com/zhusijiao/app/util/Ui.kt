@@ -2,6 +2,7 @@ package com.zhusijiao.app.util
 
 import android.content.Context
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
@@ -88,6 +89,13 @@ object Ui {
             insets
         }
         view.requestApplyInsets()
+    }
+
+    /** 收起键盘并清掉焦点：点开底部面板前调用，免得面板和键盘叠在一起。 */
+    fun hideKeyboard(view: View) {
+        view.context.getSystemService(InputMethodManager::class.java)
+            ?.hideSoftInputFromWindow(view.windowToken, 0)
+        view.findFocus()?.clearFocus()
     }
 
     /**

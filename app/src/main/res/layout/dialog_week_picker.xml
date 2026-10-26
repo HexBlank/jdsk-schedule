@@ -68,15 +68,6 @@
         android:layout_marginTop="10dp"
         android:background="@color/detail_border" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="11dp"
-        android:text="@string/week_picker_weekend_section"
-        android:textColor="@color/field_label"
-        android:textSize="@dimen/text_hint"
-        android:textStyle="bold" />
-
     <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView，
          行本身不参与键盘焦点，避免每行多出一个看不见的停留点。 -->
     <LinearLayout

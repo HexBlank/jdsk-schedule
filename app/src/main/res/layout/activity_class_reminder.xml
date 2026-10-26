@@ -28,11 +28,6 @@
             android:paddingEnd="@dimen/page_padding"
             android:paddingBottom="24dp">
 
-            <TextView
-                style="@style/PageSubtitle"
-                android:layout_marginTop="14dp"
-                android:text="@string/reminder_intro" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -72,14 +67,6 @@
                             android:textColor="@color/ink"
                             android:textSize="@dimen/text_body"
                             android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/reminder_enabled_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -159,14 +146,6 @@
                             android:textColor="@color/ink"
                             android:textSize="@dimen/text_small"
                             android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/reminder_events_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -196,15 +175,6 @@
                 style="@style/SectionTitle"
                 android:layout_marginTop="18dp"
                 android:text="@string/reminder_perm_section" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/reminder_perm_section_sub"
-                android:textColor="@color/sub_8a"
-                android:textSize="@dimen/text_caption" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -249,15 +219,6 @@
                                 android:id="@+id/notificationStatus"
                                 style="@style/ReminderStatusPill" />
                         </LinearLayout>
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:lineSpacingMultiplier="1.35"
-                            android:text="@string/reminder_perm_notification_desc"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
                     <TextView
@@ -316,15 +277,6 @@
                                     android:id="@+id/exactStatus"
                                     style="@style/ReminderStatusPill" />
                             </LinearLayout>
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="3dp"
-                                android:lineSpacingMultiplier="1.35"
-                                android:text="@string/reminder_perm_exact_desc"
-                                android:textColor="@color/sub_8a"
-                                android:textSize="@dimen/text_caption" />
                         </LinearLayout>
 
                         <TextView
@@ -401,15 +353,6 @@
                 style="@style/PrimaryButton"
                 android:layout_marginTop="18dp"
                 android:text="@string/reminder_test" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:lineSpacingMultiplier="1.5"
-                android:text="@string/reminder_test_tip"
-                android:textColor="@color/sub_a8"
-                android:textSize="@dimen/text_caption" />
 
             <TextView
                 android:id="@+id/appDetailsLink"

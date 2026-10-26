@@ -24,11 +24,6 @@
             android:paddingEnd="@dimen/page_padding"
             android:paddingBottom="16dp">
 
-            <TextView
-                style="@style/PageSubtitle"
-                android:layout_marginTop="4dp"
-                android:text="@string/library_intro" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -108,11 +103,6 @@
                 <TextView
                     style="@style/EmptyTitle"
                     android:text="@string/library_empty_title" />
-
-                <TextView
-                    style="@style/EmptyDesc"
-                    android:layout_marginBottom="0dp"
-                    android:text="@string/library_empty_desc" />
             </LinearLayout>
 
             <LinearLayout
@@ -121,7 +111,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="vertical" />
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

@@ -221,19 +221,6 @@
                     android:layout_height="1px"
                     android:background="@color/tt_border" />
 
-                <TextView
-                    android:id="@+id/note"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:paddingStart="14dp"
-                    android:paddingTop="15dp"
-                    android:paddingEnd="14dp"
-                    android:paddingBottom="12dp"
-                    android:text="@string/index_unofficial_note"
-                    android:textColor="@color/sub_a8"
-                    android:textSize="@dimen/text_caption" />
-
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="16dp" />
@@ -278,12 +265,9 @@
                 android:text="@string/index_empty_title" />
 
             <TextView
-                style="@style/EmptyDesc"
-                android:text="@string/index_empty_desc" />
-
-            <TextView
                 android:id="@+id/emptyImport"
                 style="@style/PrimaryButton"
+                android:layout_marginTop="20dp"
                 android:text="@string/index_import" />
 
             <TextView

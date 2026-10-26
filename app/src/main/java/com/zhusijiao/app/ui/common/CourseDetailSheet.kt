@@ -6,12 +6,14 @@ import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.Leaves
 
 /**
- * 课程详情底部抽屉：课程色浅底的头部里，教室用大字、时间和节次紧随其后（最常被问的「在哪上、几点上」）；
- * 周次、教师两格次要信息；一行请假入口；调课、撤销、完成并排放在底部。
+ * 课程详情底部抽屉：课程色浅底的头部里，教室用大字、时间和节次紧随其后（最常被问的「在哪上、几点上」），
+ * 周次与教师并成一行；一行请假入口；调课、撤销并排放在底部。
+ * 没有「完成」按钮——下拉或点外面就关，按钮位置只留给真正的操作，一个都没有时整行不出现。
  */
 class CourseDetailSheet(
     context: Context,
@@ -19,7 +21,7 @@ class CourseDetailSheet(
     canEdit: Boolean = false,
     onReschedule: (() -> Unit)? = null,
     onUndo: (() -> Unit)? = null,
-    /** 只读时的说明；默认是「通过分享码加入的课表」那一句，情侣课表里换成更贴切的话。 */
+    /** 只读时的一行标注（如「自己加的课」「TA 的课」）；不传就什么都不写，没有按钮本身已经说明只能看。 */
     readOnlyNote: String? = null,
     /** 「这节课请假」或查看已有请假；为 null 时不显示入口（情侣课表、没有开学日期的课表）。 */
     onLeave: (() -> Unit)? = null,
@@ -53,9 +55,10 @@ class CourseDetailSheet(
                 context.getString(R.string.detail_sections, data.course.startSection, data.course.endSection, data.timeText)
             setTextColor(heroText)
         }
-        findViewById<TextView>(R.id.sheetWeeks).text = data.weekSummary
-        findViewById<TextView>(R.id.sheetTeacher).text =
-            data.course.teacher.ifBlank { context.getString(R.string.detail_teacher_empty) }
+        findViewById<TextView>(R.id.sheetMeta).apply {
+            text = listOf(data.weekSummary, data.course.teacher).filter { it.isNotBlank() }.joinToString(" · ")
+            setTextColor(heroText)
+        }
 
         val adjustment = data.adjustment
         when {
@@ -90,11 +93,10 @@ class CourseDetailSheet(
                 ) + if (data.orphaned) "\n\n${context.getString(R.string.reschedule_orphaned)}" else ""
             }
         }
-        // 订阅课表只读：没有调课按钮时，明确告诉用户原因与获取自己副本的方式
-        if (!canEdit) {
+        if (!canEdit && readOnlyNote != null) {
             findViewById<TextView>(R.id.sheetReadOnly).apply {
                 visibility = View.VISIBLE
-                if (readOnlyNote != null) text = readOnlyNote
+                text = readOnlyNote
             }
         }
         // 补课块与停课块表示的是「某一天的整体安排」，不支持对单节课再调课
@@ -148,7 +150,8 @@ class CourseDetailSheet(
             } ?: context.getString(R.string.detail_leave_action)
         }
 
-        findViewById<TextView>(R.id.sheetClose).setOnClickListener { dismiss() }
+        findViewById<View>(R.id.sheetActions).isVisible =
+            findViewById<View>(R.id.sheetUndo).isVisible || findViewById<View>(R.id.sheetReschedule).isVisible
     }
 
     private fun dayName(day: Int) = listOf("一", "二", "三", "四", "五", "六", "日").getOrElse(day - 1) { "?" }

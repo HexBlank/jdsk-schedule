@@ -72,14 +72,6 @@
                         android:text="@string/couple_setting_now_line"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/couple_setting_now_line_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -122,14 +114,6 @@
                         android:text="@string/couple_setting_highlight"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/couple_setting_highlight_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -172,14 +156,6 @@
                         android:text="@string/couple_setting_free_label"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/couple_setting_free_label_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -279,14 +255,6 @@
                         android:textColor="@color/muted"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="@string/couple_setting_schedule_hint"
-                    android:textColor="@color/sub_a8"
-                    android:textSize="@dimen/text_caption" />
 
                 <TextView
                     android:id="@+id/syncedValue"

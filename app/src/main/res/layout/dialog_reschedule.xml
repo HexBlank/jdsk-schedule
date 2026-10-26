@@ -37,14 +37,6 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="@string/reschedule_intro"
-            android:textColor="@color/sub_8a"
-            android:textSize="@dimen/text_hint" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/reschedule_source_label"
             android:textColor="@color/field_label"
@@ -117,20 +109,12 @@
             android:layout_height="wrap_content"
             android:contentDescription="@string/reschedule_section" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="6dp"
-            android:text="@string/reschedule_room_label"
-            android:textColor="@color/field_label"
-            android:textSize="@dimen/text_hint"
-            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/rescheduleRoom"
             style="@style/FieldInput"
             android:layout_height="50dp"
+            android:layout_marginTop="14dp"
             android:backgroundTint="@null"
             android:hint="@string/reschedule_room_hint"
             android:importantForAutofill="no"
@@ -172,16 +156,5 @@
             android:layout_marginTop="16dp"
             android:text="@string/reschedule_save" />
 
-        <TextView
-            android:id="@+id/rescheduleCancel"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_menu_row"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/common_cancel"
-            android:textColor="@color/sub_68"
-            android:textSize="@dimen/text_body" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

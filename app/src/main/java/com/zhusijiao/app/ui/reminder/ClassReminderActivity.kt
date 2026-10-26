@@ -144,10 +144,8 @@ class ClassReminderActivity : BaseActivity() {
     private fun renderNext(settings: ClassReminderSettings) {
         // 连续改设置时只保留最后一次计算，避免旧结果晚到覆盖新结果
         nextJob?.cancel()
-        if (!settings.enabled) {
-            binding.nextText.setText(R.string.reminder_next_off)
-            return
-        }
+        binding.nextText.visibility = if (settings.enabled) View.VISIBLE else View.GONE
+        if (!settings.enabled) return
         binding.nextText.setText(R.string.reminder_next_loading)
         nextJob = lifecycleScope.launch {
             val now = System.currentTimeMillis()
@@ -158,10 +156,10 @@ class ClassReminderActivity : BaseActivity() {
             binding.nextText.text = when {
                 schedule == null || plan == null -> getString(R.string.reminder_next_no_schedule)
                 plan.blocker == ClassReminderPlanner.Blocker.NO_SEMESTER_START ->
-                    getString(R.string.reminder_next_no_semester, schedule.name)
+                    getString(R.string.reminder_next_no_semester)
                 plan.blocker == ClassReminderPlanner.Blocker.SEMESTER_OVER ->
-                    getString(R.string.reminder_next_semester_over, schedule.name)
-                plan.nextTriggerAtMillis == null -> getString(R.string.reminder_next_nothing, schedule.name)
+                    getString(R.string.reminder_next_semester_over)
+                plan.nextTriggerAtMillis == null -> getString(R.string.reminder_next_nothing)
                 else -> {
                     val first = plan.next.first().title
                     val what = if (plan.next.size > 1) {
@@ -171,7 +169,6 @@ class ClassReminderActivity : BaseActivity() {
                     }
                     getString(
                         R.string.reminder_next,
-                        schedule.name,
                         ClassReminderPlanner.formatMoment(plan.nextTriggerAtMillis, now),
                         what
                     )

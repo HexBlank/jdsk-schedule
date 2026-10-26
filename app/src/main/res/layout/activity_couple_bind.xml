@@ -30,11 +30,6 @@
                 android:layout_marginTop="20dp"
                 android:text="@string/couple_bind_heading" />
 
-            <TextView
-                style="@style/PageSubtitle"
-                android:layout_marginTop="7dp"
-                android:text="@string/couple_bind_desc" />
-
             <!-- 邀请 TA -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -50,14 +45,6 @@
                 <TextView
                     style="@style/SectionTitle"
                     android:text="@string/couple_invite_title" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/couple_invite_desc"
-                    android:textColor="@color/muted"
-                    android:textSize="@dimen/text_hint" />
 
                 <LinearLayout
                     android:id="@+id/inviteChars"

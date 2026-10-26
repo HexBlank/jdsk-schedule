@@ -145,12 +145,7 @@ class HolidaySheet(
             return
         }
         notice.visibility = View.VISIBLE
-        notice.text = context.getString(
-            R.string.holiday_week_notice,
-            humanDate(start),
-            weekdayNameOf(start),
-            humanDate(DateUtils.weekStartOf(start))
-        )
+        notice.text = context.getString(R.string.holiday_week_notice, humanDate(DateUtils.weekStartOf(start)))
     }
 
     /** "2026-09-12" → "9月12日"。 */
@@ -159,15 +154,6 @@ class HolidaySheet(
         return if (parts.size == 3) "${parts[1]}月${parts[2]}日" else iso
     }
 
-    /** 该日期的星期名（一…日）；由所在周的周一往后数得出，不依赖课表自身的周次定义。 */
-    private fun weekdayNameOf(iso: String): String {
-        val monday = DateUtils.weekStartOf(iso)
-        val names = listOf("一", "二", "三", "四", "五", "六", "日")
-        val index = (0..6).firstOrNull { offset ->
-            DateUtils.datesForWeek(monday, 1).getOrNull(offset)?.iso == iso
-        } ?: return ""
-        return names[index]
-    }
 
     private fun renderSelectedDay() {
         val item = calendar.itemAt(selected)

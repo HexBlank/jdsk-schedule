@@ -92,7 +92,6 @@ class LeaveEditorSheet(
                 onDelete?.invoke()
             }
         }
-        findViewById<View>(R.id.leaveCancel).setOnClickListener { dismiss() }
         render()
     }
 

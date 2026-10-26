@@ -205,30 +205,5 @@ class AppearanceSheet(
             R.string.appearance_text_2,
             R.string.appearance_text_3
         )
-
-        /** 设置页「课表外观」行的副标题：一行说清当前三档，如「格子偏高 · 留白宽松 · 文字标准」；开了「显示已上」再追加一段。 */
-        fun summary(context: Context, value: TimetableAppearance): String {
-            val head = if (value.fitScreen) {
-                context.getString(R.string.appearance_summary_fit)
-            } else {
-                context.getString(
-                    R.string.appearance_summary_height,
-                    context.getString(HEIGHT_LABELS[value.rowHeightLevel])
-                )
-            }
-            val summary = context.getString(
-                R.string.appearance_summary,
-                head,
-                context.getString(PADDING_LABELS[value.paddingLevel]),
-                context.getString(TEXT_LABELS[value.textLevel])
-            )
-            val withFinished = if (value.showFinished) {
-                context.getString(R.string.appearance_summary_with_finished, summary)
-            } else {
-                summary
-            }
-            return if (value.modernStateStyle) withFinished
-            else context.getString(R.string.appearance_summary_classic, withFinished)
-        }
     }
 }

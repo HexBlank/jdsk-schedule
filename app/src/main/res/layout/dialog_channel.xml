@@ -24,15 +24,6 @@
         android:textSize="@dimen/text_subtitle"
         android:textStyle="bold" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:lineSpacingMultiplier="1.35"
-        android:text="@string/channel_dialog_desc"
-        android:textColor="@color/sub_8a"
-        android:textSize="@dimen/text_hint" />
-
     <LinearLayout
         android:id="@+id/channelList"
         android:layout_width="match_parent"

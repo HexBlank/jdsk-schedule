@@ -29,15 +29,6 @@
         android:textSize="@dimen/text_display"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/holidayIntro"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="@string/holiday_intro"
-        android:textColor="@color/sub_8a"
-        android:textSize="@dimen/text_small" />
-
     <!-- 开学日期不是周一时才显示：停错课的代价太大，这里把起算口径直接讲明白 -->
     <TextView
         android:id="@+id/holidayWeekNotice"
@@ -101,15 +92,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
                 android:orientation="vertical" />
-
-            <TextView
-                android:id="@+id/holidayLegend"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="6dp"
-                android:text="@string/holiday_calendar_hint"
-                android:textColor="@color/sub_a2"
-                android:textSize="@dimen/text_caption" />
 
             <LinearLayout
                 android:id="@+id/holidayCalendarCard"

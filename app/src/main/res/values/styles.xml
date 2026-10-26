@@ -137,4 +137,110 @@
         <item name="android:focusable">true</item>
     </style>
 
+    <!-- ===== 分组列表（编辑页、设置页）：见 docs/UI_GUIDELINES.md「界面原则 · 版式」 ===== -->
+
+    <!-- 一组行：白底细边框圆角卡片 -->
+    <style name="FormGroup">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_card</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- 一行：左字段名、右值、可点时末尾一个 › -->
+    <style name="FormRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:background">@drawable/bg_menu_row</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <style name="FormRowLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="FormRowValue">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">end|center_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="FormRowChevron">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">6dp</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:text">›</item>
+        <item name="android:textColor">@color/arrow_grey</item>
+        <item name="android:textSize">@dimen/text_title</item>
+    </style>
+
+    <!-- 行内输入：无边框、占满一行，placeholder 就是字段名 -->
+    <style name="FormRowInput">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:background">@null</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:inputType">text</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:saveEnabled">false</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_disabled</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <!-- 页面最上方的名称输入：大一号、粗体 -->
+    <style name="FormTitleInput" parent="FormRowInput">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 组内分隔：发丝线，从左内边距起 -->
+    <style name="FormDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1px</item>
+        <item name="android:layout_marginStart">14dp</item>
+        <item name="android:background">@color/divider</item>
+    </style>
+
+    <!-- 底部面板的标题：标题即当前值 -->
+    <style name="SheetTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">@color/heading_ink</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 底部面板的把手 -->
+    <style name="SheetHandle">
+        <item name="android:layout_width">38dp</item>
+        <item name="android:layout_height">4dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:background">@drawable/bg_sheet_handle</item>
+    </style>
 </resources>

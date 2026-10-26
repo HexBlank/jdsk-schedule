@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 设置：分组列表，行只有「名称 —— 当前值 ›」，不写功能描述 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
@@ -21,986 +23,326 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="@dimen/page_padding"
+            android:paddingTop="8dp"
             android:paddingEnd="@dimen/page_padding"
             android:paddingBottom="16dp">
 
-            <TextView
-                style="@style/PageTitle"
-                android:layout_marginTop="12dp"
-                android:text="@string/app_name" />
-
-            <TextView
-                style="@style/PageSubtitle"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="18dp"
-                android:text="@string/app_tagline" />
-
-            <TextView
-                style="@style/SectionTitle"
-                android:layout_marginBottom="8dp"
-                android:text="@string/settings_status" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingEnd="11dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_status_service"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/apiHost"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/statusPill"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_status_pill"
-                        android:paddingStart="6dp"
-                        android:paddingTop="3.5dp"
-                        android:paddingEnd="6dp"
-                        android:paddingBottom="3.5dp"
-                        android:textColor="@color/status_pill_text"
-                        android:textSize="@dimen/text_caption"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingEnd="11dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_status_scope"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:text="@string/settings_status_scope_value"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
-
-                <LinearLayout
-                    android:id="@+id/menuServer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_server_row"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/serverSub"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <TextView
-                style="@style/SectionTitle"
-                android:layout_marginTop="17dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/settings_section_reminder" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
+            <!-- 常用 -->
+            <LinearLayout style="@style/FormGroup">
 
                 <LinearLayout
                     android:id="@+id/menuReminder"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/reminder_title"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/reminderSub"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:text="@string/reminder_title" />
+
+                    <TextView
+                        android:id="@+id/reminderSub"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
+                <View style="@style/FormDivider" />
 
-                <!-- 请假记录：不常用，不占课表页的位置；单节课请假在课程详情里 -->
                 <LinearLayout
                     android:id="@+id/menuLeave"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/leave_title"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/leaveSub"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:text="@string/settings_leave_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:text="@string/leave_title" />
+
+                    <TextView
+                        android:id="@+id/leaveSub"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
-            </LinearLayout>
 
-            <TextView
-                style="@style/SectionTitle"
-                android:layout_marginTop="17dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/settings_section_couple" />
+                <View style="@style/FormDivider" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
-
-                <!-- 已绑定时切到「我们」页，未绑定时进入绑定页 -->
                 <LinearLayout
                     android:id="@+id/menuCouple"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_couple_row"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/coupleSub"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:text="@string/settings_couple_row" />
+
+                    <TextView
+                        android:id="@+id/coupleSub"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
-            </LinearLayout>
 
-            <TextView
-                style="@style/SectionTitle"
-                android:layout_marginTop="17dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/settings_section_display" />
+                <View style="@style/FormDivider" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
-
-                <!-- 点击后切到课表页并直接弹出外观面板，让用户对着真实课表调档位 -->
                 <LinearLayout
                     android:id="@+id/menuAppearance"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_appearance_row"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/appearanceSub"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_appearance_row" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
+
             </LinearLayout>
 
-            <TextView
-                style="@style/SectionTitle"
-                android:layout_marginTop="17dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/settings_section_update" />
-
+            <!-- 更新 -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/updateChannelRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_channel_row"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/updateChannelSub"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
-
-                <LinearLayout
-                    android:id="@+id/updateAutoRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_update_auto"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/settings_update_auto_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/updateAutoPill"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_status_pill"
-                        android:paddingStart="6dp"
-                        android:paddingTop="3.5dp"
-                        android:paddingEnd="6dp"
-                        android:paddingBottom="3.5dp"
-                        android:textColor="@color/status_pill_text"
-                        android:textSize="@dimen/text_caption"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
+                style="@style/FormGroup"
+                android:layout_marginTop="20dp">
 
                 <LinearLayout
                     android:id="@+id/updateCheckRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_update_check"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/updateCurrentVersion"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
+                        style="@style/FormRowLabel"
+                        android:text="@string/settings_update_check" />
+
+                    <TextView
+                        android:id="@+id/updateCurrentVersion"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <!-- 整行可点只是放大触摸区；焦点与无障碍交给行内的 ToggleView -->
+                <LinearLayout
+                    android:id="@+id/updateAutoRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_update_auto" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/updateAutoToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/settings_update_auto" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/updateChannelRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:text="@string/settings_channel_row" />
+
+                    <TextView
+                        android:id="@+id/updateChannelSub"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <!-- 服务器：值是当前地址，前面的小圆点是连接状态（绿 = 已连接，灰 = 检测中 / 本机模式，红 = 连不上） -->
+                <LinearLayout
+                    android:id="@+id/menuServer"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_server_row" />
+
+                    <View
+                        android:id="@+id/serverStatusDot"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/sync_dot_gray" />
+
+                    <TextView
+                        android:id="@+id/serverSub"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        android:ellipsize="end"
+                        android:maxWidth="200dp"
+                        android:maxLines="1"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_body" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                style="@style/SectionTitle"
-                android:layout_marginTop="17dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/settings_section_data" />
-
+            <!-- 关于 -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/menuPrivacy"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_privacy"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/settings_privacy_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
-
-                <LinearLayout
-                    android:id="@+id/menuAbout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_about"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/settings_about_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
+                style="@style/FormGroup"
+                android:layout_marginTop="20dp">
 
                 <LinearLayout
                     android:id="@+id/menuQqGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_qq_group"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/settings_qq_group_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
-
-                <LinearLayout
-                    android:id="@+id/menuSyncLog"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_sync_log"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/settings_sync_log_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                        style="@style/FormRowLabel"
+                        android:text="@string/settings_qq_group" />
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowValue"
+                        android:text="@string/settings_qq_group_number" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
+                <View style="@style/FormDivider" />
 
                 <LinearLayout
                     android:id="@+id/menuOpenSource"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_open_source"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:text="@string/settings_open_source_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:text="@string/settings_open_source" />
+
+                    <TextView
+                        style="@style/FormRowValue"
+                        android:text="@string/settings_open_source_value" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
+                <View style="@style/FormDivider" />
 
-                <!-- 支持开发：只是一个入口，完全自愿；放在说明区靠后的位置，不抢眼 -->
                 <LinearLayout
                     android:id="@+id/menuSupport"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/support_title"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/support_row_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/support_title" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_marginStart="11dp"
-                    android:layout_marginEnd="11dp"
-                    android:background="@color/detail_border" />
+                <View style="@style/FormDivider" />
 
                 <LinearLayout
-                    android:id="@+id/menuDelete"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_menu_row"
+                    android:id="@+id/menuSyncLog"
+                    style="@style/FormRow"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="54dp"
-                    android:orientation="horizontal"
-                    android:paddingStart="11dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="11dp"
-                    android:paddingBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_delete_account"
-                            android:textColor="@color/danger"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2.5dp"
-                            android:text="@string/settings_delete_account_sub"
-                            android:textColor="@color/sub_8a"
-                            android:textSize="@dimen/text_caption" />
-                    </LinearLayout>
+                    android:focusable="true">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textColor="@color/arrow_grey"
-                        android:textSize="@dimen/text_title" />
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_sync_log" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/menuPrivacy"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_privacy" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/menuAbout"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_about" />
+
+                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
             </LinearLayout>
 
+            <LinearLayout
+                style="@style/FormGroup"
+                android:layout_marginTop="20dp">
+
+                <LinearLayout
+                    android:id="@+id/menuDelete"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_marginEnd="0dp"
+                        android:text="@string/settings_delete_account"
+                        android:textColor="@color/danger" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 非官方声明：合规要求常驻，压成页脚一行 -->
             <TextView
+                android:id="@+id/settingsFooter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="20dp"
                 android:gravity="center"
-                android:lineSpacingMultiplier="1.4"
-                android:text="@string/settings_compliance"
-                android:textColor="@color/sub_8a"
-                android:textSize="@dimen/text_caption" />
+                android:textColor="@color/text_disabled"
+                android:textSize="@dimen/text_hint" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

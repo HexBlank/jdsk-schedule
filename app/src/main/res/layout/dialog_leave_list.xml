@@ -26,15 +26,6 @@
         android:textSize="@dimen/text_display"
         android:textStyle="bold" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:lineSpacingMultiplier="1.35"
-        android:text="@string/leave_list_desc"
-        android:textColor="@color/sub_8a"
-        android:textSize="@dimen/text_hint" />
-
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

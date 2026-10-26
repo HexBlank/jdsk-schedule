@@ -5,15 +5,14 @@ import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.TextView
 import com.zhusijiao.app.R
-import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimeSlot
 
 /**
- * 日程详情抽屉。
+ * 日程详情抽屉：标题下面依次是时间、周次与节次、地点，没填的行不出现；备注单独一块；编辑与删除并排。
  *
- * 时间给两套口径：主行是自定义时间（没填则是该节次的作息），副行写明它占第几节、
- * 那几节的上下课时间是多少——填了 18:30 的日程画在 19:15 那一行，这里解释得清楚。
+ * 填了精确时间时，时间行是「周三 · 18:30–20:30」，节次放进第二行（「第 10–11 节」），
+ * 一眼就知道它画在哪几格；没填精确时间时时间行就是节次作息，第二行只写周次。
  */
 class EventDetailSheet(
     context: Context,
@@ -29,23 +28,29 @@ class EventDetailSheet(
 
         val event = data.event
         val timeText = event.timeText(slots) ?: context.getString(R.string.detail_time_pending)
-        findViewById<TextView>(R.id.eventDetailTitle).text = event.title
-        findViewById<TextView>(R.id.eventDetailSubtitle).text = "${data.dayName} · $timeText"
-        findViewById<TextView>(R.id.eventDetailWeeks).text =
-            ScheduleView.formatWeekSummary(event.weeks)
-        findViewById<TextView>(R.id.eventDetailTime).text = timeText
-        findViewById<TextView>(R.id.eventDetailSections).text = context.getString(
-            R.string.event_detail_sections,
-            event.startSection,
-            event.endSection,
-            ScheduleTime.rangeText(slots, event.startSection, event.endSection)
-                ?.let { "（$it）" }.orEmpty()
+        val sections = context.getString(
+            R.string.slot_value,
+            data.dayName,
+            SlotSheet.sectionText(event.startSection..event.endSection)
         )
-        findViewById<TextView>(R.id.eventDetailPlace).text =
-            event.position.ifBlank { context.getString(R.string.detail_room_pending) }
+        findViewById<TextView>(R.id.eventDetailTitle).text = event.title
+        findViewById<TextView>(R.id.eventDetailTime).text =
+            if (event.startTime != null) "${data.dayName} · $timeText" else "$sections · $timeText"
+        findViewById<TextView>(R.id.eventDetailWeeks).text = listOfNotNull(
+            ScheduleView.formatWeekSummary(event.weeks),
+            if (event.startTime != null) context.getString(R.string.course_sections_value, SlotSheet.sectionText(event.startSection..event.endSection)) else null
+        ).joinToString(" · ")
+        if (event.position.isNotBlank()) {
+            findViewById<TextView>(R.id.eventDetailPlace).apply {
+                visibility = View.VISIBLE
+                text = event.position
+            }
+        }
         if (event.note.isNotBlank()) {
-            findViewById<View>(R.id.eventDetailNoteRow).visibility = View.VISIBLE
-            findViewById<TextView>(R.id.eventDetailNote).text = event.note
+            findViewById<TextView>(R.id.eventDetailNote).apply {
+                visibility = View.VISIBLE
+                text = event.note
+            }
         }
 
         findViewById<View>(R.id.eventAccent).background = GradientDrawable().apply {
@@ -55,6 +60,5 @@ class EventDetailSheet(
         }
         findViewById<View>(R.id.eventDetailEdit).setOnClickListener { dismiss(); onEdit() }
         findViewById<View>(R.id.eventDetailDelete).setOnClickListener { dismiss(); onDelete() }
-        findViewById<View>(R.id.eventDetailClose).setOnClickListener { dismiss() }
     }
 }

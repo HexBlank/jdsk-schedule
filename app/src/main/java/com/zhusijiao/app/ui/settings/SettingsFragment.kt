@@ -67,6 +67,7 @@ class SettingsFragment : Fragment(), Refreshable {
         bindUpdateSection()
         bindServerRow()
         bindChannelRow()
+        binding.settingsFooter.text = getString(R.string.settings_footer, BuildConfig.VERSION_NAME)
         binding.menuPrivacy.setOnClickListener {
             Ui.alert(requireContext(), getString(R.string.settings_privacy_title), getString(R.string.settings_privacy_content), getString(R.string.common_i_see))
         }
@@ -127,14 +128,13 @@ class SettingsFragment : Fragment(), Refreshable {
         }
     }
 
-    /** 「上课提醒」行：副标题摘要开关与提前量，开着却没有通知权限时直接点明；点击进入提醒设置页。 */
+    /** 「上课提醒」行：值是提前量，关着就是「已关闭」，开着却没有通知权限时直接点明；点击进入提醒设置页。 */
     private fun bindReminderRow() {
         val settings = Prefs.classReminderSettings
         binding.reminderSub.text = when {
             !settings.enabled -> getString(R.string.reminder_settings_sub_off)
             !ReminderPermissions.notificationsAllowed(requireContext()) ->
                 getString(R.string.reminder_settings_sub_no_notification)
-            settings.includeEvents -> getString(R.string.reminder_settings_sub_on_events, settings.leadMinutes)
             else -> getString(R.string.reminder_settings_sub_on, settings.leadMinutes)
         }
         binding.menuReminder.setOnClickListener {
@@ -145,7 +145,7 @@ class SettingsFragment : Fragment(), Refreshable {
     private val leaveFlow = LeaveFlow(this) { bindLeaveRow() }
 
     /**
-     * 「请假」行：副标题说明还有几条没结束的请假；点击打开请假记录（按当前课表算涉及哪些课）。
+     * 「请假」行：有没结束的请假时值是条数，没有就空着；点击打开请假记录（按当前课表算涉及哪些课）。
      * 请假不是常用功能，所以记录放在设置里；给单节课请假在课程详情里更顺手。
      */
     private fun bindLeaveRow() {
@@ -154,8 +154,7 @@ class SettingsFragment : Fragment(), Refreshable {
             if (_binding == null) return@launch
             val now = System.currentTimeMillis()
             val active = leaves.count { (it.endAtMillis ?: 0L) > now }
-            binding.leaveSub.text = if (active > 0) getString(R.string.settings_leave_sub_active, active)
-            else getString(R.string.settings_leave_sub)
+            binding.leaveSub.text = if (active > 0) getString(R.string.settings_leave_sub_active, active) else ""
         }
         binding.menuLeave.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
@@ -179,8 +178,7 @@ class SettingsFragment : Fragment(), Refreshable {
     /** 「情侣课表」行：已绑定时显示和谁绑定、点击切到「我们」页；未绑定时进入绑定页。 */
     private fun bindCoupleRow() {
         val state = ApiClient.coupleState()
-        binding.coupleSub.text = if (state.bound) getString(R.string.settings_couple_sub_bound, state.partnerName)
-        else getString(R.string.settings_couple_sub_unbound)
+        binding.coupleSub.text = if (state.bound) getString(R.string.settings_couple_sub_bound, state.partnerName) else ""
         binding.menuCouple.setOnClickListener {
             when {
                 ApiClient.isLocalMode -> Ui.alert(
@@ -194,26 +192,20 @@ class SettingsFragment : Fragment(), Refreshable {
         }
     }
 
-    /** 「课表外观」行：副标题摘要当前档位，点击切到课表页并弹出外观面板。 */
+    /** 「课表外观」行：点击切到课表页并弹出外观面板（档位多，摘要成一行反而看不清，所以不显示值）。 */
     private fun bindAppearanceRow() {
-        binding.appearanceSub.text = AppearanceSheet.summary(requireContext(), Prefs.timetableAppearance)
         binding.menuAppearance.setOnClickListener {
             (activity as? MainActivity)?.openTimetableAppearance()
         }
     }
 
-    /** 「服务器地址」行：副标题显示当前生效地址，点击打开更换面板。 */
+    /** 「服务器」行：值是当前生效地址（前面的圆点是连接状态，见 [bindStatus]），点击打开更换面板。 */
     private fun bindServerRow() {
         val override = Prefs.serverBaseUrlOverride
         binding.serverSub.text = if (override.isBlank()) {
-            val defaultLabel = ServerAddress.labelOf(AppConfig.API_BASE_URL)
-            if (defaultLabel.isBlank()) {
-                getString(R.string.settings_server_local_default)
-            } else {
-                getString(R.string.settings_server_sub_default, defaultLabel)
-            }
+            ServerAddress.labelOf(AppConfig.API_BASE_URL).ifBlank { getString(R.string.settings_status_local_mode) }
         } else {
-            getString(R.string.settings_server_sub_custom, ServerAddress.labelOf(override.trimEnd('/')))
+            ServerAddress.labelOf(override.trimEnd('/'))
         }
         binding.menuServer.setOnClickListener {
             ServerSheet(requireContext()) {
@@ -230,7 +222,7 @@ class SettingsFragment : Fragment(), Refreshable {
             .plus(Prefs.customUpdateChannels)
             .firstOrNull { it.id == id }?.label
             ?: getString(R.string.channel_stable)
-        binding.updateChannelSub.text = getString(R.string.settings_channel_sub, label)
+        binding.updateChannelSub.text = label
         binding.updateChannelRow.setOnClickListener {
             ChannelSheet(requireContext()) { bindChannelRow() }.show()
         }
@@ -238,18 +230,10 @@ class SettingsFragment : Fragment(), Refreshable {
 
     private fun bindUpdateSection() {
         binding.updateCurrentVersion.text = getString(R.string.settings_update_current, BuildConfig.VERSION_NAME)
-        renderUpdateToggle()
-        binding.updateAutoRow.setOnClickListener {
-            Prefs.autoUpdateCheck = !Prefs.autoUpdateCheck
-            renderUpdateToggle()
-        }
+        binding.updateAutoToggle.setChecked(Prefs.autoUpdateCheck, animate = false)
+        binding.updateAutoToggle.onCheckedChange = { checked -> Prefs.autoUpdateCheck = checked }
+        binding.updateAutoRow.setOnClickListener { binding.updateAutoToggle.toggle() }
         binding.updateCheckRow.setOnClickListener { checkUpdateManually() }
-    }
-
-    private fun renderUpdateToggle() {
-        binding.updateAutoPill.setText(
-            if (Prefs.autoUpdateCheck) R.string.settings_update_on else R.string.settings_update_off
-        )
     }
 
     /** 手动检查更新：有更新弹更新框，否则轻提示。 */
@@ -295,16 +279,19 @@ class SettingsFragment : Fragment(), Refreshable {
         }
     }
 
+    /** 服务器连接状态只用「服务器」行前的圆点表达：绿 = 已连接，灰 = 检测中 / 本机模式，红 = 连不上。 */
     private fun bindStatus() {
-        binding.apiHost.text = AppConfig.apiHostLabel
-        if (ApiClient.isLocalMode) {
-            binding.statusPill.text = getString(R.string.settings_status_local_mode)
-            return
-        }
-        binding.statusPill.text = getString(R.string.settings_status_checking)
+        val dot = binding.serverStatusDot
+        dot.setBackgroundResource(R.drawable.sync_dot_gray)
+        dot.contentDescription = getString(
+            if (ApiClient.isLocalMode) R.string.settings_status_local_mode else R.string.settings_status_checking
+        )
+        if (ApiClient.isLocalMode) return
         viewLifecycleOwner.lifecycleScope.launch {
             val online = ApiClient.healthCheck()
-            if (_binding != null) binding.statusPill.text = getString(
+            if (_binding == null) return@launch
+            dot.setBackgroundResource(if (online) R.drawable.sync_dot_green else R.drawable.sync_dot_error)
+            dot.contentDescription = getString(
                 if (online) R.string.settings_status_online else R.string.settings_status_unavailable
             )
         }

@@ -52,14 +52,6 @@
             android:textSize="@dimen/text_hint" />
     </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="@string/appearance_hint"
-        android:textColor="@color/sub_a8"
-        android:textSize="@dimen/text_caption" />
-
     <!-- 小屏或系统大字体下内容仍可能超出，这里限高可滚，保证三排档位都够得着 -->
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
         android:id="@+id/appearanceScroll"
@@ -115,14 +107,6 @@
                         android:text="@string/appearance_fit_screen"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/appearance_fit_screen_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -145,14 +129,6 @@
                 android:textColor="@color/field_label"
                 android:textSize="@dimen/text_hint"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="@string/appearance_padding_sub"
-                android:textColor="@color/sub_a8"
-                android:textSize="@dimen/text_caption" />
 
             <com.zhusijiao.app.ui.common.SegmentedChoiceView
                 android:id="@+id/paddingChoice"
@@ -221,14 +197,6 @@
                         android:text="@string/appearance_show_finished"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/appearance_show_finished_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -266,14 +234,6 @@
                         android:text="@string/appearance_show_now_line"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/appearance_show_now_line_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -311,14 +271,6 @@
                         android:text="@string/appearance_show_next_class"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/appearance_show_next_class_sub"
-                        android:textColor="@color/sub_a8"
-                        android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
                 <com.zhusijiao.app.ui.common.ToggleView
@@ -425,15 +377,6 @@
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="4dp"
-                android:text="@string/appearance_state_hint"
-                android:textColor="@color/sub_a8"
-                android:textSize="@dimen/text_caption" />
         </LinearLayout>
     </com.zhusijiao.app.ui.common.MaxHeightScrollView>
 </LinearLayout>

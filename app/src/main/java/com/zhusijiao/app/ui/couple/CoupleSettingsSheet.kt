@@ -39,7 +39,6 @@ class CoupleSettingsSheet(
         }
 
         findViewById<TextView>(R.id.scheduleValue).text = currentScheduleName
-            ?.let { context.getString(R.string.couple_setting_schedule_value, it) }
             ?: context.getString(R.string.couple_no_my_schedule)
         findViewById<TextView>(R.id.syncedValue).text = if (syncedAt > 0) {
             context.getString(R.string.couple_setting_synced, relativeTime(syncedAt))
