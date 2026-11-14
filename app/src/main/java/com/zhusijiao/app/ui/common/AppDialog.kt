@@ -16,6 +16,7 @@ class AppDialog(context: Context) : Dialog(context, R.style.Theme_Zhusijiao_Moda
 
     private val titleView: TextView
     private val messageView: TextView
+    private val messageScroll: View
     private val negativeView: TextView
     private val positiveView: TextView
 
@@ -32,6 +33,7 @@ class AppDialog(context: Context) : Dialog(context, R.style.Theme_Zhusijiao_Moda
         setContentView(R.layout.dialog_app_modal)
         titleView = findViewById(R.id.modalTitle)
         messageView = findViewById(R.id.modalMessage)
+        messageScroll = findViewById(R.id.modalMessageScroll)
         negativeView = findViewById(R.id.modalNegative)
         positiveView = findViewById(R.id.modalPositive)
         setCanceledOnTouchOutside(true)
@@ -46,7 +48,7 @@ class AppDialog(context: Context) : Dialog(context, R.style.Theme_Zhusijiao_Moda
 
     fun message(text: CharSequence?) = apply {
         messageView.text = text
-        messageView.visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
+        messageScroll.visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
     }
 
     fun positive(text: CharSequence, action: (() -> Unit)? = null) = apply {
