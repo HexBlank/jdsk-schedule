@@ -51,3 +51,4 @@ keystore/README.md
 *.log
 *.tmp
 *.swp
+/.local-view/
