@@ -1,17 +1,20 @@
 package com.zhusijiao.app.ui.common
 
 import android.content.Context
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.TimetableAppearance
+import com.zhusijiao.app.domain.WeekendDisplayMode
 
 /**
- * 课表外观底部面板：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」，
- * 以及「状态显示」分组：「显示已上状态」「显示当前时间线」「显示下一节课提示」三个开关，
- * 和停课、日程的样式（新版 / 经典，带预览的卡片二选一）。
+ * 课表外观底部面板，分两页，页签就是面板标题：
+ * - 「尺寸」：格子高度、格子留白、文字大小三排分段选择，外加「自动铺满一屏」；
+ * - 「显示」：下一节课提示、当前时间线、已上状态、周末无课时隐藏四个开关，
+ *   和停课、日程的样式（新版 / 经典，带预览的卡片二选一）。
  *
  * 交互约定：
  * - 面板只占下半屏且几乎不压暗背景，用户一边点一边能看到上半屏真实课表，所以没有「确定」按钮，
@@ -23,12 +26,21 @@ import com.zhusijiao.app.domain.TimetableAppearance
 class AppearanceSheet(
     context: Context,
     initial: TimetableAppearance,
-    /** 打开后直接滚到「状态显示」分组（从「换了新样式」提示的「改回」进来时）。 */
+    /** 打开后直接停在「显示」页（从「换了新样式」提示的「改回」进来时）。 */
     private val focusStateStyle: Boolean = false,
+    /** 周末列的显示方式另存一项偏好，不在 [TimetableAppearance] 里，但同属「课表长什么样」，开关放在这里。 */
+    initialWeekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO,
+    private val onWeekendModeChanged: (WeekendDisplayMode) -> Unit = {},
     private val onChanged: (TimetableAppearance) -> Unit
 ) : SheetDialog(context, SheetDialog.SCRIM_CLEAR) {
 
     private var current = initial
+    private var weekendMode = initialWeekendMode
+    private val weekendToggle: ToggleView
+    private val tabSize: TextView
+    private val tabDisplay: TextView
+    private val pageSize: View
+    private val pageDisplay: View
 
     private val heightChoice: SegmentedChoiceView
     private val paddingChoice: SegmentedChoiceView
@@ -55,6 +67,23 @@ class AppearanceSheet(
         nowLineToggle = findViewById(R.id.showNowLineToggle)
         nextClassToggle = findViewById(R.id.showNextClassToggle)
         resetButton = findViewById(R.id.appearanceReset)
+        weekendToggle = findViewById(R.id.weekendAutoToggle)
+        tabSize = findViewById(R.id.appearanceTabSize)
+        tabDisplay = findViewById(R.id.appearanceTabDisplay)
+        pageSize = findViewById(R.id.appearancePageSize)
+        pageDisplay = findViewById(R.id.appearancePageDisplay)
+        tabSize.setOnClickListener { showPage(display = false) }
+        tabDisplay.setOnClickListener { showPage(display = true) }
+
+        // 开启 = 当周周六日有安排时才显示（AUTO），关闭 = 始终显示（ALWAYS）。
+        // 周末列不允许完全隐藏，避免用户漏看周末课程。
+        weekendToggle.setChecked(weekendMode == WeekendDisplayMode.AUTO, animate = false)
+        weekendToggle.onCheckedChange = { checked ->
+            weekendMode = if (checked) WeekendDisplayMode.AUTO else WeekendDisplayMode.ALWAYS
+            onWeekendModeChanged(weekendMode)
+            renderResetState()
+        }
+        findViewById<View>(R.id.weekendAutoRow).setOnClickListener { weekendToggle.toggle() }
 
         heightChoice.configure(
             items = HEIGHT_LABELS.map(context::getString),
@@ -115,12 +144,23 @@ class AppearanceSheet(
         renderStateStyle()
         renderResetState()
 
-        if (focusStateStyle) {
-            val scroll = findViewById<MaxHeightScrollView>(R.id.appearanceScroll)
-            val group = findViewById<View>(R.id.stateGroupTitle)
-            scroll.post { scroll.smoothScrollTo(0, group.top) }
-        }
+        showPage(display = focusStateStyle)
     }
+
+    /** 两页叠放，不在的那页只是不可见：面板高度不随换页跳动。选中的页签加粗变深。 */
+    private fun showPage(display: Boolean) {
+        pageSize.visibility = if (display) View.INVISIBLE else View.VISIBLE
+        pageDisplay.visibility = if (display) View.VISIBLE else View.INVISIBLE
+        fun style(tab: TextView, selected: Boolean) {
+            tab.isSelected = selected
+            tab.typeface = if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            tab.setTextColor(ContextCompat.getColor(context, if (selected) R.color.heading_ink else R.color.text_tertiary))
+        }
+        style(tabSize, !display)
+        style(tabDisplay, display)
+    }
+
+    private val allDefault get() = current.isDefault && weekendMode == WeekendDisplayMode.AUTO
 
     private fun selectStateStyle(style: Int) {
         apply(current.copy(stateStyle = style))
@@ -164,7 +204,13 @@ class AppearanceSheet(
 
     private fun resetToDefault() {
         val target = TimetableAppearance.DEFAULT
-        if (current == target) return
+        if (allDefault) return
+        weekendToggle.setChecked(true, animate = true)
+        if (weekendMode != WeekendDisplayMode.AUTO) {
+            weekendMode = WeekendDisplayMode.AUTO
+            onWeekendModeChanged(weekendMode)
+            renderResetState()
+        }
         heightChoice.setSelection(target.rowHeightLevel)
         paddingChoice.setSelection(target.paddingLevel)
         textChoice.setSelection(target.textLevel)
@@ -183,8 +229,8 @@ class AppearanceSheet(
     }
 
     private fun renderResetState() {
-        resetButton.isEnabled = !current.isDefault
-        resetButton.alpha = if (current.isDefault) 0.35f else 1f
+        resetButton.isEnabled = !allDefault
+        resetButton.alpha = if (allDefault) 0.35f else 1f
     }
 
     companion object {

@@ -2,6 +2,7 @@
 <!--
   课表外观面板：只占屏幕下半部分，背景几乎不压暗（SheetDialog.SCRIM_CLEAR），
   用户一边点档位一边能看到上半屏真实课表的变化，因此没有「确定」按钮——改一下即时生效。
+  分「尺寸」「显示」两页，一页只摆三四个控件；页签就是面板标题。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -18,23 +19,43 @@
         android:layout_width="38dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="13dp"
+        android:layout_marginBottom="4dp"
         android:background="@drawable/bg_sheet_handle" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/appearance_title"
-            android:textColor="@color/heading_ink"
+            android:id="@+id/appearanceTabSize"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingEnd="20dp"
+            android:text="@string/appearance_tab_size"
             android:textSize="@dimen/text_subtitle"
-            android:textStyle="bold" />
+            tools:ignore="RtlSymmetry" />
+
+        <TextView
+            android:id="@+id/appearanceTabDisplay"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingEnd="20dp"
+            android:text="@string/appearance_tab_display"
+            android:textSize="@dimen/text_subtitle"
+            tools:ignore="RtlSymmetry" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/appearanceReset"
@@ -52,331 +73,309 @@
             android:textSize="@dimen/text_hint" />
     </LinearLayout>
 
-    <!-- 小屏或系统大字体下内容仍可能超出，这里限高可滚，保证三排档位都够得着 -->
+    <!-- 小屏或系统大字体下内容仍可能超出，这里限高可滚 -->
     <com.zhusijiao.app.ui.common.MaxHeightScrollView
         android:id="@+id/appearanceScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <LinearLayout
+        <!-- 两页叠放，不在的那页 invisible 而不是 gone：面板高度不随换页跳动 -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="@string/appearance_row_height"
-                android:textColor="@color/field_label"
-                android:textSize="@dimen/text_hint"
-                android:textStyle="bold" />
-
-            <com.zhusijiao.app.ui.common.SegmentedChoiceView
-                android:id="@+id/heightChoice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp" />
-
-            <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView -->
+            <!-- 尺寸 -->
             <LinearLayout
-                android:id="@+id/fitScreenRow"
+                android:id="@+id/appearancePageSize"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="false"
-                android:gravity="center_vertical"
-                android:importantForAccessibility="no"
-                android:minHeight="52dp"
-                android:orientation="horizontal"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                tools:ignore="KeyboardInaccessibleWidget">
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="10dp">
+                    android:layout_marginTop="4dp"
+                    android:text="@string/appearance_row_height"
+                    android:textColor="@color/field_label"
+                    android:textSize="@dimen/text_hint" />
+
+                <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                    android:id="@+id/heightChoice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+                <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView -->
+                <LinearLayout
+                    android:id="@+id/fitScreenRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="52dp"
+                    android:orientation="horizontal"
+                    tools:ignore="KeyboardInaccessibleWidget">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="@string/appearance_fit_screen"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/fitScreenToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/appearance_fit_screen" />
                 </LinearLayout>
 
-                <com.zhusijiao.app.ui.common.ToggleView
-                    android:id="@+id/fitScreenToggle"
-                    android:layout_width="50dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/appearance_fit_screen" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/appearance_padding"
+                    android:textColor="@color/field_label"
+                    android:textSize="@dimen/text_hint" />
+
+                <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                    android:id="@+id/paddingChoice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/appearance_text_size"
+                    android:textColor="@color/field_label"
+                    android:textSize="@dimen/text_hint" />
+
+                <com.zhusijiao.app.ui.common.SegmentedChoiceView
+                    android:id="@+id/textChoice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
             </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1px"
-                android:background="@color/detail_border" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="13dp"
-                android:text="@string/appearance_padding"
-                android:textColor="@color/field_label"
-                android:textSize="@dimen/text_hint"
-                android:textStyle="bold" />
-
-            <com.zhusijiao.app.ui.common.SegmentedChoiceView
-                android:id="@+id/paddingChoice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="13dp"
-                android:text="@string/appearance_text_size"
-                android:textColor="@color/field_label"
-                android:textSize="@dimen/text_hint"
-                android:textStyle="bold" />
-
-            <com.zhusijiao.app.ui.common.SegmentedChoiceView
-                android:id="@+id/textChoice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1px"
-                android:layout_marginTop="13dp"
-                android:background="@color/detail_border" />
-
-            <!-- 「状态显示」分组：已上状态与停课、日程的样式 -->
-            <TextView
-                android:id="@+id/stateGroupTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/appearance_group_state"
-                android:textColor="@color/accent"
-                android:textSize="@dimen/text_caption"
-                android:textStyle="bold" />
-
-            <!-- 与「自动铺满一屏」同款：整行放大触摸区，焦点/无障碍在行内 ToggleView -->
+            <!-- 显示 -->
             <LinearLayout
-                android:id="@+id/showFinishedRow"
+                android:id="@+id/appearancePageDisplay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="false"
-                android:gravity="center_vertical"
-                android:importantForAccessibility="no"
-                android:minHeight="52dp"
-                android:orientation="horizontal"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                tools:ignore="KeyboardInaccessibleWidget">
+                android:orientation="vertical"
+                android:visibility="invisible">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/showNextClassRow"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="10dp">
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="52dp"
+                    android:orientation="horizontal"
+                    tools:ignore="KeyboardInaccessibleWidget">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/appearance_show_finished"
-                        android:textColor="@color/body_ink"
-                        android:textSize="@dimen/text_body" />
-                </LinearLayout>
-
-                <com.zhusijiao.app.ui.common.ToggleView
-                    android:id="@+id/showFinishedToggle"
-                    android:layout_width="50dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/appearance_show_finished" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/showNowLineRow"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="false"
-                android:gravity="center_vertical"
-                android:importantForAccessibility="no"
-                android:minHeight="52dp"
-                android:orientation="horizontal"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                tools:ignore="KeyboardInaccessibleWidget">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="10dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/appearance_show_now_line"
-                        android:textColor="@color/body_ink"
-                        android:textSize="@dimen/text_body" />
-                </LinearLayout>
-
-                <com.zhusijiao.app.ui.common.ToggleView
-                    android:id="@+id/showNowLineToggle"
-                    android:layout_width="50dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/appearance_show_now_line" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/showNextClassRow"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="false"
-                android:gravity="center_vertical"
-                android:importantForAccessibility="no"
-                android:minHeight="52dp"
-                android:orientation="horizontal"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                tools:ignore="KeyboardInaccessibleWidget">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="10dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="@string/appearance_show_next_class"
                         android:textColor="@color/body_ink"
                         android:textSize="@dimen/text_body" />
-                </LinearLayout>
 
-                <com.zhusijiao.app.ui.common.ToggleView
-                    android:id="@+id/showNextClassToggle"
-                    android:layout_width="50dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/appearance_show_next_class" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/appearance_state_style"
-                android:textColor="@color/field_label"
-                android:textSize="@dimen/text_hint"
-                android:textStyle="bold" />
-
-            <!-- 二选一的预览卡片：看图选，而不是一个说不清的「使用旧样式」开关 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/stateStyleModern"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-
-                    <com.zhusijiao.app.ui.common.StateStylePreviewView
-                        android:id="@+id/stateStyleModernPreview"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:importantForAccessibility="no" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center_vertical"
-                        android:importantForAccessibility="no"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:id="@+id/stateStyleModernRadio"
-                            android:layout_width="14dp"
-                            android:layout_height="14dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="7dp"
-                            android:text="@string/appearance_state_modern"
-                            android:textColor="@color/text_primary"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/showNextClassToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/appearance_show_next_class" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/stateStyleClassic"
-                    android:layout_width="0dp"
+                    android:id="@+id/showNowLineRow"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="1"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:orientation="vertical"
-                    android:padding="8dp">
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="52dp"
+                    android:orientation="horizontal"
+                    tools:ignore="KeyboardInaccessibleWidget">
 
-                    <com.zhusijiao.app.ui.common.StateStylePreviewView
-                        android:id="@+id/stateStyleClassicPreview"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:importantForAccessibility="no" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/appearance_show_now_line"
+                        android:textColor="@color/body_ink"
+                        android:textSize="@dimen/text_body" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/showNowLineToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/appearance_show_now_line" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/showFinishedRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="52dp"
+                    android:orientation="horizontal"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/appearance_show_finished"
+                        android:textColor="@color/body_ink"
+                        android:textSize="@dimen/text_body" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/showFinishedToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/appearance_show_finished" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/weekendAutoRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:gravity="center_vertical"
+                    android:importantForAccessibility="no"
+                    android:minHeight="52dp"
+                    android:orientation="horizontal"
+                    tools:ignore="KeyboardInaccessibleWidget">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/week_picker_auto_weekend"
+                        android:textColor="@color/body_ink"
+                        android:textSize="@dimen/text_body" />
+
+                    <com.zhusijiao.app.ui.common.ToggleView
+                        android:id="@+id/weekendAutoToggle"
+                        android:layout_width="50dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="@string/week_picker_auto_weekend" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/appearance_state_style"
+                    android:textColor="@color/field_label"
+                    android:textSize="@dimen/text_hint" />
+
+                <!-- 二选一的预览卡片：看图选，而不是一个说不清的「使用旧样式」开关 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:id="@+id/stateStyleModern"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center_vertical"
-                        android:importantForAccessibility="no"
-                        android:orientation="horizontal">
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="8dp">
 
-                        <View
-                            android:id="@+id/stateStyleClassicRadio"
-                            android:layout_width="14dp"
-                            android:layout_height="14dp" />
+                        <com.zhusijiao.app.ui.common.StateStylePreviewView
+                            android:id="@+id/stateStyleModernPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:importantForAccessibility="no" />
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="7dp"
-                            android:text="@string/appearance_state_classic"
-                            android:textColor="@color/text_primary"
-                            android:textSize="@dimen/text_small"
-                            android:textStyle="bold" />
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:importantForAccessibility="no"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:id="@+id/stateStyleModernRadio"
+                                android:layout_width="14dp"
+                                android:layout_height="14dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="7dp"
+                                android:text="@string/appearance_state_modern"
+                                android:textColor="@color/text_primary"
+                                android:textSize="@dimen/text_small"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/stateStyleClassic"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <com.zhusijiao.app.ui.common.StateStylePreviewView
+                            android:id="@+id/stateStyleClassicPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:importantForAccessibility="no" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:importantForAccessibility="no"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:id="@+id/stateStyleClassicRadio"
+                                android:layout_width="14dp"
+                                android:layout_height="14dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="7dp"
+                                android:text="@string/appearance_state_classic"
+                                android:textColor="@color/text_primary"
+                                android:textSize="@dimen/text_small"
+                                android:textStyle="bold" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+        </FrameLayout>
     </com.zhusijiao.app.ui.common.MaxHeightScrollView>
 </LinearLayout>

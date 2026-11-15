@@ -25,6 +25,7 @@
     <string name="index_week_title">第 %1$d 周</string>
     <string name="index_current_week">本周</string>
     <string name="index_back_current_week">回本周</string>
+    <string name="schedule_switch">切换课表</string>
     <string name="next_class_ongoing">正在上</string>
     <string name="next_class_upcoming">下一节</string>
     <string name="next_class_title_format">%1$s · %2$s</string>
@@ -177,10 +178,11 @@
     <string name="appearance_desc_height">格子高度：</string>
     <string name="appearance_desc_padding">格子留白：</string>
     <string name="appearance_desc_text">文字大小：</string>
-    <string name="appearance_show_finished">显示已上状态</string>
-    <string name="appearance_show_now_line">显示当前时间线</string>
-    <string name="appearance_show_next_class">显示下一节课提示</string>
-    <string name="appearance_group_state">状态显示</string>
+    <string name="appearance_show_finished">已上状态</string>
+    <string name="appearance_show_now_line">当前时间线</string>
+    <string name="appearance_show_next_class">下一节课提示</string>
+    <string name="appearance_tab_size">尺寸</string>
+    <string name="appearance_tab_display">显示</string>
     <string name="appearance_state_style">停课与日程的样式</string>
     <string name="appearance_state_modern">新版</string>
     <string name="appearance_state_classic">经典</string>

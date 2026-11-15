@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sheet"
@@ -60,38 +59,4 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
     </com.zhusijiao.app.ui.common.MaxHeightScrollView>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="10dp"
-        android:background="@color/detail_border" />
-
-    <!-- 整行可点只是放大触摸区；真正的焦点/无障碍控件是行内的 ToggleView，
-         行本身不参与键盘焦点，避免每行多出一个看不见的停留点。 -->
-    <LinearLayout
-        android:id="@+id/weekendAutoRow"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:clickable="true"
-        android:focusable="false"
-        android:gravity="center_vertical"
-        android:importantForAccessibility="no"
-        android:orientation="horizontal"
-        tools:ignore="KeyboardInaccessibleWidget">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/week_picker_auto_weekend"
-            android:textColor="@color/body_ink"
-            android:textSize="@dimen/text_body" />
-
-        <com.zhusijiao.app.ui.common.ToggleView
-            android:id="@+id/weekendAutoToggle"
-            android:layout_width="50dp"
-            android:layout_height="32dp"
-            android:contentDescription="@string/week_picker_auto_weekend" />
-    </LinearLayout>
 </LinearLayout>

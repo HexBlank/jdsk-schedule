@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -118,8 +117,6 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.onEmptySlotClick = { week, day, section -> showAddChoice(week, day, section) }
         binding.timetable.onWeekChanged = { week, isFirst, isLast -> updateWeekBar(week, isFirst, isLast) }
         binding.timetable.onPageScroll = { shown, local -> followPage(shown, local) }
-        binding.prevWeek.setOnClickListener { binding.timetable.previousWeek() }
-        binding.nextWeek.setOnClickListener { binding.timetable.nextWeek() }
         binding.weekCenter.setOnClickListener { showWeekPicker() }
         binding.backToCurrentWeek.setOnClickListener { binding.timetable.goToWeek(currentWeekNumber) }
         binding.nextClassBar.setOnClickListener { openNextClass() }
@@ -173,9 +170,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                     leaves = emptyList()
                     extras = emptyList()
                     binding.timetable.setSchedule(null)
-                    binding.header.setTitle(getString(R.string.index_default_title))
                     binding.header.clearActions()
-                    binding.header.setOnTitleClick(null)
                     setState(STATE_EMPTY)
                     Prefs.removeActiveSchedule()
                     syncRemoteThenReload(syncRemote)
@@ -195,7 +190,6 @@ class ScheduleFragment : Fragment(), Refreshable {
                 schedule = loadedSchedule
                 Prefs.activeScheduleId = loadedSchedule.id
                 currentWeekNumber = DateUtils.currentWeek(loadedSchedule.semesterStart, loadedSchedule.totalWeeks)
-                binding.header.setTitle(loadedSchedule.name)
                 updateHeaderActions()
                 binding.timetable.setSchedule(
                     loadedSchedule,
@@ -230,7 +224,9 @@ class ScheduleFragment : Fragment(), Refreshable {
     }
 
     private fun setState(state: Int) {
+        // 有课表时页头正中是周次栏（第 N 周 + 日期与课表名），页头自己的标题让位
         binding.weekBar.visibility = if (state == STATE_CONTENT) View.VISIBLE else View.GONE
+        binding.header.setTitle(if (state == STATE_CONTENT) "" else getString(R.string.index_default_title))
         binding.scroll.visibility = if (state == STATE_CONTENT) View.VISIBLE else View.GONE
         binding.loading.visibility = if (state == STATE_LOADING) View.VISIBLE else View.GONE
         binding.emptyState.visibility = if (state == STATE_EMPTY) View.VISIBLE else View.GONE
@@ -238,11 +234,10 @@ class ScheduleFragment : Fragment(), Refreshable {
         updateNextClass()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun updateWeekBar(week: Int, isFirst: Boolean, isLast: Boolean) {
         currentWeek = week
         showWeekTitle(week)
-        tint(binding.prevIcon, if (isFirst) R.color.tt_chevron_off else R.color.tt_chevron)
-        tint(binding.nextIcon, if (isLast) R.color.tt_chevron_off else R.color.tt_chevron)
         binding.backToCurrentWeek.visibility = if (week != currentWeekNumber) View.VISIBLE else View.GONE
         updateNextClass()
     }
@@ -357,18 +352,15 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.openBlockAt(info.day, item.title, item.isEvent, item.startTime)
     }
 
-    private fun tint(view: ImageView, colorRes: Int) {
-        view.setColorFilter(ContextCompat.getColor(requireContext(), colorRes))
-    }
-
+    /** 周次下面那一行：「本周 · 11.9–11.15 · 课表名」，没有的部分不写；太长时从末尾的课表名开始省略。 */
     private fun captionForWeek(week: Int): String {
         val s = schedule ?: return ""
         val dates = DateUtils.datesForWeek(s.semesterStart, week)
-        if (dates.isEmpty()) return if (week == currentWeekNumber) getString(R.string.index_current_week) else ""
-        val first = dates.first()
-        val last = dates.last()
-        val range = "${first.month}.${first.day}–${last.month}.${last.day}"
-        return if (week == currentWeekNumber) "${getString(R.string.index_current_week)} · $range" else range
+        return listOfNotNull(
+            getString(R.string.index_current_week).takeIf { week == currentWeekNumber },
+            dates.takeIf { it.isNotEmpty() }?.let { "${it.first().month}.${it.first().day}–${it.last().month}.${it.last().day}" },
+            s.name.takeIf { it.isNotBlank() }
+        ).joinToString(" · ")
     }
 
     private fun showWeekPicker() {
@@ -379,12 +371,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             totalWeeks = total,
             semesterStart = s.semesterStart,
             selectedWeek = currentWeek,
-            currentWeekNumber = currentWeekNumber,
-            weekendMode = Prefs.weekendDisplayMode,
-            onWeekendModeChanged = { mode ->
-                Prefs.weekendDisplayMode = mode
-                binding.timetable.setWeekendDisplayMode(mode)
-            }
+            currentWeekNumber = currentWeekNumber
         ) { week -> binding.timetable.goToWeek(week) }.show()
     }
 
@@ -522,7 +509,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         sharedColors = stored.courseColors
         val updated = ExtraCourses.merge(stored, extras)
         schedule = updated
-        binding.header.setTitle(updated.name)
+        showWeekTitle(titleWeek.takeIf { it > 0 } ?: currentWeek)
         updateHeaderActions()
         binding.timetable.setSchedule(
             updated,
@@ -754,19 +741,19 @@ class ScheduleFragment : Fragment(), Refreshable {
     /**
      * 页头右侧只有一个「⋯」：点开是带文字的操作面板，课表页能做的事都列在里面，
      * 不必靠长按、点表头日期这些看不见的手势去发现（手势仍保留为快捷方式）。
-     * 课表名在有两份以上课表时可点，直接切换，不用绕到课表库。
+     * 有两份以上课表时第一项是「切换课表」，不用绕到课表库。
      */
     private fun updateHeaderActions() {
         val header = binding.header
         header.clearActions()
         header.addAction(headerIconButton(R.drawable.ic_more, getString(R.string.library_more)) { showMoreActions() })
-        header.setOnTitleClick(if (allSchedules.size > 1) ({ showScheduleSwitcher() }) else null)
     }
 
     private fun showMoreActions() {
         val current = schedule ?: return
         val day = defaultHolidayDay()
         val actions = buildList {
+            if (allSchedules.size > 1) add(ActionSheet.Item(getString(R.string.schedule_switch)) { showScheduleSwitcher() })
             add(ActionSheet.Item(getString(R.string.course_new_title)) {
                 startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, 1))
             })
@@ -783,7 +770,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         ActionSheet(requireContext(), current.name, actions).show()
     }
 
-    /** 课表名点开：列出本机全部课表，当前那份带勾；点另一份就地切换。 */
+    /** 「⋯」里的「切换课表」：列出本机全部课表，当前那份带勾；点另一份就地切换。 */
     private fun showScheduleSwitcher() {
         val currentId = schedule?.id
         val items = allSchedules.map { item ->
@@ -797,7 +784,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                 }
             }
         }
-        ActionSheet(requireContext(), getString(R.string.nav_library), items).show()
+        ActionSheet(requireContext(), getString(R.string.schedule_switch), items).show()
     }
 
     /** 页头图标按钮：44dp 触摸区，里面画一个 34dp 的圆形浅底，按下有水波纹。 */
@@ -829,7 +816,16 @@ class ScheduleFragment : Fragment(), Refreshable {
      */
     private fun showAppearanceSheet(focusStateStyle: Boolean = false) {
         if (_binding == null) return
-        AppearanceSheet(requireContext(), Prefs.timetableAppearance, focusStateStyle) { value ->
+        AppearanceSheet(
+            requireContext(),
+            Prefs.timetableAppearance,
+            focusStateStyle,
+            initialWeekendMode = Prefs.weekendDisplayMode,
+            onWeekendModeChanged = { mode ->
+                Prefs.weekendDisplayMode = mode
+                _binding?.timetable?.setWeekendDisplayMode(mode)
+            }
+        ) { value ->
             Prefs.timetableAppearance = value
             applyAppearance(value)
         }.show()

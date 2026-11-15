@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.DateUtils
-import com.zhusijiao.app.domain.WeekendDisplayMode
 import kotlin.math.roundToInt
 
 /**
@@ -24,25 +23,12 @@ class WeekPickerSheet(
     private val semesterStart: String,
     private val selectedWeek: Int,
     private val currentWeekNumber: Int,
-    private val weekendMode: WeekendDisplayMode = WeekendDisplayMode.AUTO,
-    private val onWeekendModeChanged: ((WeekendDisplayMode) -> Unit)? = null,
     private val onPick: (Int) -> Unit
 ) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_week_picker)
         setCanceledOnTouchOutside(true)
-
-        // 单个开关：开启 = 当周周六日有课时才显示（AUTO），关闭 = 始终显示（ALWAYS）。
-        // 周末列不允许完全隐藏，避免用户漏看周末课程。
-        val autoToggle = findViewById<ToggleView>(R.id.weekendAutoToggle)
-        autoToggle.setChecked(weekendMode == WeekendDisplayMode.AUTO, animate = false)
-        autoToggle.onCheckedChange = { checked ->
-            onWeekendModeChanged?.invoke(
-                if (checked) WeekendDisplayMode.AUTO else WeekendDisplayMode.ALWAYS
-            )
-        }
-        findViewById<View>(R.id.weekendAutoRow).setOnClickListener { autoToggle.toggle() }
 
         findViewById<TextView>(R.id.pickerTitle).text = context.getString(R.string.index_week_title, selectedWeek)
         val backToCurrent = findViewById<TextView>(R.id.backToCurrent)
