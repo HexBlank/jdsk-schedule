@@ -46,12 +46,16 @@ class LibraryFragment : Fragment(), Refreshable {
         super.onViewCreated(view, savedInstanceState)
         binding.header.setTitle(getString(R.string.library_title))
         BottomNavView.padScrollContent(binding.scroll)
-        binding.importBtn.setOnClickListener { startActivity(Intent(requireContext(), ImportActivity::class.java)) }
-        binding.joinBtn.setOnClickListener {
-            if (ApiClient.isLocalMode) showSharingUnavailable()
-            else startActivity(Intent(requireContext(), JoinActivity::class.java))
-        }
-        if (ApiClient.isLocalMode) binding.joinBtn.text = getString(R.string.library_join_offline)
+        val openImport = View.OnClickListener { startActivity(Intent(requireContext(), ImportActivity::class.java)) }
+        val openJoin = View.OnClickListener { startActivity(Intent(requireContext(), JoinActivity::class.java)) }
+        binding.importBtn.setOnClickListener(openImport)
+        binding.emptyImport.setOnClickListener(openImport)
+        binding.joinBtn.setOnClickListener(openJoin)
+        binding.emptyJoin.setOnClickListener(openJoin)
+        // 本机模式没有数据服务，加入永远走不通：不放一个点了才报错的按钮
+        val joinVisibility = if (ApiClient.isLocalMode) View.GONE else View.VISIBLE
+        binding.joinBtn.visibility = joinVisibility
+        binding.emptyJoin.visibility = joinVisibility
     }
 
     override fun onDestroyView() {
@@ -74,7 +78,11 @@ class LibraryFragment : Fragment(), Refreshable {
                 val schedules = ApiClient.listSchedules()
                 binding.skeletonList.visibility = View.GONE
                 binding.countText.text = getString(R.string.library_count, schedules.size)
-                if (schedules.isEmpty()) {
+                // 空的时候只剩「一句标题 + 按钮」：顶部按钮行与列表标题让位给空状态
+                val empty = schedules.isEmpty()
+                binding.actionRow.visibility = if (empty) View.GONE else View.VISIBLE
+                binding.listHeader.visibility = if (empty) View.GONE else View.VISIBLE
+                if (empty) {
                     binding.emptyState.visibility = View.VISIBLE
                 } else {
                     schedules.forEach { binding.cardList.addView(buildCard(it, it.id == activeId)) }
@@ -235,10 +243,4 @@ class LibraryFragment : Fragment(), Refreshable {
             }
         }
     }
-
-    private fun showSharingUnavailable() = Ui.alert(
-        requireContext(),
-        getString(R.string.import_helper_unavailable_title),
-        getString(R.string.local_sharing_unavailable)
-    )
 }

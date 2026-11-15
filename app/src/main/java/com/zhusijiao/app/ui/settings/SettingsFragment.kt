@@ -64,11 +64,11 @@ class SettingsFragment : Fragment(), Refreshable {
         bindStatus()
         bindReminderRow()
         bindLeaveRow()
-        bindAppearanceRow()
         bindExportRow()
         bindUpdateSection()
         bindServerRow()
         bindChannelRow()
+        bindAvailability()
         binding.settingsFooter.text = getString(R.string.settings_footer, BuildConfig.VERSION_NAME)
         binding.menuPrivacy.setOnClickListener {
             Ui.alert(requireContext(), getString(R.string.settings_privacy_title), getString(R.string.settings_privacy_content), getString(R.string.common_i_see))
@@ -125,10 +125,31 @@ class SettingsFragment : Fragment(), Refreshable {
             bindReminderRow()
             bindLeaveRow()
             bindCoupleRow()
-            bindAppearanceRow()
             bindServerRow()
             bindChannelRow()
+            bindAvailability()
         }
+    }
+
+    /**
+     * 用不了的行直接置灰不可点，而不是点了再弹「为什么不行」：
+     * 没有课表时的请假、导出；本机模式（没有数据服务）下的情侣课表、检查更新。
+     */
+    private fun bindAvailability() {
+        val online = !ApiClient.isLocalMode
+        setRowEnabled(binding.menuCouple, online)
+        setRowEnabled(binding.updateCheckRow, online)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val hasSchedule = withContext(Dispatchers.IO) { ClassReminders.currentSchedule() != null }
+            if (_binding == null) return@launch
+            setRowEnabled(binding.menuLeave, hasSchedule)
+            setRowEnabled(binding.menuExport, hasSchedule)
+        }
+    }
+
+    private fun setRowEnabled(row: View, enabled: Boolean) {
+        row.isEnabled = enabled
+        row.alpha = if (enabled) 1f else 0.4f
     }
 
     /** 「上课提醒」行：值是提前量，关着就是「已关闭」，开着却没有通知权限时直接点明；点击进入提醒设置页。 */
@@ -164,16 +185,8 @@ class SettingsFragment : Fragment(), Refreshable {
                 val (schedule, leaves) = withContext(Dispatchers.IO) {
                     ClassReminders.currentSchedule() to LeaveStore.list()
                 }
-                if (_binding == null) return@launch
-                if (schedule == null) {
-                    Ui.alert(
-                        requireContext(),
-                        getString(R.string.settings_leave_no_schedule_title),
-                        getString(R.string.settings_leave_no_schedule)
-                    )
-                } else {
-                    leaveFlow.showList(schedule, leaves)
-                }
+                if (_binding == null || schedule == null) return@launch
+                leaveFlow.showList(schedule, leaves)
             }
         }
     }
@@ -184,21 +197,9 @@ class SettingsFragment : Fragment(), Refreshable {
         binding.coupleSub.text = if (state.bound) getString(R.string.settings_couple_sub_bound, state.partnerName) else ""
         binding.menuCouple.setOnClickListener {
             when {
-                ApiClient.isLocalMode -> Ui.alert(
-                    requireContext(),
-                    getString(R.string.import_helper_unavailable_title),
-                    getString(R.string.local_sharing_unavailable)
-                )
                 ApiClient.coupleState().bound -> (activity as? MainActivity)?.openCoupleTab()
                 else -> startActivity(Intent(requireContext(), CoupleBindActivity::class.java))
             }
-        }
-    }
-
-    /** 「课表外观」行：点击切到课表页并弹出外观面板（档位多，摘要成一行反而看不清，所以不显示值）。 */
-    private fun bindAppearanceRow() {
-        binding.menuAppearance.setOnClickListener {
-            (activity as? MainActivity)?.openTimetableAppearance()
         }
     }
 
@@ -209,12 +210,8 @@ class SettingsFragment : Fragment(), Refreshable {
         binding.menuExport.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 val scheduleId = withContext(Dispatchers.IO) { ClassReminders.currentSchedule()?.id }
-                if (_binding == null) return@launch
-                if (scheduleId == null) {
-                    Ui.toastError(requireContext(), getString(R.string.export_no_schedule))
-                } else {
-                    exportFlow.show(scheduleId)
-                }
+                if (_binding == null || scheduleId == null) return@launch
+                exportFlow.show(scheduleId)
             }
         }
     }
@@ -258,14 +255,6 @@ class SettingsFragment : Fragment(), Refreshable {
 
     /** 手动检查更新：有更新弹更新框，否则轻提示。 */
     private fun checkUpdateManually() {
-        if (ApiClient.isLocalMode) {
-            Ui.alert(
-                requireContext(),
-                getString(R.string.import_helper_unavailable_title),
-                getString(R.string.local_sharing_unavailable)
-            )
-            return
-        }
         Ui.toastLoading(requireContext(), getString(R.string.update_checking))
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = AppUpdater.fetch()) {

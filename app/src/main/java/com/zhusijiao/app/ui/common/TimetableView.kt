@@ -149,6 +149,9 @@ class TimetableView @JvmOverloads constructor(
 
     /** 长按课程块：手动选择课程颜色（仅发布者）。 */
     var onCourseLongClick: ((CourseClick) -> Unit)? = null
+
+    /** 这门课长按有没有事可做；返回 false 时长按既不震动也不回调（如订阅者不能改课表自带课的颜色）。 */
+    var canLongClickCourse: (Course) -> Boolean = { true }
     var onDayClick: ((DayClick) -> Unit)? = null
     var onWeekChanged: ((week: Int, isFirst: Boolean, isLast: Boolean) -> Unit)? = null
 
@@ -322,6 +325,15 @@ class TimetableView @JvmOverloads constructor(
     private val colMarkOffBg = c(R.color.tt_mark_off_bg)
     private val colTodayColumn = c(R.color.tt_today_col)
     private val colNowLine = c(R.color.couple_now_line)
+    private val colAccent = c(R.color.accent)
+
+    /**
+     * 点空格子先在那一格画一个虚线「+」占位（周、星期、节次），再点它才真的新建：
+     * 课表是天天看的页面，手指碰到空白就弹面板太容易误触。点别处、翻周、刷新都会取消。
+     */
+    private var pendingSlot: IntArray? = null
+    private val pendingRect = RectF()
+    private val pendingPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     // 手势
     private var downX = 0f; private var downY = 0f
@@ -673,6 +685,7 @@ class TimetableView @JvmOverloads constructor(
 
     private fun notifyWeek() {
         val s = schedule ?: return
+        pendingSlot?.let { if (it[0] != week) pendingSlot = null }
         onWeekChanged?.invoke(week, week <= 1, week >= s.totalWeeks)
         // 页头文字跟随的是「露出更多的那一页」，可能还不是刚提交的这一周
         dispatchPageScroll()
@@ -1235,6 +1248,38 @@ class TimetableView @JvmOverloads constructor(
         canvas.drawCircle(left + rpx(5f), y, rpx(7f), fillPaint)
     }
 
+    private fun drawPendingSlot(canvas: Canvas, render: WeekRender) {
+        val slot = pendingSlot ?: return
+        if (slot[0] != render.week || slot[1] > dayCount || slot[2] > sectionsList.size) return
+        val inset = rpx(4f)
+        val left = timeColPx + (slot[1] - 1) * dayColPx
+        val top = headerHeightPx + (slot[2] - 1) * rowHeightPx
+        pendingRect.set(left + inset, top + inset, left + dayColPx - inset, top + rowHeightPx - inset)
+        val radius = rpx(10f)
+        pendingPaint.pathEffect = null
+        pendingPaint.style = Paint.Style.FILL
+        pendingPaint.color = colAccent
+        pendingPaint.alpha = 26
+        canvas.drawRoundRect(pendingRect, radius, radius, pendingPaint)
+        pendingPaint.style = Paint.Style.STROKE
+        pendingPaint.strokeWidth = max(2f, rpx(2.4f))
+        pendingPaint.alpha = 255
+        pendingPaint.pathEffect = DashPathEffect(floatArrayOf(rpx(9f), rpx(7f)), 0f)
+        canvas.drawRoundRect(pendingRect, radius, radius, pendingPaint)
+        pendingPaint.pathEffect = null
+        val arm = rpx(13f)
+        val cx = pendingRect.centerX()
+        val cy = pendingRect.centerY()
+        canvas.drawLine(cx - arm, cy, cx + arm, cy, pendingPaint)
+        canvas.drawLine(cx, cy - arm, cx, cy + arm, pendingPaint)
+    }
+
+    private fun clearPendingSlot() {
+        if (pendingSlot == null) return
+        pendingSlot = null
+        invalidate()
+    }
+
     private fun nowMinutes(): Int {
         val cal = java.util.Calendar.getInstance()
         return cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
@@ -1266,6 +1311,7 @@ class TimetableView @JvmOverloads constructor(
         drawBody(canvas)
         drawFreeRuns(canvas, render)
         drawBlocks(canvas, render)
+        drawPendingSlot(canvas, render)
         drawNowLine(canvas, render)
         if (render.blocks.isEmpty()) {
             emptyPaint.textSize = rpx(25f)
@@ -1784,10 +1830,10 @@ class TimetableView @JvmOverloads constructor(
             if (onEmptySlotClick == null) return@Runnable
             longPressFired = true
             performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            openEmptySlot(downX - pageOffset, downY)
+            openEmptySlot(downX - pageOffset, downY, direct = true)
             return@Runnable
         }
-        if (hit.event != null || onCourseLongClick == null) return@Runnable
+        if (hit.event != null || onCourseLongClick == null || !canLongClickCourse(hit.course)) return@Runnable
         longPressFired = true
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         openBlock(render, hit, onCourseLongClick)
@@ -1965,6 +2011,7 @@ class TimetableView @JvmOverloads constructor(
         if (y <= headerHeightPx && dayColPx > 0f && x > timeColPx) {
             val day = ((x - timeColPx) / dayColPx).toInt() + 1
             if (day in 1..dayCount) {
+                clearPendingSlot()
                 openDay(day)
                 return
             }
@@ -1972,6 +2019,7 @@ class TimetableView @JvmOverloads constructor(
         val render = renderFor(week)
         val hit = render.blocks.lastOrNull { !it.buried && x in it.left..it.right && y in it.top..it.bottom }
         if (hit != null) {
+            clearPendingSlot()
             openBlock(render, hit)
             return
         }
@@ -1979,16 +2027,30 @@ class TimetableView @JvmOverloads constructor(
     }
 
     /**
-     * 点击空格子：在这个时段新建日程。
+     * 点击空格子：第一下只放一个「+」占位，点占位才在这个时段新建；长按（[direct]）一步到位。
      * 发布者和订阅者都可以——日程是本机私有数据，与课表的编辑权限无关。
      */
-    private fun openEmptySlot(x: Float, y: Float) {
+    private fun openEmptySlot(x: Float, y: Float, direct: Boolean = false) {
         val sink = onEmptySlotClick ?: return
-        if (dayColPx <= 0f || rowHeightPx <= 0f || x <= timeColPx || y <= headerHeightPx) return
+        if (dayColPx <= 0f || rowHeightPx <= 0f || x <= timeColPx || y <= headerHeightPx) {
+            clearPendingSlot()
+            return
+        }
         val day = ((x - timeColPx) / dayColPx).toInt() + 1
         val section = ((y - headerHeightPx) / rowHeightPx).toInt() + 1
-        if (day !in 1..dayCount || section !in 1..sectionsList.size) return
-        sink(week, day, section)
+        if (day !in 1..dayCount || section !in 1..sectionsList.size) {
+            clearPendingSlot()
+            return
+        }
+        val pending = pendingSlot
+        val confirmed = pending != null && pending[0] == week && pending[1] == day && pending[2] == section
+        if (direct || confirmed) {
+            clearPendingSlot()
+            sink(week, day, section)
+        } else {
+            pendingSlot = intArrayOf(week, day, section)
+            invalidate()
+        }
     }
 
     private fun openDay(day: Int) {

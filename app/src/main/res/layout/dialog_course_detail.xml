@@ -83,7 +83,7 @@
         android:textSize="@dimen/text_hint"
         android:visibility="gone" />
 
-    <!-- 请假入口：本机私有，订阅的课表也能用；已请假时显示请假时段，点进去修改或取消 -->
+    <!-- 已请假时显示请假时段，点进去修改或取消；没请假时入口是下面的「请假」操作块 -->
     <LinearLayout
         android:id="@+id/sheetLeave"
         android:layout_width="match_parent"
@@ -119,43 +119,13 @@
             android:textSize="@dimen/text_title" />
     </LinearLayout>
 
-    <!-- 操作并排：撤销调课（有调课时）· 调课；一个都没有时整行隐藏 -->
+    <!-- 操作块：等宽并排，由代码按权限填充（请假 · 颜色 · 撤销调课 · 调课）；一个都没有时整行隐藏 -->
     <LinearLayout
         android:id="@+id/sheetActions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
+        android:baselineAligned="false"
         android:orientation="horizontal"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/sheetUndo"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_ghost_button"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/reschedule_undo"
-            android:textColor="@color/action_ink"
-            android:textSize="@dimen/text_body"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/sheetReschedule"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_close_button"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/reschedule_action"
-            android:textColor="@color/sheet_close_text"
-            android:textSize="@dimen/text_body"
-            android:textStyle="bold"
-            android:visibility="gone" />
-    </LinearLayout>
+        android:visibility="gone" />
 </LinearLayout>

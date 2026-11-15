@@ -143,6 +143,12 @@ class CourseEditorActivity : BaseActivity() {
             ).show()
         }
         binding.courseSave.setOnClickListener { submit() }
+        // 名称是唯一必填项：键盘上的「完成」就是保存，点格子 → 打名字 → 完成
+        binding.courseName.setOnEditorActionListener { _, actionId, _ ->
+            val done = actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE && binding.courseSave.isEnabled
+            if (done) submit()
+            done
+        }
         ready = true
         refresh()
     }

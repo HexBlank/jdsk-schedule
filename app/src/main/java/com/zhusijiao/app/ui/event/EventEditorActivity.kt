@@ -150,6 +150,11 @@ class EventEditorActivity : BaseActivity() {
             ).show()
         }
         binding.eventSave.setOnClickListener { submit() }
+        binding.eventName.setOnEditorActionListener { _, actionId, _ ->
+            val done = actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE && binding.eventSave.isEnabled
+            if (done) submit()
+            done
+        }
         ready = true
         refresh()
     }

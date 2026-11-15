@@ -35,6 +35,7 @@ import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimetableAppearance
+import com.zhusijiao.app.ui.common.ActionSheet
 import com.zhusijiao.app.ui.common.AddEntrySheet
 import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.AppearanceSheet
@@ -42,6 +43,7 @@ import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.EventDetailSheet
+import com.zhusijiao.app.ui.common.ExportFlow
 import com.zhusijiao.app.ui.common.HolidaySheet
 import com.zhusijiao.app.ui.common.LeaveFlow
 import com.zhusijiao.app.ui.common.Refreshable
@@ -52,6 +54,7 @@ import com.zhusijiao.app.ui.course.CourseEditorActivity
 import com.zhusijiao.app.ui.event.EventEditorActivity
 import com.zhusijiao.app.ui.importer.ImportActivity
 import com.zhusijiao.app.ui.join.JoinActivity
+import com.zhusijiao.app.ui.share.ShareActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,11 +94,12 @@ class ScheduleFragment : Fragment(), Refreshable {
     private var restoredWeek: Int? = null
     private var syncRunning = false
 
+    /** 本机全部课表的摘要，页头切换课表用。 */
+    private var allSchedules: List<Schedule> = emptyList()
+    private val exportFlow = ExportFlow(this)
+
     /** 打开中的调休面板：保存后就地刷新，不必关掉再进。 */
     private var holidaySheet: HolidaySheet? = null
-
-    /** 从设置页跳过来时先记下，等课表视图就绪再弹外观面板。 */
-    private var pendingAppearanceSheet = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScheduleBinding.inflate(inflater, container, false)
@@ -108,6 +112,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.header.setTitle(getString(R.string.index_default_title))
         binding.timetable.onCourseClick = { click -> showCourse(click) }
         binding.timetable.onCourseLongClick = { click -> showCourseColorSheet(click) }
+        binding.timetable.canLongClickCourse = { course -> canRecolor(course) }
         binding.timetable.onDayClick = { click -> showHolidaySheet(click.week, click.day) }
         binding.timetable.onEventClick = { click -> showEvent(click) }
         binding.timetable.onEmptySlotClick = { week, day, section -> showAddChoice(week, day, section) }
@@ -121,14 +126,9 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.emptyImport.setOnClickListener {
             startActivity(Intent(requireContext(), ImportActivity::class.java))
         }
-        binding.emptyJoin.setOnClickListener {
-            if (ApiClient.isLocalMode) Ui.alert(
-                requireContext(),
-                getString(R.string.import_helper_unavailable_title),
-                getString(R.string.local_sharing_unavailable)
-            ) else startActivity(Intent(requireContext(), JoinActivity::class.java))
-        }
-        if (ApiClient.isLocalMode) binding.emptyJoin.text = getString(R.string.library_join_offline)
+        binding.emptyJoin.setOnClickListener { startActivity(Intent(requireContext(), JoinActivity::class.java)) }
+        // 本机模式没有数据服务，加入永远走不通：不放一个点了才报错的按钮
+        binding.emptyJoin.visibility = if (ApiClient.isLocalMode) View.GONE else View.VISIBLE
         binding.errorRetry.setOnClickListener { load(silent = false) }
         binding.timetable.setAppearance(Prefs.timetableAppearance)
         // 「铺满一屏」要按可视高度平分行高；用始终可见的内容区测量，首帧就是最终高度，
@@ -138,10 +138,6 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.contentArea.addOnLayoutChangeListener { v, _, top, _, bottom, _, _, _, _ ->
             binding.timetable.setViewportHeight(bottom - top - BottomNavView.contentInset(v))
         }
-        if (pendingAppearanceSheet) {
-            pendingAppearanceSheet = false
-            binding.timetable.post { showAppearanceSheet() }
-        }
     }
 
     override fun onDestroyView() {
@@ -150,6 +146,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         holidaySheet?.dismiss()
         holidaySheet = null
         leaveFlow.dismiss()
+        exportFlow.dismiss()
         _binding = null
     }
 
@@ -167,6 +164,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val schedules = ApiClient.listSchedules()
+                allSchedules = schedules
                 val activeId = Prefs.activeScheduleId
                 if (schedules.isEmpty()) {
                     if (activeId.isNotBlank()) notifyMissingSchedule(activeId, fallbackName = null)
@@ -177,6 +175,7 @@ class ScheduleFragment : Fragment(), Refreshable {
                     binding.timetable.setSchedule(null)
                     binding.header.setTitle(getString(R.string.index_default_title))
                     binding.header.clearActions()
+                    binding.header.setOnTitleClick(null)
                     setState(STATE_EMPTY)
                     Prefs.removeActiveSchedule()
                     syncRemoteThenReload(syncRemote)
@@ -311,7 +310,9 @@ class ScheduleFragment : Fragment(), Refreshable {
         val now = System.currentTimeMillis()
         val enabled = Prefs.timetableAppearance.showNextClass
         val info = if (enabled && s != null && b.scroll.visibility == View.VISIBLE && currentWeek == currentWeekNumber) {
-            NextClass.find(s, events, now, leaves)?.takeIf { it.week == currentWeekNumber }
+            // 今天的课上完了就预告明天第一节（明天已经是下一周时不预告：点它找不到本周的块）
+            (NextClass.find(s, events, now, leaves) ?: NextClass.firstTomorrow(s, events, now, leaves))
+                ?.takeIf { it.week == currentWeekNumber }
         } else null
         nextClass = info
         if (info == null) {
@@ -319,11 +320,18 @@ class ScheduleFragment : Fragment(), Refreshable {
             return
         }
         val item = info.item
-        b.nextClassLabel.text = getString(if (info.ongoing) R.string.next_class_ongoing else R.string.next_class_upcoming)
+        b.nextClassLabel.text = getString(
+            when {
+                info.tomorrow -> R.string.widget_tomorrow
+                info.ongoing -> R.string.next_class_ongoing
+                else -> R.string.next_class_upcoming
+            }
+        )
         b.nextClassTitle.text = if (item.position.isNotBlank()) {
             getString(R.string.next_class_title_format, item.title, item.position)
         } else item.title
         b.nextClassTime.text = when {
+            info.tomorrow -> item.startTime
             info.ongoing -> getString(if (item.isEvent) R.string.next_class_event_ends_at else R.string.next_class_ends_at, item.endTime)
             info.minutesUntil <= 0 -> getString(R.string.next_class_now)
             info.minutesUntil <= 60 -> getString(R.string.next_class_in_minutes, info.minutesUntil)
@@ -444,6 +452,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             requireContext(),
             click,
             canEdit = current.isOwner,
+            onColor = if (canRecolor(click.course)) ({ showCourseColorSheet(click) }) else null,
             // 请假是本机私有的，订阅来的课表同样可以请；没有开学日期时详情里不给入口
             onLeave = { leaveFlow.showForCourse(current, click) },
             onReschedule = {
@@ -558,7 +567,8 @@ class ScheduleFragment : Fragment(), Refreshable {
                     )
                 )
             },
-            onDeleteExtra = { deleteExtraCourse(current.id, click.course.id) }
+            onDeleteExtra = { deleteExtraCourse(current.id, click.course.id) },
+            onColor = { showCourseColorSheet(click) }
         ).show()
     }
 
@@ -685,15 +695,8 @@ class ScheduleFragment : Fragment(), Refreshable {
             onEdit = {
                 showEventEditor(click.event, click.week, click.event.day, click.event.startSection)
             },
-            onDelete = {
-                Ui.confirm(
-                    requireContext(),
-                    getString(R.string.event_delete_title),
-                    getString(R.string.event_delete_content),
-                    confirmText = getString(R.string.event_delete),
-                    confirmColor = 1
-                ) { deleteEvent(click.event.id) }
-            }
+            // 与删除自己加的课一致：直接删，轻提示里可以撤销
+            onDelete = { deleteEvent(click.event.id) }
         ).show()
     }
 
@@ -749,21 +752,52 @@ class ScheduleFragment : Fragment(), Refreshable {
     }
 
     /**
-     * 页头操作区：左「课表外观」图标（所有人可见），右「调休」文字（仅发布者）。
-     * 外观用图标而非文字，避免两个中文按钮把居中的课表名挤掉。
+     * 页头右侧只有一个「⋯」：点开是带文字的操作面板，课表页能做的事都列在里面，
+     * 不必靠长按、点表头日期这些看不见的手势去发现（手势仍保留为快捷方式）。
+     * 课表名在有两份以上课表时可点，直接切换，不用绕到课表库。
      */
     private fun updateHeaderActions() {
         val header = binding.header
         header.clearActions()
-        // 调休（仅发布者）在左、外观在右；两个都是同尺寸的圆形浅底图标按钮，标题两侧对称
-        if (schedule?.isOwner == true) {
-            header.addAction(
-                headerIconButton(R.drawable.ic_holiday, getString(R.string.holiday_title)) {
-                    showHolidaySheet(currentWeek, defaultHolidayDay())
-                }
-            )
+        header.addAction(headerIconButton(R.drawable.ic_more, getString(R.string.library_more)) { showMoreActions() })
+        header.setOnTitleClick(if (allSchedules.size > 1) ({ showScheduleSwitcher() }) else null)
+    }
+
+    private fun showMoreActions() {
+        val current = schedule ?: return
+        val day = defaultHolidayDay()
+        val actions = buildList {
+            add(ActionSheet.Item(getString(R.string.course_new_title)) {
+                startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, 1))
+            })
+            add(ActionSheet.Item(getString(R.string.event_new_title)) { showEventEditor(null, currentWeek, day, 1) })
+            if (current.isOwner) add(ActionSheet.Item(getString(R.string.holiday_title)) {
+                showHolidaySheet(currentWeek, day)
+            })
+            add(ActionSheet.Item(getString(R.string.appearance_title)) { showAppearanceSheet() })
+            if (current.isOwner && !ApiClient.isLocalMode) add(ActionSheet.Item(getString(R.string.library_action_share)) {
+                startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, current.id))
+            })
+            add(ActionSheet.Item(getString(R.string.library_action_export)) { exportFlow.show(current.id) })
         }
-        header.addAction(headerIconButton(R.drawable.ic_appearance, getString(R.string.appearance_action)) { showAppearanceSheet() })
+        ActionSheet(requireContext(), current.name, actions).show()
+    }
+
+    /** 课表名点开：列出本机全部课表，当前那份带勾；点另一份就地切换。 */
+    private fun showScheduleSwitcher() {
+        val currentId = schedule?.id
+        val items = allSchedules.map { item ->
+            ActionSheet.Item(if (item.id == currentId) "${item.name}  ✓" else item.name) {
+                if (item.id != currentId) {
+                    Prefs.activeScheduleId = item.id
+                    if (ApiClient.coupleState().bound) {
+                        Ui.toast(requireContext(), getString(R.string.library_couple_switch_toast))
+                    }
+                    load(silent = true, syncRemote = false)
+                }
+            }
+        }
+        ActionSheet(requireContext(), getString(R.string.nav_library), items).show()
     }
 
     /** 页头图标按钮：44dp 触摸区，里面画一个 34dp 的圆形浅底，按下有水波纹。 */
@@ -788,15 +822,6 @@ class ScheduleFragment : Fragment(), Refreshable {
             contentDescription = description
             setOnClickListener { onClick() }
         }
-
-    /** 供设置页「课表外观」跳转过来时直接弹面板；视图未就绪则记下待办。 */
-    fun requestAppearanceSheet() {
-        if (_binding == null) {
-            pendingAppearanceSheet = true
-            return
-        }
-        binding.timetable.post { showAppearanceSheet() }
-    }
 
     /**
      * 课表外观面板：改一下即时生效并写入本机偏好。
@@ -882,7 +907,11 @@ class ScheduleFragment : Fragment(), Refreshable {
         sheet.show()
     }
 
-    /** 长按课程手动选色：手动颜色优先于自动配色，随课表同步给加入的同学。 */
+    /** 课表自带的课只有发布者能改色（颜色随课表同步）；自己加的课颜色在本机，谁都能改。 */
+    private fun canRecolor(course: Course): Boolean =
+        ExtraCourses.isExtra(course) || schedule?.isOwner == true
+
+    /** 课程详情里的「颜色」或长按课程：手动选色：手动颜色优先于自动配色，随课表同步给加入的同学。 */
     private fun showCourseColorSheet(click: TimetableView.CourseClick) {
         val current = schedule ?: return
         // 自己加的课另有一份只在本机的颜色，不受「只有发布者能改色」限制
@@ -890,10 +919,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             showExtraColorSheet(current, click)
             return
         }
-        if (!current.isOwner) {
-            Ui.toastError(requireContext(), getString(R.string.course_colors_owner_only))
-            return
-        }
+        if (!current.isOwner) return
         ColorPickerSheet(
             requireContext(),
             courseName = click.course.name,

@@ -29,7 +29,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/week_picker_title"
             android:textColor="@color/heading_ink"
             android:textSize="@dimen/text_subtitle"
             android:textStyle="bold" />

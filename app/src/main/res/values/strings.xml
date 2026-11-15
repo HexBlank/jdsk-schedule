@@ -22,7 +22,6 @@
     <string name="index_load_failed_title">课表加载失败</string>
     <string name="index_empty_title">还没有课表</string>
     <string name="index_import">导入课表</string>
-    <string name="index_use_code">使用分享码</string>
     <string name="index_week_title">第 %1$d 周</string>
     <string name="index_current_week">本周</string>
     <string name="index_back_current_week">回本周</string>
@@ -37,7 +36,6 @@
     <string name="index_week_empty">本周没有课程</string>
     <string name="index_prev_week">上一周</string>
     <string name="index_next_week">下一周</string>
-    <string name="week_picker_title">选择周次</string>
     <string name="week_picker_back_current">回到本周</string>
     <string name="week_picker_week_start">%1$d/%2$d</string>
     <string name="week_picker_chip_dated">第 %1$d 周，%2$d月%3$d日起</string>
@@ -156,12 +154,10 @@
     <string name="color_picker_saved_description">已保存颜色 %1$s，长按删除</string>
     <string name="color_picker_removed">已删除自定义颜色</string>
     <string name="course_colors_updated">颜色已更新</string>
-    <string name="course_colors_owner_only">课程颜色由发布者统一设置</string>
     <string name="week_picker_auto_weekend">周末无课时隐藏</string>
 
     <!-- 课表外观：格子高度/留白/文字大小，纯本机显示偏好 -->
     <string name="appearance_title">课表外观</string>
-    <string name="appearance_action">课表外观</string>
     <string name="appearance_reset">恢复默认</string>
     <string name="appearance_row_height">格子高度</string>
     <string name="appearance_height_1">最矮</string>
@@ -199,12 +195,9 @@
     <!-- 课表库 library -->
     <string name="library_title">课表库</string>
     <string name="library_import">导入课表</string>
-    <string name="library_join">输入分享码</string>
-    <string name="library_join_offline">分享码（需数据服务）</string>
     <string name="local_sharing_unavailable">本机模式下不能分享和同步</string>
     <string name="library_all">全部课表</string>
     <string name="library_count">%1$d 份</string>
-    <string name="library_empty_title">暂无课表</string>
     <string name="library_active_tag">当前</string>
     <string name="library_meta_format">%1$d 个时段 · %2$d 周 · %3$s</string>
     <string name="library_sync_owner">%1$d 人正在同步</string>
@@ -290,7 +283,6 @@
     <string name="settings_status_online">已连接</string>
     <string name="settings_status_checking">检测中</string>
     <string name="settings_status_unavailable">连不上</string>
-    <string name="settings_appearance_row">课表外观</string>
     <string name="settings_update_auto">自动检查更新</string>
     <string name="settings_update_check">检查更新</string>
     <string name="settings_update_current">v%1$s</string>
@@ -449,9 +441,6 @@
     <string name="event_save">保存</string>
     <string name="event_saved">日程已保存</string>
     <string name="event_deleted">日程已删除</string>
-    <string name="event_delete">删除日程</string>
-    <string name="event_delete_title">删除这条日程？</string>
-    <string name="event_delete_content">删除后不可恢复。</string>
 
     <!-- 上课通知提醒（对用户一律称「提醒」「通知」，只在指引授权时照实写出系统里的权限名「闹钟和提醒」） -->
     <string name="reminder_title">上课提醒</string>
@@ -634,10 +623,7 @@
     <string name="leave_row_no_classes">时段内没有课</string>
     <string name="leave_need_semester_title">暂时不能请假</string>
     <string name="leave_need_semester">这份课表没有开学日期，无法按时间请假</string>
-    <string name="detail_leave_action">这节课请假</string>
     <string name="settings_leave_sub_active">%1$d 条进行中</string>
-    <string name="settings_leave_no_schedule_title">还没有课表</string>
-    <string name="settings_leave_no_schedule">先导入或加入一份课表，才能按课表请假。</string>
     <string name="detail_leave_active">%1$s · %2$s</string>
 
     <!-- 桌面小部件 -->
@@ -726,7 +712,6 @@
     <string name="export_failed">导出失败</string>
     <string name="export_need_dates">没有开学日期，不能导出日历</string>
     <string name="export_expired">导出中断，请重试</string>
-    <string name="export_no_schedule">还没有课表</string>
     <string name="import_paste_row">手动粘贴</string>
     <string name="import_reselect">重新选择</string>
     <string name="import_source_pasted">手动粘贴的内容</string>

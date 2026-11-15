@@ -44,6 +44,7 @@ class WeekPickerSheet(
         }
         findViewById<View>(R.id.weekendAutoRow).setOnClickListener { autoToggle.toggle() }
 
+        findViewById<TextView>(R.id.pickerTitle).text = context.getString(R.string.index_week_title, selectedWeek)
         val backToCurrent = findViewById<TextView>(R.id.backToCurrent)
         if (selectedWeek == currentWeekNumber || currentWeekNumber !in 1..totalWeeks) {
             backToCurrent.visibility = View.GONE

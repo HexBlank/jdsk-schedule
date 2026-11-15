@@ -30,6 +30,7 @@ import com.zhusijiao.app.domain.PersonalEvent
 import com.zhusijiao.app.domain.Schedule
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
+import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.CourseDetailSheet
 import com.zhusijiao.app.ui.common.CoupleDayView
@@ -678,19 +679,22 @@ class CoupleFragment : Fragment(), Refreshable {
                     EventEditorActivity.intent(requireContext(), schedule.id, event.id, week, event.day, event.startSection)
                 )
             },
+            // 与课表页一致：直接删，轻提示里可以撤销
             onDelete = {
-                Ui.confirm(
-                    requireContext(),
-                    getString(R.string.event_delete_title),
-                    getString(R.string.event_delete_content),
-                    confirmText = getString(R.string.event_delete),
-                    confirmColor = 1
-                ) {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        withContext(Dispatchers.IO) { PersonalEventStore.delete(schedule.id, event.id) }
-                        load(sync = false)
-                        Ui.toastSuccess(requireContext(), getString(R.string.event_deleted))
-                    }
+                viewLifecycleOwner.lifecycleScope.launch {
+                    withContext(Dispatchers.IO) { PersonalEventStore.delete(schedule.id, event.id) }
+                    load(sync = false)
+                    Ui.toastSuccess(
+                        requireContext(),
+                        getString(R.string.event_deleted),
+                        AppToast.Action(getString(R.string.common_undo)) {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                withContext(Dispatchers.IO) { PersonalEventStore.restore(schedule.id, event) }
+                                load(sync = false)
+                                Ui.toastSuccess(requireContext(), getString(R.string.event_restored))
+                            }
+                        }
+                    )
                 }
             }
         ).show()

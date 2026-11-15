@@ -17,8 +17,40 @@ object NextClass {
         /** 已经开始、还没下课。 */
         val ongoing: Boolean,
         /** 距离上课还有几分钟；正在上时为 0。 */
-        val minutesUntil: Int
+        val minutesUntil: Int,
+        /** 是明天的第一节（今天已经没课了），不是今天的。 */
+        val tomorrow: Boolean = false
     )
+
+    /** 明天的第一节课或日程；明天不在学期内、或没有安排时为 null。 */
+    fun firstTomorrow(
+        schedule: Schedule,
+        events: List<PersonalEvent>,
+        nowMillis: Long,
+        leaves: List<Leave> = emptyList()
+    ): Info? {
+        if (!DateUtils.hasSemesterStart(schedule.semesterStart)) return null
+        val totalWeeks = if (schedule.totalWeeks > 0) schedule.totalWeeks else 20
+        val cal = Calendar.getInstance().apply {
+            timeInMillis = nowMillis
+            add(Calendar.DAY_OF_MONTH, 1)
+        }
+        val week = DateUtils.teachingWeekAt(schedule.semesterStart, cal.timeInMillis)
+        if (week < 1 || week > totalWeeks) return null
+        val iso = DateUtils.formatDate(cal)
+        val day = DateUtils.datesForWeek(schedule.semesterStart, week).indexOfFirst { it.iso == iso } + 1
+        if (day < 1) return null
+        val item = ClassReminderPlanner.occurrencesOn(schedule, events, includeEvents = true, week, day, iso, leaves)
+            .firstOrNull() ?: return null
+        return Info(
+            item = item,
+            week = week,
+            day = day,
+            ongoing = false,
+            minutesUntil = ClassReminderPlanner.minutesUntil(item.startAtMillis, nowMillis),
+            tomorrow = true
+        )
+    }
 
     fun find(
         schedule: Schedule,

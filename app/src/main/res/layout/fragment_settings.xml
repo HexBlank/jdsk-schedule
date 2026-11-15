@@ -88,23 +88,6 @@
                 <View style="@style/FormDivider" />
 
                 <LinearLayout
-                    android:id="@+id/menuAppearance"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:text="@string/settings_appearance_row" />
-
-                    <TextView style="@style/FormRowChevron" />
-                </LinearLayout>
-
-                <View style="@style/FormDivider" />
-
-                <LinearLayout
                     android:id="@+id/menuExport"
                     style="@style/FormRow"
                     android:clickable="true"
@@ -165,60 +148,6 @@
                         android:layout_height="32dp"
                         android:contentDescription="@string/settings_update_auto" />
                 </LinearLayout>
-
-                <View style="@style/FormDivider" />
-
-                <LinearLayout
-                    android:id="@+id/updateChannelRow"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:text="@string/settings_channel_row" />
-
-                    <TextView
-                        android:id="@+id/updateChannelSub"
-                        style="@style/FormRowValue" />
-
-                    <TextView style="@style/FormRowChevron" />
-                </LinearLayout>
-
-                <View style="@style/FormDivider" />
-
-                <!-- 服务器：值是当前地址，前面的小圆点是连接状态（绿 = 已连接，灰 = 检测中 / 本机模式，红 = 连不上） -->
-                <LinearLayout
-                    android:id="@+id/menuServer"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:text="@string/settings_server_row" />
-
-                    <View
-                        android:id="@+id/serverStatusDot"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/sync_dot_gray" />
-
-                    <TextView
-                        android:id="@+id/serverSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxWidth="200dp"
-                        android:maxLines="1"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="@dimen/text_body" />
-
-                    <TextView style="@style/FormRowChevron" />
-                </LinearLayout>
             </LinearLayout>
 
             <!-- 关于 -->
@@ -239,8 +168,6 @@
                     <TextView
                         style="@style/FormRowValue"
                         android:text="@string/settings_qq_group_number" />
-
-                    <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
                 <View style="@style/FormDivider" />
@@ -282,23 +209,6 @@
                 <View style="@style/FormDivider" />
 
                 <LinearLayout
-                    android:id="@+id/menuSyncLog"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:text="@string/settings_sync_log" />
-
-                    <TextView style="@style/FormRowChevron" />
-                </LinearLayout>
-
-                <View style="@style/FormDivider" />
-
-                <LinearLayout
                     android:id="@+id/menuPrivacy"
                     style="@style/FormRow"
                     android:clickable="true"
@@ -328,6 +238,79 @@
                         android:text="@string/settings_about" />
 
                     <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 排查问题才用得到的：更新通道、服务器、同步日志 -->
+            <LinearLayout
+                style="@style/FormGroup"
+                android:layout_marginTop="20dp">
+
+                <LinearLayout
+                    android:id="@+id/updateChannelRow"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:text="@string/settings_channel_row" />
+
+                    <TextView
+                        android:id="@+id/updateChannelSub"
+                        style="@style/FormRowValue" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <!-- 值是当前地址，前面的小圆点是连接状态（绿 = 已连接，灰 = 检测中 / 本机模式，红 = 连不上） -->
+                <LinearLayout
+                    android:id="@+id/menuServer"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_server_row" />
+
+                    <View
+                        android:id="@+id/serverStatusDot"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/sync_dot_gray" />
+
+                    <TextView
+                        android:id="@+id/serverSub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxWidth="200dp"
+                        android:maxLines="1"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_body" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View style="@style/FormDivider" />
+
+                <LinearLayout
+                    android:id="@+id/menuSyncLog"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_sync_log" />
                 </LinearLayout>
             </LinearLayout>
 

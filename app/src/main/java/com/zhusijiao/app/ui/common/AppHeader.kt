@@ -49,6 +49,28 @@ class AppHeader @JvmOverloads constructor(
         titleView.text = title ?: ""
     }
 
+    /**
+     * 标题可点（如课表页的课表名 = 切换课表）：传入回调时标题后出现一个小箭头，传 null 恢复成普通标题。
+     * 箭头另一侧补等宽内边距，文字仍然整屏居中。
+     */
+    fun setOnTitleClick(listener: (() -> Unit)?) {
+        val density = resources.displayMetrics.density
+        if (listener == null) {
+            titleView.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
+            titleView.setPaddingRelative(0, 0, 0, 0)
+            titleView.setOnClickListener(null)
+            titleView.isClickable = false
+            titleView.background = null
+            return
+        }
+        val gap = (6 * density).toInt()
+        titleView.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_caret_down, 0)
+        titleView.compoundDrawablePadding = gap
+        titleView.setPaddingRelative(gap + (9 * density).toInt(), 0, 0, 0)
+        titleView.setBackgroundResource(R.drawable.bg_menu_row)
+        titleView.setOnClickListener { listener() }
+    }
+
     fun setBackVisible(visible: Boolean) {
         backView.visibility = if (visible) View.VISIBLE else View.GONE
     }

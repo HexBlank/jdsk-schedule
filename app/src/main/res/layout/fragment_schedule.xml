@@ -175,7 +175,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/title_ink"
-            android:textSize="@dimen/text_hint" />
+            android:textSize="@dimen/text_body" />
 
         <TextView
             android:id="@+id/nextClassTime"
@@ -274,7 +274,7 @@
                 android:id="@+id/emptyJoin"
                 style="@style/GhostButton"
                 android:layout_marginTop="8dp"
-                android:text="@string/index_use_code" />
+                android:text="@string/join_title" />
         </LinearLayout>
 
         <!-- 加载失败 -->
