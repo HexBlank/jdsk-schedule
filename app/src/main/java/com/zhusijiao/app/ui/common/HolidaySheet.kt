@@ -298,7 +298,7 @@ class HolidaySheet(
         if (entries.isEmpty()) {
             listContainer.addView(TextView(context).apply {
                 text = context.getString(R.string.holiday_empty)
-                setTextColor(ContextCompat.getColor(context, R.color.sub_8a))
+                setTextColor(ContextCompat.getColor(context, R.color.text_tertiary))
                 textSize = 13f
                 setPadding(0, dp(6f), 0, dp(6f))
             })
@@ -369,7 +369,7 @@ class HolidaySheet(
         }
         row.addView(TextView(context).apply {
             text = entry.label
-            setTextColor(ContextCompat.getColor(context, R.color.body_ink))
+            setTextColor(ContextCompat.getColor(context, R.color.text_primary))
             textSize = 13f
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
@@ -498,7 +498,7 @@ class HolidaySheet(
                 }
                 ActionKind.GHOST -> {
                     setBackgroundResource(R.drawable.bg_ghost_button)
-                    setTextColor(ContextCompat.getColor(context, R.color.ink))
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
                 }
                 ActionKind.DANGER -> {
                     setBackgroundResource(R.drawable.bg_danger_button)

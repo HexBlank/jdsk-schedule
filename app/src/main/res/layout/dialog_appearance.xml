@@ -10,17 +10,11 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sheet"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="14dp">
+    style="@style/SheetRoot">
 
     <View
-        android:layout_width="38dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="4dp"
-        android:background="@drawable/bg_sheet_handle" />
+        style="@style/SheetHandle"
+        android:layout_marginBottom="4dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -96,7 +90,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="@string/appearance_row_height"
-                    android:textColor="@color/field_label"
+                    android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_hint" />
 
                 <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -123,7 +117,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/appearance_fit_screen"
-                        android:textColor="@color/body_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body" />
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -138,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="@string/appearance_padding"
-                    android:textColor="@color/field_label"
+                    android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_hint" />
 
                 <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -152,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/appearance_text_size"
-                    android:textColor="@color/field_label"
+                    android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_hint" />
 
                 <com.zhusijiao.app.ui.common.SegmentedChoiceView
@@ -187,7 +181,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/appearance_show_next_class"
-                        android:textColor="@color/body_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body" />
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -214,7 +208,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/appearance_show_now_line"
-                        android:textColor="@color/body_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body" />
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -241,7 +235,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/appearance_show_finished"
-                        android:textColor="@color/body_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body" />
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -268,7 +262,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/week_picker_auto_weekend"
-                        android:textColor="@color/body_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body" />
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -283,7 +277,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="@string/appearance_state_style"
-                    android:textColor="@color/field_label"
+                    android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_hint" />
 
                 <!-- 二选一的预览卡片：看图选，而不是一个说不清的「使用旧样式」开关 -->

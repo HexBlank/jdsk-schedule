@@ -169,7 +169,7 @@ class CourseDetailSheet(
                     when {
                         primary -> R.color.sheet_close_text
                         danger -> R.color.danger_action
-                        else -> R.color.action_ink
+                        else -> R.color.text_primary
                     }
                 )
             )

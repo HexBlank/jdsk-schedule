@@ -5,17 +5,9 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sheet"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="18dp">
+    style="@style/SheetRoot">
 
-    <View
-        android:layout_width="38dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_sheet_handle" />
+    <View style="@style/SheetHandle" />
 
     <TextView
         android:id="@+id/dateTimeTitle"
@@ -23,7 +15,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:includeFontPadding="false"
-        android:textColor="@color/heading_ink"
+        android:textColor="@color/text_primary"
         android:textSize="@dimen/text_title"
         android:textStyle="bold" />
 
@@ -52,7 +44,7 @@
             android:paddingStart="2dp"
             android:paddingEnd="2dp"
             android:text="@string/time_range_colon"
-            android:textColor="@color/sub_8a"
+            android:textColor="@color/text_tertiary"
             android:textSize="@dimen/text_display" />
 
         <com.zhusijiao.app.ui.common.WheelView

@@ -13,7 +13,7 @@
         android:includeFontPadding="false"
         android:maxLines="1"
         android:minWidth="38dp"
-        android:textColor="@color/title_ink"
+        android:textColor="@color/text_primary"
         android:textSize="12sp"
         android:textStyle="bold" />
 
@@ -35,7 +35,7 @@
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:maxLines="1"
-        android:textColor="@color/ink"
+        android:textColor="@color/text_primary"
         android:textSize="13sp" />
 
     <TextView

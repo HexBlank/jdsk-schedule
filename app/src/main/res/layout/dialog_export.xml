@@ -6,10 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sheet"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="16dp">
+    style="@style/SheetRoot">
 
     <View style="@style/SheetHandle" />
 
@@ -177,7 +174,7 @@
             android:focusable="true"
             android:gravity="center"
             android:text="@string/export_save"
-            android:textColor="@color/action_ink"
+            android:textColor="@color/text_primary"
             android:textSize="@dimen/text_body" />
 
         <TextView

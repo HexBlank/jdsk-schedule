@@ -63,7 +63,7 @@ class WheelView @JvmOverloads constructor(
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
 
     private val colorSelected = ContextCompat.getColor(context, R.color.accent_strong)
-    private val colorNormal = ContextCompat.getColor(context, R.color.sub_8a)
+    private val colorNormal = ContextCompat.getColor(context, R.color.text_tertiary)
     private val colorLine = ContextCompat.getColor(context, R.color.line)
 
     private var lastY = 0f

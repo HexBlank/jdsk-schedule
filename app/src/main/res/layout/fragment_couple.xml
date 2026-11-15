@@ -133,7 +133,7 @@
                         android:ellipsize="end"
                         android:maxWidth="120dp"
                         android:maxLines="1"
-                        android:textColor="@color/title_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
@@ -232,7 +232,7 @@
                         android:ellipsize="end"
                         android:maxWidth="120dp"
                         android:maxLines="1"
-                        android:textColor="@color/title_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
@@ -261,7 +261,7 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:paddingBottom="4dp"
-                android:textColor="@color/sub_a8"
+                android:textColor="@color/text_disabled"
                 android:textSize="@dimen/text_caption"
                 android:visibility="gone" />
 
@@ -315,7 +315,7 @@
                         android:layout_weight="1"
                         android:paddingTop="8dp"
                         android:paddingBottom="8dp"
-                        android:textColor="@color/ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_body" />
 
                     <FrameLayout
@@ -380,7 +380,7 @@
                         android:ellipsize="end"
                         android:maxWidth="84dp"
                         android:maxLines="1"
-                        android:textColor="@color/action_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
@@ -409,7 +409,7 @@
                         android:ellipsize="end"
                         android:maxWidth="84dp"
                         android:maxLines="1"
-                        android:textColor="@color/action_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
@@ -443,7 +443,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/couple_only_partner"
-                        android:textColor="@color/action_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_small" />
 
                     <com.zhusijiao.app.ui.common.ToggleView
@@ -490,7 +490,7 @@
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
                         android:maxLines="1"
-                        android:textColor="@color/title_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_subtitle"
                         android:textStyle="bold" />
 

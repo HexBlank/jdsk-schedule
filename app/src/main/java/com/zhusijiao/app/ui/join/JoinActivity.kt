@@ -109,7 +109,7 @@ class JoinActivity : BaseActivity() {
             val cell = TextView(this).apply {
                 text = ch
                 gravity = Gravity.CENTER
-                setTextColor(getColor(R.color.title_ink))
+                setTextColor(getColor(R.color.text_primary))
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, if (dense) 14f else 18f)
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setBackgroundResource(

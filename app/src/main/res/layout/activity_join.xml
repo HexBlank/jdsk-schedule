@@ -124,7 +124,7 @@
                         android:layout_weight="1"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:textColor="@color/title_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_subtitle"
                         android:textStyle="bold" />
 
@@ -148,7 +148,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:textColor="@color/sub_8a"
+                    android:textColor="@color/text_tertiary"
                     android:textSize="@dimen/text_hint"
                     android:visibility="gone" />
 
@@ -171,7 +171,7 @@
                             android:id="@+id/statSync"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/value_ink"
+                            android:textColor="@color/text_primary"
                             android:textSize="@dimen/text_title"
                             android:textStyle="bold" />
 
@@ -180,7 +180,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4.5dp"
                             android:text="@string/join_stat_sync"
-                            android:textColor="@color/sub_94"
+                            android:textColor="@color/text_tertiary"
                             android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
@@ -195,7 +195,7 @@
                             android:id="@+id/statCourses"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/value_ink"
+                            android:textColor="@color/text_primary"
                             android:textSize="@dimen/text_title"
                             android:textStyle="bold" />
 
@@ -204,7 +204,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4.5dp"
                             android:text="@string/join_stat_courses"
-                            android:textColor="@color/sub_94"
+                            android:textColor="@color/text_tertiary"
                             android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 
@@ -219,7 +219,7 @@
                             android:id="@+id/statWeeks"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/value_ink"
+                            android:textColor="@color/text_primary"
                             android:textSize="@dimen/text_title"
                             android:textStyle="bold" />
 
@@ -228,7 +228,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4.5dp"
                             android:text="@string/join_stat_weeks"
-                            android:textColor="@color/sub_94"
+                            android:textColor="@color/text_tertiary"
                             android:textSize="@dimen/text_caption" />
                     </LinearLayout>
                 </LinearLayout>
@@ -239,7 +239,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:textColor="@color/sub_9b"
+                    android:textColor="@color/text_tertiary"
                     android:textSize="@dimen/text_caption" />
 
                 <TextView

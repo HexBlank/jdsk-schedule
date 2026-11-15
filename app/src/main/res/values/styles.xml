@@ -21,13 +21,13 @@
     <!-- 次要描边按钮 -->
     <style name="GhostButton" parent="PrimaryButton">
         <item name="android:background">@drawable/bg_ghost_button</item>
-        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColor">@color/text_primary</item>
     </style>
 
     <style name="SectionTitle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">@dimen/text_section</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -35,7 +35,7 @@
     <style name="PageTitle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/title_ink</item>
+        <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">@dimen/text_page_title</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -43,7 +43,7 @@
     <style name="FieldLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/field_label</item>
+        <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">@dimen/text_small</item>
         <item name="android:layout_marginTop">12dp</item>
         <item name="android:layout_marginBottom">5dp</item>
@@ -58,8 +58,8 @@
         <item name="android:paddingEnd">11dp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
-        <item name="android:textColor">@color/ink</item>
-        <item name="android:textColorHint">@color/sub_a0</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_disabled</item>
         <item name="android:textSize">@dimen/text_body</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:saveEnabled">false</item>
@@ -69,7 +69,7 @@
     <style name="EmptyTitle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">@dimen/text_subtitle</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -79,7 +79,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">14dp</item>
-        <item name="android:textColor">@color/muted</item>
+        <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">@dimen/text_sub</item>
         <item name="android:lineSpacingMultiplier">1.4</item>
         <item name="android:gravity">center</item>
@@ -107,7 +107,7 @@
         <item name="android:paddingStart">10dp</item>
         <item name="android:paddingEnd">10dp</item>
         <item name="android:background">@drawable/bg_ghost_button</item>
-        <item name="android:textColor">@color/action_ink</item>
+        <item name="android:textColor">@color/text_primary</item>
         <item name="android:stateListAnimator">@animator/press_scale</item>
         <item name="android:textSize">@dimen/text_hint</item>
         <item name="android:clickable">true</item>
@@ -219,9 +219,17 @@
         <item name="android:includeFontPadding">false</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textColor">@color/heading_ink</item>
+        <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">@dimen/text_title</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 底部面板的根容器：左右 18、上 8（把手上方）、下 16；所有 SheetDialog 的布局统一用它 -->
+    <style name="SheetRoot">
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingEnd">18dp</item>
+        <item name="android:paddingBottom">16dp</item>
     </style>
 
     <!-- 底部面板的把手 -->

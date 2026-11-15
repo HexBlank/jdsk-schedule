@@ -34,7 +34,7 @@
         android:ellipsize="end"
         android:maxLines="2"
         android:text="@string/widget_loading"
-        android:textColor="@color/title_ink"
+        android:textColor="@color/text_primary"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -45,7 +45,7 @@
         android:layout_marginTop="6dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/body_ink"
+        android:textColor="@color/text_primary"
         android:textSize="13sp"
         android:textStyle="bold" />
 

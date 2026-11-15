@@ -295,7 +295,7 @@ object ScheduleWidgets {
                 when {
                     faded -> R.color.text_disabled
                     ongoing -> R.color.accent_strong
-                    else -> R.color.title_ink
+                    else -> R.color.text_primary
                 }
             )
             row.setTextViewText(R.id.widgetRowTime, occurrence.startTime)

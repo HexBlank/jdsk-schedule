@@ -43,7 +43,7 @@ class StepperFieldView @JvmOverloads constructor(
     private val valueText = TextView(context).apply {
         gravity = Gravity.CENTER
         includeFontPadding = false
-        setTextColor(ContextCompat.getColor(context, R.color.heading_ink))
+        setTextColor(ContextCompat.getColor(context, R.color.text_primary))
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
         typeface = Typeface.DEFAULT_BOLD
         layoutParams = LayoutParams(0, LayoutParams.MATCH_PARENT, 1f)

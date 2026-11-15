@@ -140,7 +140,7 @@ class ColorPickerSheet(
                 View(context).apply {
                     background = GradientDrawable().apply {
                         shape = GradientDrawable.OVAL
-                        setStroke(dp(2f), ContextCompat.getColor(context, R.color.heading_ink))
+                        setStroke(dp(2f), ContextCompat.getColor(context, R.color.text_primary))
                     }
                 },
                 FrameLayout.LayoutParams(dp(44f), dp(44f), Gravity.CENTER)

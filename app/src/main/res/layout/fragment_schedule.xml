@@ -56,7 +56,7 @@
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
                         android:maxLines="1"
-                        android:textColor="@color/title_ink"
+                        android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_nav_title"
                         android:textStyle="bold" />
 
@@ -144,7 +144,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/title_ink"
+            android:textColor="@color/text_primary"
             android:textSize="@dimen/text_body" />
 
         <TextView
@@ -203,7 +203,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/index_loading"
-            android:textColor="@color/muted"
+            android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_small"
             android:visibility="gone" />
 

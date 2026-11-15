@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ===== 全局语义色 ===== -->
-    <color name="ink">#202725</color>
-    <color name="muted">#7d8783</color>
     <color name="background">#f5f7f6</color>
     <color name="background_alt">#f7f8f7</color>
     <color name="surface">#ffffff</color>
@@ -11,29 +9,16 @@
     <color name="accent_soft">#e4f0ec</color>
     <color name="accent_soft_pressed">#d3e7e0</color>
     <color name="line">#e9edeb</color>
+    <color name="divider">#e6ebe9</color>
 
-    <!-- 文字灰阶只用五级，按用途命名 -->
+    <!--
+      文字只有四档：主、次、辅、禁用。新界面只用这四个名字，
+      不要再为某一处新增 xxx_ink / sub_xx 这类近似色。
+    -->
     <color name="text_primary">#1d2421</color>
     <color name="text_secondary">#5f6965</color>
     <color name="text_tertiary">#8a9490</color>
     <color name="text_disabled">#a2aba7</color>
-    <color name="divider">#e6ebe9</color>
-
-    <!-- 主文字/次文字的近色阶（旧名保留，按亮度并入上面五级） -->
-    <color name="title_ink">#1d2421</color>
-    <color name="heading_ink">#202623</color>
-    <color name="value_ink">#21302b</color>
-    <color name="body_ink">#333a37</color>
-    <color name="field_label">@color/text_secondary</color>
-    <color name="sub_94">@color/text_tertiary</color>
-    <color name="sub_8a">@color/text_tertiary</color>
-    <color name="sub_9b">@color/text_tertiary</color>
-    <color name="sub_a2">@color/text_disabled</color>
-    <color name="sub_a8">@color/text_disabled</color>
-    <color name="sub_a0">@color/text_disabled</color>
-    <color name="sub_6c">@color/text_secondary</color>
-    <color name="sub_68">@color/text_secondary</color>
-    <color name="action_ink">#35403b</color>
 
     <!-- 危险/删除 -->
     <color name="danger">#b44c48</color>

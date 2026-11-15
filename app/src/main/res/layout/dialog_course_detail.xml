@@ -8,17 +8,9 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sheet"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="16dp">
+    style="@style/SheetRoot">
 
-    <View
-        android:layout_width="38dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_sheet_handle" />
+    <View style="@style/SheetHandle" />
 
     <!-- 头部：课程色浅底，背景与文字色由代码按课程色生成 -->
     <LinearLayout
@@ -69,7 +61,7 @@
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_detail_cell"
         android:padding="11dp"
-        android:textColor="@color/body_ink"
+        android:textColor="@color/text_primary"
         android:textSize="@dimen/text_small"
         android:visibility="gone" />
 
@@ -107,7 +99,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:lineSpacingMultiplier="1.3"
-            android:textColor="@color/body_ink"
+            android:textColor="@color/text_primary"
             android:textSize="@dimen/text_small" />
 
         <TextView

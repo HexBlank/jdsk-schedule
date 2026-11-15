@@ -98,8 +98,8 @@ class CoupleDayView @JvmOverloads constructor(
     private val colPillText = ContextCompat.getColor(context, R.color.couple_free_pill_text)
     private val colNow = ContextCompat.getColor(context, R.color.couple_now_line)
     private val colSurface = ContextCompat.getColor(context, R.color.surface)
-    private val colInk = ContextCompat.getColor(context, R.color.ink)
-    private val colMuted = ContextCompat.getColor(context, R.color.muted)
+    private val colInk = ContextCompat.getColor(context, R.color.text_primary)
+    private val colMuted = ContextCompat.getColor(context, R.color.text_secondary)
     private val colLine = ContextCompat.getColor(context, R.color.line)
 
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)

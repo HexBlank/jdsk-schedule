@@ -103,14 +103,14 @@ class ChannelSheet(
                 text = option.label
                 textSize = 12.5f
                 typeface = Typeface.DEFAULT_BOLD
-                setTextColor(ContextCompat.getColor(context, R.color.ink))
+                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
             })
             addView(TextView(context).apply {
                 text = option.manifestUrl
                 textSize = 10.5f
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
-                setTextColor(ContextCompat.getColor(context, R.color.sub_8a))
+                setTextColor(ContextCompat.getColor(context, R.color.text_tertiary))
             })
         })
 

@@ -14,7 +14,7 @@
         android:id="@+id/modalTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/heading_ink"
+        android:textColor="@color/text_primary"
         android:textSize="@dimen/text_title"
         android:textStyle="bold" />
 
@@ -31,7 +31,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lineSpacingMultiplier="1.5"
-            android:textColor="@color/muted"
+            android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_body" />
     </androidx.core.widget.NestedScrollView>
 

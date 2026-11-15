@@ -124,7 +124,7 @@ class CoupleBindActivity : BaseActivity() {
             binding.inviteChars.addView(TextView(this).apply {
                 text = ch.toString()
                 gravity = Gravity.CENTER
-                setTextColor(getColor(R.color.value_ink))
+                setTextColor(getColor(R.color.text_primary))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f)
                 typeface = Typeface.DEFAULT_BOLD
                 setBackgroundResource(R.drawable.bg_code_char)
@@ -213,7 +213,7 @@ class CoupleBindActivity : BaseActivity() {
             binding.codeCells.addView(TextView(this).apply {
                 text = code.getOrNull(i)?.toString() ?: ""
                 gravity = Gravity.CENTER
-                setTextColor(getColor(R.color.title_ink))
+                setTextColor(getColor(R.color.text_primary))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
                 typeface = Typeface.DEFAULT_BOLD
                 setBackgroundResource(

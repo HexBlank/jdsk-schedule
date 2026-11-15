@@ -14,7 +14,7 @@
         android:focusable="true"
         android:gravity="center"
         android:text="‹"
-        android:textColor="@color/ink"
+        android:textColor="@color/text_primary"
         android:textSize="28sp"
         android:visibility="gone"
         tools:visibility="visible" />
@@ -27,7 +27,7 @@
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"
-        android:textColor="@color/ink"
+        android:textColor="@color/text_primary"
         android:textSize="@dimen/text_nav_title"
         android:textStyle="bold"
         tools:text="课表库" />

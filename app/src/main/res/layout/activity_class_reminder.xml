@@ -64,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/reminder_title"
-                            android:textColor="@color/ink"
+                            android:textColor="@color/text_primary"
                             android:textSize="@dimen/text_body"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -97,7 +97,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/reminder_lead_label"
-                        android:textColor="@color/field_label"
+                        android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_hint"
                         android:textStyle="bold" />
 
@@ -143,7 +143,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/reminder_events"
-                            android:textColor="@color/ink"
+                            android:textColor="@color/text_primary"
                             android:textSize="@dimen/text_small"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -211,7 +211,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/reminder_perm_notification"
-                                android:textColor="@color/ink"
+                                android:textColor="@color/text_primary"
                                 android:textSize="@dimen/text_small"
                                 android:textStyle="bold" />
 
@@ -269,7 +269,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="@string/reminder_perm_exact"
-                                    android:textColor="@color/ink"
+                                    android:textColor="@color/text_primary"
                                     android:textSize="@dimen/text_small"
                                     android:textStyle="bold" />
 
@@ -322,7 +322,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/reminder_perm_background"
-                                android:textColor="@color/ink"
+                                android:textColor="@color/text_primary"
                                 android:textSize="@dimen/text_small"
                                 android:textStyle="bold" />
 
@@ -337,7 +337,7 @@
                             android:layout_marginTop="3dp"
                             android:lineSpacingMultiplier="1.35"
                             android:text="@string/reminder_perm_background_desc"
-                            android:textColor="@color/sub_8a"
+                            android:textColor="@color/text_tertiary"
                             android:textSize="@dimen/text_caption" />
                     </LinearLayout>
 

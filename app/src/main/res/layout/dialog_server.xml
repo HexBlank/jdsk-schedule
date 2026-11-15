@@ -4,23 +4,15 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_sheet"
     android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="16dp">
+    style="@style/SheetRoot">
 
-    <View
-        android:layout_width="38dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="13dp"
-        android:background="@drawable/bg_sheet_handle" />
+    <View style="@style/SheetHandle" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/server_dialog_title"
-        android:textColor="@color/heading_ink"
+        android:textColor="@color/text_primary"
         android:textSize="@dimen/text_subtitle"
         android:textStyle="bold" />
 
@@ -39,8 +31,8 @@
         android:paddingEnd="12dp"
         android:paddingBottom="10dp"
         android:singleLine="true"
-        android:textColor="@color/body_ink"
-        android:textColorHint="@color/sub_a2"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_disabled"
         android:textSize="@dimen/text_small" />
 
     <TextView
@@ -57,7 +49,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:textColor="@color/sub_9b"
+        android:textColor="@color/text_tertiary"
         android:textSize="@dimen/text_caption" />
 
     <LinearLayout
@@ -97,7 +89,7 @@
             android:paddingEnd="14dp"
             android:paddingBottom="9dp"
             android:text="@string/common_cancel"
-            android:textColor="@color/field_label"
+            android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_small"
             android:textStyle="bold" />
 

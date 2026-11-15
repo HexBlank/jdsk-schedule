@@ -154,7 +154,7 @@ class AppearanceSheet(
         fun style(tab: TextView, selected: Boolean) {
             tab.isSelected = selected
             tab.typeface = if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-            tab.setTextColor(ContextCompat.getColor(context, if (selected) R.color.heading_ink else R.color.text_tertiary))
+            tab.setTextColor(ContextCompat.getColor(context, if (selected) R.color.text_primary else R.color.text_tertiary))
         }
         style(tabSize, !display)
         style(tabDisplay, display)

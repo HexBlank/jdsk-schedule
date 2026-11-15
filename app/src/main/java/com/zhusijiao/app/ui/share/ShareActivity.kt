@@ -78,7 +78,7 @@ class ShareActivity : BaseActivity() {
             val cell = TextView(this).apply {
                 text = ch.toString()
                 gravity = Gravity.CENTER
-                setTextColor(getColor(R.color.value_ink))
+                setTextColor(getColor(R.color.text_primary))
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 19f)
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
                 setBackgroundResource(R.drawable.bg_code_char)

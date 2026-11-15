@@ -77,7 +77,7 @@ class WeekPickerSheet(
                 val numberColor = when {
                     isSelected -> Color.WHITE
                     isCurrent -> ContextCompat.getColor(context, R.color.accent_strong)
-                    else -> ContextCompat.getColor(context, R.color.ink)
+                    else -> ContextCompat.getColor(context, R.color.text_primary)
                 }
                 cell.setBackgroundResource(
                     when {
@@ -104,7 +104,7 @@ class WeekPickerSheet(
                         // 选中态底色是实心强调色，日期用同色系浅一档保证对比度。
                         setTextColor(
                             if (isSelected) Color.WHITE
-                            else ContextCompat.getColor(context, R.color.sub_8a)
+                            else ContextCompat.getColor(context, R.color.text_tertiary)
                         )
                         alpha = if (isSelected) 0.85f else 1f
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO

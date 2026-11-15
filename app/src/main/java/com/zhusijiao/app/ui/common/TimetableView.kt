@@ -312,7 +312,7 @@ class TimetableView @JvmOverloads constructor(
     private val colTimeClock = c(R.color.tt_time_clock)
     private val colGridV = c(R.color.tt_grid_v)
     private val colGridH = c(R.color.tt_grid_h)
-    private val colEmpty = c(R.color.sub_a0)
+    private val colEmpty = c(R.color.text_disabled)
     private val colBadgeBg = c(R.color.tt_badge_bg)
     // 默认日程色：冷灰蓝，刻意与 20 色课程色板拉开，一眼能分出「这不是课」
     private val colEventBg = Color.rgb(74, 90, 114)

@@ -344,7 +344,7 @@ class CoupleFragment : Fragment(), Refreshable {
         val (chipBg, chipText, dotColor) = when (status.kind) {
             CoupleDay.StatusKind.IN_CLASS -> Triple(R.color.couple_status_busy_bg, R.color.danger, R.color.couple_now_line)
             CoupleDay.StatusKind.FREE -> Triple(R.color.accent_soft, R.color.couple_free_pill_text, R.color.sync_dot)
-            CoupleDay.StatusKind.NEUTRAL -> Triple(R.color.skeleton, R.color.sub_6c, R.color.sync_dot_idle)
+            CoupleDay.StatusKind.NEUTRAL -> Triple(R.color.skeleton, R.color.text_secondary, R.color.sync_dot_idle)
         }
         val ctx = requireContext()
         statusView.text = status.text
@@ -386,7 +386,7 @@ class CoupleFragment : Fragment(), Refreshable {
         }
         val names = listOf("一", "二", "三", "四", "五", "六", "日")
         val accent = ContextCompat.getColor(requireContext(), R.color.tt_today_text)
-        val normal = ContextCompat.getColor(requireContext(), R.color.action_ink)
+        val normal = ContextCompat.getColor(requireContext(), R.color.text_primary)
         val sub = ContextCompat.getColor(requireContext(), R.color.tt_day_text)
         repeat(7) { index ->
             val iso = DateUtils.formatDate(cal)
@@ -568,8 +568,8 @@ class CoupleFragment : Fragment(), Refreshable {
 
     private fun renderModeButtons() {
         val context = context ?: return
-        val selectedColor = ContextCompat.getColor(context, R.color.title_ink)
-        val normalColor = ContextCompat.getColor(context, R.color.field_label)
+        val selectedColor = ContextCompat.getColor(context, R.color.text_primary)
+        val normalColor = ContextCompat.getColor(context, R.color.text_secondary)
         listOf(dayButton to Mode.DAY, weekButton to Mode.WEEK).forEach { (button, target) ->
             val selected = mode == target
             button?.apply {

@@ -85,9 +85,9 @@ class HolidayCalendarView @JvmOverloads constructor(
     private val blockGap = dp(10f)
     private val cellRadius = dp(9f)
 
-    private val ink = ContextCompat.getColor(context, R.color.heading_ink)
-    private val faintText = ContextCompat.getColor(context, R.color.sub_a2)
-    private val weekendText = ContextCompat.getColor(context, R.color.sub_8a)
+    private val ink = ContextCompat.getColor(context, R.color.text_primary)
+    private val faintText = ContextCompat.getColor(context, R.color.text_disabled)
+    private val weekendText = ContextCompat.getColor(context, R.color.text_tertiary)
     private val accent = ContextCompat.getColor(context, R.color.accent)
     private val makeupText = ContextCompat.getColor(context, R.color.tt_mark_makeup_text)
     private val makeupBg = ContextCompat.getColor(context, R.color.tt_mark_makeup_bg)
