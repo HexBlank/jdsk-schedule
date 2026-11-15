@@ -2,7 +2,9 @@ package com.zhusijiao.app.ui.library
 
 import android.content.Intent
 import android.os.Bundle
+import android.graphics.Rect
 import android.view.LayoutInflater
+import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -167,10 +169,27 @@ class LibraryFragment : Fragment(), Refreshable {
             }
         }
 
+        // 状态行只有一行小字高：可点（失败 / 已失效）时把触摸区在文字列内上下撑到 48dp
+        if (card.syncRow.hasOnClickListeners()) expandTouchArea(card.syncRow)
         card.cardMain.setOnClickListener { openSchedule(item.id) }
         card.cardMain.setOnLongClickListener { showActions(item, isOwner); true }
         card.actionMore.setOnClickListener { showActions(item, isOwner) }
         return card.root
+    }
+
+    /** 不改视图大小，只把 [view] 的可点范围在父容器内上下、向右扩到至少 48dp 见方。 */
+    private fun expandTouchArea(view: View) {
+        val parent = view.parent as? View ?: return
+        parent.post {
+            val min = (48 * resources.displayMetrics.density).toInt()
+            val rect = Rect()
+            view.getHitRect(rect)
+            val extraY = ((min - rect.height()) / 2).coerceAtLeast(0)
+            rect.top -= extraY
+            rect.bottom += extraY
+            rect.right += (min - rect.width()).coerceAtLeast(0)
+            parent.touchDelegate = TouchDelegate(rect, view)
+        }
     }
 
     /** 卡片的操作面板：发布者能重新导入、分享；所有人都能导出、删除（订阅者是移除）。 */
