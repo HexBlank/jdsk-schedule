@@ -237,6 +237,20 @@ object LocalScheduleStore {
         )
     }
 
+    /** 连续停课整组删除及撤销：单次落盘，避免中途失败只改了一半。 */
+    fun editCalendar(
+        scheduleId: String,
+        edit: com.zhusijiao.app.domain.CalendarEdit,
+        expectedRevision: Int
+    ): Schedule = updateSchedule(scheduleId, expectedRevision, "只有发布者可以设置调休") { schedule ->
+        val updated = try {
+            edit.applyTo(schedule)
+        } catch (error: IllegalArgumentException) {
+            throw ApiException(error.message ?: "调休设置无效")
+        }
+        updated.copy(revision = schedule.revision + 1, updatedAt = now())
+    }
+
     fun deleteHoliday(
         scheduleId: String,
         holidayId: String,

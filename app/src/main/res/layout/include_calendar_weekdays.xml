@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:orientation="horizontal">
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_monday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_tuesday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_wednesday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_thursday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_friday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_saturday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+    <TextView android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1"
+        android:gravity="center" android:text="@string/calendar_sunday" android:textColor="@color/text_tertiary" android:textSize="12sp" android:importantForAccessibility="no" />
+</LinearLayout>

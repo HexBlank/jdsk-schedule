@@ -85,58 +85,28 @@
 
     <!-- 停课与补课（假期调休）：日历直选，不再让用户心算「第几周周几」 -->
     <string name="holiday_title">调休</string>
-    <string name="holiday_week_notice">第 1 周从 %1$s（周一）算起</string>
     <string name="holiday_list_label">已有安排</string>
-    <string name="holiday_list_count">已有安排 · %1$d</string>
     <string name="holiday_empty">暂无安排</string>
-    <string name="holiday_expand">展开</string>
-    <string name="holiday_collapse">收起</string>
-    <string name="holiday_row_suspend">停课 · %1$s</string>
     <string name="holiday_row_makeup">补课 · %1$s → %2$s</string>
     <string name="holiday_delete">删除</string>
-    <string name="holiday_delete_suspend_title">删除停课？</string>
-    <string name="holiday_delete_suspend_content">%1$s 恢复上课。</string>
-    <string name="holiday_delete_makeup_title">删除补课？</string>
-    <string name="holiday_delete_makeup_content">%1$s 的补课取消。</string>
 
     <!-- 日历 -->
     <string name="holiday_calendar_description">学期日历，点选日期设置停课或补课</string>
     <string name="holiday_calendar_month">%1$d年%2$d月</string>
-    <string name="holiday_calendar_count">%1$d课</string>
 
     <!-- 所选日期 -->
-    <string name="holiday_pick_hint">选择日期</string>
     <string name="holiday_no_selection">未选日期</string>
-    <string name="holiday_selected_title">%1$s · 第%2$d周</string>
-    <string name="holiday_selected_courses">%1$d 门课：%2$s</string>
-    <string name="holiday_selected_more">等</string>
     <string name="holiday_selected_none">无课</string>
     <string name="holiday_state_suspended">已停课</string>
-    <string name="holiday_state_makeup_target">补课日 · 上 %1$s 的课</string>
     <string name="holiday_state_makeup_source">课已补到 %1$s</string>
 
     <!-- 停课 -->
-    <string name="holiday_duration_label">连停</string>
-    <string name="holiday_days_label">连续停课天数</string>
-    <string name="holiday_days_value">%1$d 天</string>
-    <string name="holiday_range_format">%1$s – %2$s · 共 %3$d 天</string>
-    <string name="holiday_action_suspend_day">停课</string>
     <string name="holiday_action_suspend_days">停课 %1$d 天</string>
     <string name="holiday_action_remove_suspend">取消停课</string>
     <string name="holiday_saved_count">已停课 %1$d 天</string>
-    <string name="holiday_nothing_added">这些日子已有安排</string>
 
     <!-- 补课 -->
-    <string name="holiday_action_move_out">补到另一天…</string>
-    <string name="holiday_action_add_makeup">保存补课</string>
     <string name="holiday_action_remove_makeup">取消补课</string>
-    <string name="holiday_action_remove_makeup_source">取消补到 %1$s</string>
-    <string name="holiday_makeup_title">%1$s 的课补到…</string>
-    <string name="holiday_makeup_pick_hint">选择补课日</string>
-    <string name="holiday_makeup_chosen">补课日：%1$s</string>
-    <string name="holiday_makeup_target_courses">当天已有 %1$d 门课</string>
-    <string name="holiday_makeup_target_free">当天无课</string>
-    <string name="holiday_makeup_need_target">先在日历上选补课日</string>
 
     <string name="holiday_date_label">%1$s 周%2$s</string>
     <string name="holiday_week_fallback">第 %1$d 周周%2$s</string>
@@ -664,7 +634,6 @@
     <!-- 自己加课（本机私有，并进当前课表一起显示） -->
     <string name="add_entry_title">%1$s · 第 %2$d 节</string>
     <string name="add_entry_course">课程</string>
-    <string name="add_entry_event">日程</string>
     <string name="course_new_title">添加课程</string>
     <string name="course_edit_title">修改课程</string>
     <string name="course_name_hint">课程名称</string>
@@ -722,4 +691,41 @@
     <string name="import_week_span_year">%1$s年 %2$s</string>
     <string name="library_active_couple_tag">当前 · TA 可见</string>
     <string name="library_more">更多操作</string>
+    <string name="menu_selected">已选中</string>
+    <string name="menu_unselected">未选中</string>
+    <string name="holiday_range_title">%1$s–%2$s</string>
+    <string name="holiday_pending_sources">待补课</string>
+    <string name="holiday_course_count_value">%1$d 门课</string>
+    <string name="holiday_range_value">%1$d 天 · 新增 %2$d 天</string>
+    <string name="holiday_makeup_value">补 %1$s</string>
+    <string name="holiday_group_value">%1$s · 停课 %2$d 天</string>
+    <string name="holiday_undo">撤销</string>
+    <string name="holiday_restored">已撤销</string>
+    <string name="holiday_saving">保存中</string>
+    <string name="holiday_makeup_source_row">补 %1$s</string>
+    <string name="holiday_calendar_missing">缺少开学日期</string>
+    <string name="common_back">返回</string>
+    <string name="calendar_monday">一</string>
+    <string name="calendar_tuesday">二</string>
+    <string name="calendar_wednesday">三</string>
+    <string name="calendar_thursday">四</string>
+    <string name="calendar_friday">五</string>
+    <string name="calendar_saturday">六</string>
+    <string name="calendar_sunday">日</string>
+    <string name="holiday_suspend_tab">停课</string>
+    <string name="holiday_makeup_tab">补课</string>
+    <string name="holiday_start_field">开始</string>
+    <string name="holiday_end_field">结束</string>
+    <string name="holiday_target_field">补课日</string>
+    <string name="holiday_source_field">原上课日</string>
+    <string name="holiday_other_date">其他日期</string>
+    <string name="holiday_source_unset">未选择</string>
+    <string name="holiday_source_empty">暂无可补课程</string>
+    <string name="holiday_makeup_submit">补课</string>
+    <string name="holiday_makeup_preview">%1$s · 上 %2$s 的课</string>
+    <string name="holiday_all_suspended">所选日期已有安排</string>
+    <string name="holiday_makeup_course_value">%1$d 门课 · %2$s</string>
+    <string name="holiday_no_target">暂无可补日期</string>
+    <string name="holiday_target_unavailable">当天已有安排</string>
+    <string name="holiday_target_courses_value">当天原有 %1$d 门课</string>
 </resources>

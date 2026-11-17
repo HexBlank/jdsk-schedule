@@ -575,6 +575,16 @@ object ApiClient {
         }
     }
 
+    suspend fun editCalendar(scheduleId: String, edit: com.zhusijiao.app.domain.CalendarEdit, expectedRevision: Int): Schedule {
+        migrateReadOnlyCache()
+        return withContext(Dispatchers.IO) {
+            val before = LocalScheduleStore.getSchedule(scheduleId)
+            val saved = LocalScheduleStore.editCalendar(scheduleId, edit, expectedRevision)
+            markDirtyIfShared(before)
+            saved
+        }
+    }
+
     suspend fun deleteHoliday(scheduleId: String, holidayId: String, expectedRevision: Int): Schedule {
         migrateReadOnlyCache()
         return withContext(Dispatchers.IO) {

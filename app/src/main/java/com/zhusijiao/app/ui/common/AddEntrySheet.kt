@@ -27,22 +27,21 @@ class AddEntrySheet(
         setContentView(R.layout.dialog_add_entry)
         setCanceledOnTouchOutside(true)
         findViewById<TextView>(R.id.addEntryTitle).text = title
-        swatch(R.id.addEntryCourseSwatch, ScheduleView.COURSE_PALETTES[0].background)
-        swatch(R.id.addEntryEventSwatch, EventEditorActivity.DEFAULT_EVENT_COLOR)
-        findViewById<View>(R.id.addEntryCourse).setOnClickListener {
-            dismiss()
-            onCourse()
-        }
-        findViewById<View>(R.id.addEntryEvent).setOnClickListener {
-            dismiss()
-            onEvent()
-        }
+        bindChoices(findViewById<View>(android.R.id.content), { dismiss(); onCourse() }, { dismiss(); onEvent() })
     }
 
-    private fun swatch(id: Int, color: Int) {
-        findViewById<View>(id).background = GradientDrawable().apply {
-            cornerRadius = Rpx.dp(6f).toFloat()
-            setColor(color)
+    companion object {
+        fun bindChoices(root: View, onCourse: () -> Unit, onEvent: () -> Unit) {
+            fun swatch(id: Int, color: Int) {
+                root.findViewById<View>(id).background = GradientDrawable().apply {
+                    cornerRadius = Rpx.dp(6f).toFloat()
+                    setColor(color)
+                }
+            }
+            swatch(R.id.addEntryCourseSwatch, ScheduleView.COURSE_PALETTES[0].background)
+            swatch(R.id.addEntryEventSwatch, EventEditorActivity.DEFAULT_EVENT_COLOR)
+            root.findViewById<View>(R.id.addEntryCourse).setOnClickListener { onCourse() }
+            root.findViewById<View>(R.id.addEntryEvent).setOnClickListener { onEvent() }
         }
     }
 }

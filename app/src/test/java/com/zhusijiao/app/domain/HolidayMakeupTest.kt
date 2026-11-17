@@ -149,4 +149,135 @@ class HolidayMakeupTest {
         assertEquals(listOf(3), s.courses.first().weeks)
         assertEquals(1, s.courses.first().day)
     }
+
+    @Test
+    fun rangeSpansWeeksInEitherDirectionAndSkipsExistingArrangements() {
+        val state = schedule(holidays = listOf(holiday(1, 7)), makeups = listOf(makeup(targetWeek = 2, targetDay = 2)))
+        val forward = HolidayPlanner.range(state, 5, 11)
+        assertEquals(5, forward.size)
+        assertEquals(forward, HolidayPlanner.range(state, 11, 5))
+        assertEquals(DayHolidayDraft(1, 6), forward.first())
+        assertEquals(DayHolidayDraft(2, 5), forward.last())
+        assertTrue(forward.none { it.week == 1 && it.day == 7 || it.week == 2 && it.day == 2 })
+    }
+
+    @Test
+    fun rangeRejectsOutOfSemesterAndSupportsSingleDay() {
+        assertTrue(HolidayPlanner.range(schedule(), 0, 140).isEmpty())
+        assertTrue(HolidayPlanner.range(schedule(), -1, 3).isEmpty())
+        assertEquals(listOf(DayHolidayDraft(20, 7)), HolidayPlanner.range(schedule(), 139, 139))
+    }
+
+    @Test
+    fun consecutiveHolidaysMergeAcrossWeekBoundary() {
+        val days = listOf(holiday(2, 1, "b"), holiday(1, 7, "a"), holiday(2, 3, "c"))
+        assertEquals(listOf(listOf("a", "b"), listOf("c")), HolidayPlanner.groups(days).map { group -> group.map { it.id } })
+    }
+
+    @Test
+    fun emptyTargetListsOnlySuspendedDaysWithCoursesStillAwaitingMakeup() {
+        val suspended = holiday(3, 1)
+        val state = schedule(holidays = listOf(suspended, holiday(3, 2, "empty")))
+        assertEquals(listOf(suspended), HolidayPlanner.makeupSources(state, HolidayPlanner.index(2, 6)))
+        assertTrue(HolidayPlanner.makeupSources(state, HolidayPlanner.index(3, 1)).isEmpty())
+        assertTrue(HolidayPlanner.makeupSources(state.copy(makeups = listOf(makeup())), HolidayPlanner.index(2, 7)).isEmpty())
+    }
+
+    @Test
+    fun occupiedTargetDoesNotOfferMakeupSources() {
+        val state = schedule(holidays = listOf(holiday(4, 1))).copy(
+            courses = listOf(course, course.copy(weeks = listOf(4)))
+        )
+        assertTrue(HolidayPlanner.makeupSources(state, HolidayPlanner.index(3, 1)).isEmpty())
+    }
+
+    @Test
+    fun groupDeleteAndUndoPreserveIdsAndUnrelatedChanges() {
+        val first = holiday(1, 7, "a")
+        val second = holiday(2, 1, "b")
+        val original = schedule(holidays = listOf(first, second), makeups = listOf(makeup()))
+        val deleted = CalendarEdit(removeHolidayIds = setOf("a", "b")).applyTo(original)
+        assertTrue(deleted.holidays.isEmpty())
+        assertEquals(original.makeups, deleted.makeups)
+        val unrelated = holiday(6, 1, "other")
+        val restored = CalendarEdit(restoreHolidays = listOf(first, second)).applyTo(deleted.copy(holidays = listOf(unrelated)))
+        assertEquals(listOf(unrelated, first, second), restored.holidays)
+        assertEquals(2, original.holidays.size)
+    }
+
+    @Test
+    fun makeupDeleteAndUndoRestoreOriginalRecord() {
+        val entry = makeup()
+        val original = schedule(makeups = listOf(entry))
+        val deleted = CalendarEdit(removeMakeupIds = setOf(entry.id)).applyTo(original)
+        assertTrue(deleted.makeups.isEmpty())
+        assertEquals(original, CalendarEdit(restoreMakeups = listOf(entry)).applyTo(deleted))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun groupDeleteRejectsMissingRecordBeforeChangingAnything() {
+        CalendarEdit(removeHolidayIds = setOf("h1", "missing")).applyTo(schedule(holidays = listOf(holiday())))
+    }
+
+    @Test
+    fun undoConflictLeavesOriginalStateIntact() {
+        val original = schedule(makeups = listOf(makeup()))
+        val undo = CalendarEdit(restoreHolidays = listOf(holiday(1, 1, "safe"), holiday(2, 6, "conflict")))
+        assertTrue(runCatching { undo.applyTo(original) }.isFailure)
+        assertTrue(original.holidays.isEmpty())
+        assertEquals(1, original.makeups.size)
+    }
+
+    @Test
+    fun makeupSourcesIncludeRegularDatesWithoutPriorSuspension() {
+        val source = HolidayPlanner.index(3, 1)
+        assertEquals(setOf(source), HolidayPlanner.makeupSourceDays(schedule(), HolidayPlanner.index(2, 6)))
+        assertTrue(schedule().holidays.isEmpty())
+    }
+
+    @Test
+    fun suspendedSourceRetainsItsOriginalCourses() {
+        val state = schedule(holidays = listOf(holiday(3, 1)))
+        assertEquals(listOf(course), HolidayPlanner.sourceCourses(state, HolidayPlanner.index(3, 1)))
+        assertTrue(HolidayPlanner.index(3, 1) in HolidayPlanner.makeupSourceDays(state, HolidayPlanner.index(2, 6)))
+    }
+
+    @Test
+    fun targetWithExistingCoursesStillUsesOriginalValidationRules() {
+        val state = schedule().copy(courses = listOf(course, course.copy(weeks = listOf(4))))
+        assertTrue(HolidayPlanner.index(4, 1) in HolidayPlanner.makeupSourceDays(state, HolidayPlanner.index(3, 1)))
+    }
+
+    @Test
+    fun sourceOptionsExcludeSameDayAndAlreadyMovedCourses() {
+        val source = HolidayPlanner.index(3, 1)
+        assertTrue(source !in HolidayPlanner.makeupSourceDays(schedule(), source))
+        assertTrue(source !in HolidayPlanner.makeupSourceDays(schedule(makeups = listOf(makeup())), HolidayPlanner.index(4, 6)))
+        assertTrue(HolidayPlanner.sourceCourses(schedule(), -1).isEmpty())
+    }
+
+    @Test
+    fun targetsExcludeSuspendedAndAlreadyAssignedDays() {
+        val state = schedule(holidays = listOf(holiday(2, 7)), makeups = listOf(makeup()))
+        val targets = HolidayPlanner.makeupTargetDays(state)
+        assertTrue(HolidayPlanner.index(2, 7) !in targets)
+        assertTrue(HolidayPlanner.index(2, 6) !in targets)
+        assertTrue(HolidayPlanner.makeupSourceDays(state, HolidayPlanner.index(2, 7)).isEmpty())
+        assertTrue(HolidayPlanner.makeupSourceDays(state, 140).isEmpty())
+    }
+
+    @Test
+    fun sourcePreviewDoesNotRecursivelyCopyAnotherMakeupDay() {
+        val state = schedule(makeups = listOf(makeup()))
+        assertTrue(HolidayPlanner.sourceCourses(state, HolidayPlanner.index(2, 6)).isEmpty())
+    }
+
+    @Test
+    fun changingEitherDateKeepsSuspendRangeValid() {
+        val range = HolidayDateRange(5, 11)
+        assertEquals(HolidayDateRange(12, 12), range.startingAt(12))
+        assertEquals(HolidayDateRange(3, 3), range.endingAt(3))
+        assertEquals(HolidayDateRange(6, 11), range.startingAt(6))
+        assertEquals(HolidayDateRange(5, 10), range.endingAt(10))
+    }
 }

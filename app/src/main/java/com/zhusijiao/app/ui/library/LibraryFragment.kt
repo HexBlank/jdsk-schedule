@@ -195,16 +195,17 @@ class LibraryFragment : Fragment(), Refreshable {
     /** 卡片的操作面板：发布者能重新导入、分享；所有人都能导出、删除（订阅者是移除）。 */
     private fun showActions(item: Schedule, isOwner: Boolean) {
         val actions = buildList {
-            if (isOwner) add(ActionSheet.Item(getString(R.string.library_action_update)) {
+            if (isOwner) add(ActionSheet.Item(getString(R.string.library_action_update), R.drawable.ic_menu_import, group = 0) {
                 startActivity(Intent(requireContext(), ImportActivity::class.java).putExtra(ImportActivity.EXTRA_ID, item.id))
             })
-            if (isOwner && !ApiClient.isLocalMode) add(ActionSheet.Item(getString(R.string.library_action_share)) {
+            if (isOwner && !ApiClient.isLocalMode) add(ActionSheet.Item(getString(R.string.library_action_share), R.drawable.ic_menu_share, group = 1) {
                 startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, item.id))
             })
             // 导出不分发布者、订阅者：订阅来的课表一样可以导出给自己用
-            add(ActionSheet.Item(getString(R.string.library_action_export)) { exportFlow.show(item.id) })
+            add(ActionSheet.Item(getString(R.string.library_action_export), R.drawable.ic_menu_export, group = 1) { exportFlow.show(item.id) })
             add(ActionSheet.Item(
                 getString(if (isOwner) R.string.library_action_delete else R.string.library_action_leave),
+                icon = R.drawable.ic_menu_delete,
                 danger = true
             ) { confirmRemove(item, isOwner) })
         }

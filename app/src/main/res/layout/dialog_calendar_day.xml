@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/bg_sheet" android:orientation="vertical" style="@style/SheetRoot">
+    <View style="@style/SheetHandle" />
+    <TextView android:id="@+id/calendarDayTitle" style="@style/SheetTitle" />
+    <include layout="@layout/include_calendar_weekdays" />
+    <androidx.core.widget.NestedScrollView android:id="@+id/calendarDayScroll" android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1" android:overScrollMode="never">
+        <com.zhusijiao.app.ui.common.HolidayCalendarView android:id="@+id/calendarDayCalendar"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -81,9 +81,9 @@ class RescheduleSheet(
             if (calendarUsable) View.GONE else View.VISIBLE
         if (calendarUsable) {
             calendar.setSelection(selectedIndex, secondaryIndex = -1)
-            // 首帧把日历滚到原目标日附近：等日历完成 layout 拿到格子坐标后再定位（与调休面板一致）。
+            // 首帧把日历滚到原目标日附近：等日历完成 layout 后定位日历内部滚动区，星期栏保持固定。
             calendar.doOnLayout {
-                findViewById<NestedScrollView>(R.id.rescheduleScroll).scrollTo(0, scrollOffsetFor())
+                findViewById<NestedScrollView>(R.id.rescheduleCalendarScroll).scrollTo(0, calendar.scrollTopFor(selectedIndex))
             }
         } else {
             selectedIndex = -1
@@ -169,13 +169,6 @@ class RescheduleSheet(
     private fun dateText(week: Int, day: Int): String {
         val date = DateUtils.datesForWeek(schedule.semesterStart, week).getOrNull(day - 1) ?: return ""
         return "${date.month}月${date.day}日"
-    }
-
-    /** 让原目标日露出时外层滚动容器应滚到的 y；日历卡片相对滚动内容顶部的偏移 + 日历内目标格偏移。 */
-    private fun scrollOffsetFor(): Int {
-        val calendar = findViewById<HolidayCalendarView>(R.id.rescheduleCalendar)
-        val card = findViewById<View>(R.id.rescheduleCalendarCard)
-        return (card.top + calendar.top + calendar.scrollTopFor(selectedIndex)).coerceAtLeast(0)
     }
 
     private fun dayName(day: Int) = listOf("一", "二", "三", "四", "五", "六", "日").getOrElse(day - 1) { "?" }

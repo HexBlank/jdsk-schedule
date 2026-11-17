@@ -1,8 +1,6 @@
 package com.zhusijiao.app.ui.common
 
 import android.content.Context
-import android.graphics.Typeface
-import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.widget.EditText
@@ -69,56 +67,27 @@ class ChannelSheet(
             val builtIn = option.id == UpdateChannelOptions.STABLE_ID ||
                 option.id == UpdateChannelOptions.BETA_ID
             container.addView(row(option, selectedId == option.id, deletable = !builtIn))
-            if (index != rows.lastIndex) container.addView(divider())
+            if (index != rows.lastIndex) MenuRows.divider(container)
         }
     }
 
     private fun row(option: UpdateChannelOption, selected: Boolean, deletable: Boolean): View {
-        val row = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = ContextCompat.getDrawable(context, R.drawable.bg_menu_row)
-            isClickable = true
-            isFocusable = true
-            minimumHeight = dp(48f)
-            setPadding(dp(11f), dp(8f), dp(11f), dp(8f))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setOnClickListener {
-                if (Prefs.updateChannelId != option.id) {
-                    Prefs.updateChannelId = option.id
-                    renderList()
-                    onChanged()
-                    Ui.toastSuccess(context, context.getString(R.string.channel_switched))
-                }
+        val row = MenuRows.row(findViewById(R.id.channelList), option.label, R.drawable.ic_menu_channel, selected = selected) {
+            if (Prefs.updateChannelId != option.id) {
+                Prefs.updateChannelId = option.id
+                renderList()
+                onChanged()
+                Ui.toastSuccess(context, context.getString(R.string.channel_switched))
             }
         }
-
-        row.addView(LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            addView(TextView(context).apply {
-                text = option.label
-                textSize = 12.5f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-            })
-            addView(TextView(context).apply {
-                text = option.manifestUrl
-                textSize = 10.5f
-                maxLines = 1
-                ellipsize = TextUtils.TruncateAt.END
-                setTextColor(ContextCompat.getColor(context, R.color.text_tertiary))
-            })
-        })
 
         if (deletable) {
             row.addView(TextView(context).apply {
                 text = "✕"
                 textSize = 13f
-                setPadding(dp(10f), dp(6f), dp(2f), dp(6f))
+                gravity = Gravity.CENTER
+                minimumWidth = dp(48f)
+                minimumHeight = dp(48f)
                 setTextColor(ContextCompat.getColor(context, R.color.danger))
                 contentDescription = context.getString(R.string.channel_delete_title)
                 setOnClickListener {
@@ -137,22 +106,10 @@ class ChannelSheet(
                         onChanged()
                     }
                 }
-            })
+            }, row.childCount - 1)
         }
 
-        row.addView(TextView(context).apply {
-            text = if (selected) "✓" else ""
-            textSize = 14f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(dp(8f), 0, 0, 0)
-            setTextColor(ContextCompat.getColor(context, R.color.accent_strong))
-        })
         return row
-    }
-
-    private fun divider() = View(context).apply {
-        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1f))
-        setBackgroundColor(ContextCompat.getColor(context, R.color.detail_border))
     }
 
     private fun dp(v: Float) = (v * context.resources.displayMetrics.density).roundToInt()

@@ -272,8 +272,7 @@ class ScheduleFragment : Fragment(), Refreshable {
     // ===== 请假 =====
 
     /**
-     * 请假不是常用功能，课表页上不单独放按钮：这里只接课程详情里的「这节课请假」，
-     * 看全部记录、请跨天的长假在设置页。两处共用 [LeaveFlow]。
+     * 课表右上角菜单、课程详情和设置页共用 [LeaveFlow]，保存后刷新课表上的请假状态。
      */
     private val leaveFlow = LeaveFlow(this) { loaded ->
         if (_binding != null) {
@@ -753,28 +752,30 @@ class ScheduleFragment : Fragment(), Refreshable {
         val current = schedule ?: return
         val day = defaultHolidayDay()
         val actions = buildList {
-            if (allSchedules.size > 1) add(ActionSheet.Item(getString(R.string.schedule_switch)) { showScheduleSwitcher() })
-            add(ActionSheet.Item(getString(R.string.course_new_title)) {
-                startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, 1))
-            })
-            add(ActionSheet.Item(getString(R.string.event_new_title)) { showEventEditor(null, currentWeek, day, 1) })
-            if (current.isOwner) add(ActionSheet.Item(getString(R.string.holiday_title)) {
+            if (allSchedules.size > 1) add(ActionSheet.Item(getString(R.string.schedule_switch), R.drawable.ic_swap) { showScheduleSwitcher() })
+            if (current.isOwner) add(ActionSheet.Item(getString(R.string.holiday_title), R.drawable.ic_menu_holiday, group = 1) {
                 showHolidaySheet(currentWeek, day)
             })
-            add(ActionSheet.Item(getString(R.string.appearance_title)) { showAppearanceSheet() })
-            if (current.isOwner && !ApiClient.isLocalMode) add(ActionSheet.Item(getString(R.string.library_action_share)) {
+            add(ActionSheet.Item(getString(R.string.leave_title), R.drawable.ic_menu_leave, group = 1) {
+                leaveFlow.showList(current, leaves)
+            })
+            add(ActionSheet.Item(getString(R.string.appearance_title), R.drawable.ic_menu_appearance, group = 1) { showAppearanceSheet() })
+            if (current.isOwner && !ApiClient.isLocalMode) add(ActionSheet.Item(getString(R.string.library_action_share), R.drawable.ic_menu_share, group = 2) {
                 startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, current.id))
             })
-            add(ActionSheet.Item(getString(R.string.library_action_export)) { exportFlow.show(current.id) })
+            add(ActionSheet.Item(getString(R.string.library_action_export), R.drawable.ic_menu_export, group = 2) { exportFlow.show(current.id) })
         }
-        ActionSheet(requireContext(), current.name, actions).show()
+        ActionSheet(requireContext(), current.name, actions, primaryActions = Pair(
+            { startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, 1)) },
+            { showEventEditor(null, currentWeek, day, 1) }
+        )).show()
     }
 
     /** 「⋯」里的「切换课表」：列出本机全部课表，当前那份带勾；点另一份就地切换。 */
     private fun showScheduleSwitcher() {
         val currentId = schedule?.id
         val items = allSchedules.map { item ->
-            ActionSheet.Item(if (item.id == currentId) "${item.name}  ✓" else item.name) {
+            ActionSheet.Item(item.name, selected = item.id == currentId) {
                 if (item.id != currentId) {
                     Prefs.activeScheduleId = item.id
                     if (ApiClient.coupleState().bound) {
@@ -878,25 +879,32 @@ class ScheduleFragment : Fragment(), Refreshable {
             initialDay = initialDay,
             canEdit = current.isOwner,
             onAddHolidays = { drafts ->
-                persistCalendar({ updated ->
-                    getString(R.string.holiday_saved_count, updated.holidays.size - current.holidays.size)
-                }) { ApiClient.saveHolidays(current.id, drafts, current.revision) }
-            },
-            onDeleteHoliday = { holiday ->
-                persistCalendar({ getString(R.string.holiday_deleted) }) {
-                    ApiClient.deleteHoliday(current.id, holiday.id, current.revision)
+                persistCalendar({ getString(R.string.holiday_saved_count, drafts.size) }) {
+                    ApiClient.saveHolidays(current.id, drafts, calendarRevision(current.id))
                 }
             },
             onAddMakeup = { draft ->
                 persistCalendar({ getString(R.string.holiday_saved) }) {
-                    ApiClient.saveMakeup(current.id, draft, current.revision)
+                    ApiClient.saveMakeup(current.id, draft, calendarRevision(current.id))
                 }
             },
-            onDeleteMakeup = { makeup ->
-                persistCalendar({ getString(R.string.holiday_deleted) }) {
-                    ApiClient.deleteMakeup(current.id, makeup.id, current.revision)
-                }
+            onDeleteEntries = { holidays, makeups ->
+                val edit = com.zhusijiao.app.domain.CalendarEdit(
+                    removeHolidayIds = holidays.map { it.id }.toSet(),
+                    removeMakeupIds = makeups.map { it.id }.toSet()
+                )
+                val undo = com.zhusijiao.app.domain.CalendarEdit(restoreHolidays = holidays, restoreMakeups = makeups)
+                persistCalendar({ getString(R.string.holiday_deleted) }, afterSave = { updated ->
+                    // 撤销只恢复本次删除的记录，并绑定删除后的版本，拒绝覆盖之后的编辑。
+                    AppToast.show(holidaySheet?.context ?: requireContext(), getString(R.string.holiday_deleted), AppToast.Kind.SUCCESS,
+                        action = AppToast.Action(getString(R.string.holiday_undo)) {
+                            persistCalendar({ getString(R.string.holiday_restored) }) {
+                                ApiClient.editCalendar(current.id, undo, updated.revision)
+                            }
+                        })
+                }) { ApiClient.editCalendar(current.id, edit, calendarRevision(current.id)) }
             }
+
         )
         sheet.setOnDismissListener { if (holidaySheet === sheet) holidaySheet = null }
         holidaySheet = sheet
@@ -968,15 +976,36 @@ class ScheduleFragment : Fragment(), Refreshable {
         }
     }
 
-    private fun persistCalendar(successMessage: (Schedule) -> String, block: suspend () -> Schedule) {
+    private fun calendarRevision(scheduleId: String): Int {
+        val latest = schedule
+        check(latest?.id == scheduleId) { "课表已切换" }
+        return latest.revision
+    }
+
+    private var calendarSaving = false
+
+    private fun persistCalendar(
+        successMessage: (Schedule) -> String,
+        afterSave: ((Schedule) -> Unit)? = null,
+        block: suspend () -> Schedule
+    ) {
+        if (calendarSaving) return
+        calendarSaving = true
+        holidaySheet?.setSaving(true)
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val updated = block()
-                applyUpdatedSchedule(updated)
-                holidaySheet?.applySchedule(schedule ?: updated)
-                Ui.toastSuccess(requireContext(), successMessage(updated))
+                if (schedule?.id == updated.id && _binding != null) {
+                    applyUpdatedSchedule(updated)
+                    holidaySheet?.applySchedule(schedule ?: updated)
+                }
+                if (afterSave == null) Ui.toastSuccess(requireContext(), successMessage(updated)) else afterSave(updated)
             } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                holidaySheet?.setSaving(false)
                 Ui.toastError(requireContext(), error.message ?: getString(R.string.common_load_failed))
+            } finally {
+                calendarSaving = false
             }
         }
     }

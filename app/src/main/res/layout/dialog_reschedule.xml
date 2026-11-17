@@ -68,10 +68,13 @@
             android:paddingEnd="8dp"
             android:paddingBottom="10dp">
 
-            <com.zhusijiao.app.ui.common.HolidayCalendarView
-                android:id="@+id/rescheduleCalendar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+            <include layout="@layout/include_calendar_weekdays" />
+            <androidx.core.widget.NestedScrollView android:id="@+id/rescheduleCalendarScroll"
+                android:layout_width="match_parent" android:layout_height="280dp" android:overScrollMode="never">
+                <com.zhusijiao.app.ui.common.HolidayCalendarView
+                    android:id="@+id/rescheduleCalendar" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </androidx.core.widget.NestedScrollView>
         </LinearLayout>
 
         <TextView
