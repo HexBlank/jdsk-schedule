@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 设置：分组列表，行只有「名称 —— 当前值 ›」，不写功能描述 -->
+<!-- 设置：轻分组标题 + 行首统一矢量图标 + 无描边纯白圆角卡；技术排查项收纳进「高级与诊断」 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -23,18 +23,50 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="@dimen/page_padding"
-            android:paddingTop="8dp"
+            android:paddingTop="2dp"
             android:paddingEnd="@dimen/page_padding"
             android:paddingBottom="16dp">
 
-            <!-- 常用 -->
+            <!-- ===== 课表 ===== -->
+            <TextView
+                style="@style/FormGroupTitle"
+                android:layout_marginTop="8dp"
+                android:text="@string/settings_group_schedule" />
+
             <LinearLayout style="@style/FormGroup">
+
+                <LinearLayout
+                    android:id="@+id/menuAppearance"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_menu_appearance" />
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/appearance_title" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
+
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuReminder"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_bell" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -47,13 +79,19 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuLeave"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_menu_leave" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -66,13 +104,19 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuCouple"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_nav_couple" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -85,13 +129,19 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuExport"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_menu_export" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -103,16 +153,22 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- 更新 -->
-            <LinearLayout
-                style="@style/FormGroup"
-                android:layout_marginTop="20dp">
+            <!-- ===== 应用 ===== -->
+            <TextView
+                style="@style/FormGroupTitle"
+                android:text="@string/settings_group_app" />
+
+            <LinearLayout style="@style/FormGroup">
 
                 <LinearLayout
                     android:id="@+id/updateCheckRow"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_update" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -125,9 +181,10 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
-                <!-- 整行可点只是放大触摸区；焦点与无障碍交给行内的 ToggleView -->
                 <LinearLayout
                     android:id="@+id/updateAutoRow"
                     style="@style/FormRow"
@@ -135,6 +192,10 @@
                     android:focusable="false"
                     android:importantForAccessibility="no"
                     tools:ignore="KeyboardInaccessibleWidget">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_menu_channel" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -148,18 +209,65 @@
                         android:layout_height="32dp"
                         android:contentDescription="@string/settings_update_auto" />
                 </LinearLayout>
+
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
+
+                <!-- 收纳更新通道、服务器地址、同步日志；右侧仍直观呈现服务器连接点与当前地址 -->
+                <LinearLayout
+                    android:id="@+id/menuAdvanced"
+                    style="@style/FormRow"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_tune" />
+
+                    <TextView
+                        style="@style/FormRowLabel"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/settings_advanced_row" />
+
+                    <View
+                        android:id="@+id/serverStatusDot"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/sync_dot_gray" />
+
+                    <TextView
+                        android:id="@+id/serverSub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxWidth="150dp"
+                        android:maxLines="1"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_small" />
+
+                    <TextView style="@style/FormRowChevron" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- 关于 -->
-            <LinearLayout
-                style="@style/FormGroup"
-                android:layout_marginTop="20dp">
+            <!-- ===== 关于 ===== -->
+            <TextView
+                style="@style/FormGroupTitle"
+                android:text="@string/settings_about" />
+
+            <LinearLayout style="@style/FormGroup">
 
                 <LinearLayout
                     android:id="@+id/menuQqGroup"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_chat" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -170,13 +278,19 @@
                         android:text="@string/settings_qq_group_number" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuOpenSource"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_code" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -189,13 +303,19 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuSupport"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_gift" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -206,13 +326,19 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuPrivacy"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_shield" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -223,13 +349,19 @@
                     <TextView style="@style/FormRowChevron" />
                 </LinearLayout>
 
-                <View style="@style/FormDivider" />
+                <View
+                    style="@style/FormDivider"
+                    android:layout_marginStart="48dp" />
 
                 <LinearLayout
                     android:id="@+id/menuAbout"
                     style="@style/FormRow"
                     android:clickable="true"
                     android:focusable="true">
+
+                    <ImageView
+                        style="@style/FormRowIcon"
+                        android:src="@drawable/ic_info" />
 
                     <TextView
                         style="@style/FormRowLabel"
@@ -241,82 +373,9 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- 排查问题才用得到的：更新通道、服务器、同步日志 -->
             <LinearLayout
                 style="@style/FormGroup"
-                android:layout_marginTop="20dp">
-
-                <LinearLayout
-                    android:id="@+id/updateChannelRow"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:text="@string/settings_channel_row" />
-
-                    <TextView
-                        android:id="@+id/updateChannelSub"
-                        style="@style/FormRowValue" />
-
-                    <TextView style="@style/FormRowChevron" />
-                </LinearLayout>
-
-                <View style="@style/FormDivider" />
-
-                <!-- 值是当前地址，前面的小圆点是连接状态（绿 = 已连接，灰 = 检测中 / 本机模式，红 = 连不上） -->
-                <LinearLayout
-                    android:id="@+id/menuServer"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:text="@string/settings_server_row" />
-
-                    <View
-                        android:id="@+id/serverStatusDot"
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/sync_dot_gray" />
-
-                    <TextView
-                        android:id="@+id/serverSub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxWidth="200dp"
-                        android:maxLines="1"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="@dimen/text_body" />
-
-                    <TextView style="@style/FormRowChevron" />
-                </LinearLayout>
-
-                <View style="@style/FormDivider" />
-
-                <LinearLayout
-                    android:id="@+id/menuSyncLog"
-                    style="@style/FormRow"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        style="@style/FormRowLabel"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:text="@string/settings_sync_log" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                style="@style/FormGroup"
-                android:layout_marginTop="20dp">
+                android:layout_marginTop="18dp">
 
                 <LinearLayout
                     android:id="@+id/menuDelete"
@@ -338,7 +397,7 @@
                 android:id="@+id/settingsFooter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 android:gravity="center"
                 android:textColor="@color/text_disabled"
                 android:textSize="@dimen/text_hint" />

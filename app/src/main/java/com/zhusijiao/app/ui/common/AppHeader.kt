@@ -21,7 +21,7 @@ class AppHeader @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
-    private val backView: TextView
+    private val backView: View
     private val titleView: TextView
     private val actionsView: LinearLayout
 

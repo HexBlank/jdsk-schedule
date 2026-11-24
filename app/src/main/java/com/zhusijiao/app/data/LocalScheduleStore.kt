@@ -65,28 +65,39 @@ object LocalScheduleStore {
             timeZone = TimeZone.getTimeZone("UTC")
             format(Date())
         }
-        val saved = Schedule(
-            id = existing?.id ?: "local-${UUID.randomUUID()}",
-            name = normalized.name,
-            school = normalized.school,
-            semesterStart = normalized.semesterStart,
-            totalWeeks = normalized.totalWeeks,
-            shareCode = null,
-            revision = (existing?.revision ?: 0) + 1,
-            createdAt = existing?.createdAt ?: now,
-            updatedAt = now,
-            subscriberCount = 0,
-            role = "owner",
-            courseCount = normalized.courses.size,
-            timeSlots = normalized.timeSlots,
-            courses = normalized.courses,
-            // 整表导入覆盖以最新教务快照为准，旧的手动调课全部清空。
-            adjustments = emptyList()
-        )
+        val saved = buildSavedSchedule(normalized, existing, now)
         if (existingIndex >= 0) schedules[existingIndex] = saved else schedules.add(saved)
         write(schedules)
         saved
     }
+
+    /**
+     * 构造导入/覆盖后的本机课表：整表覆盖以最新教务快照为准、清空旧的手动调课，
+     * 但用户手动设置的课程颜色按课程名生效，覆盖后必须保留（与后端 schedule-service.js 一致）。
+     */
+    internal fun buildSavedSchedule(
+        normalized: ParsedSchedule,
+        existing: Schedule?,
+        timestamp: String,
+        newId: String = "local-${UUID.randomUUID()}"
+    ): Schedule = Schedule(
+        id = existing?.id ?: newId,
+        name = normalized.name,
+        school = normalized.school,
+        semesterStart = normalized.semesterStart,
+        totalWeeks = normalized.totalWeeks,
+        shareCode = existing?.shareCode,
+        revision = (existing?.revision ?: 0) + 1,
+        createdAt = existing?.createdAt ?: timestamp,
+        updatedAt = timestamp,
+        subscriberCount = existing?.subscriberCount ?: 0,
+        role = "owner",
+        courseCount = normalized.courses.size,
+        timeSlots = normalized.timeSlots,
+        courses = normalized.courses,
+        adjustments = emptyList(),
+        courseColors = existing?.courseColors ?: emptyMap()
+    )
 
     /**
      * 从 JSON 备份新建一份本机课表：课程、调课、停课、补课、配色在一次落盘里写完，

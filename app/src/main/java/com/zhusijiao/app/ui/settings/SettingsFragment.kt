@@ -27,7 +27,7 @@ import com.zhusijiao.app.domain.ServerAddress
 import com.zhusijiao.app.domain.UpdateChannelOptions
 import com.zhusijiao.app.reminder.ClassReminders
 import com.zhusijiao.app.reminder.ReminderPermissions
-import com.zhusijiao.app.ui.common.AppearanceSheet
+import com.zhusijiao.app.ui.common.ActionSheet
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ChannelSheet
 import com.zhusijiao.app.ui.common.ExportFlow
@@ -62,12 +62,12 @@ class SettingsFragment : Fragment(), Refreshable {
         binding.header.setTitle(getString(R.string.settings_title))
         BottomNavView.padScrollContent(binding.scroll)
         bindStatus()
+        bindAppearanceRow()
         bindReminderRow()
         bindLeaveRow()
         bindExportRow()
         bindUpdateSection()
-        bindServerRow()
-        bindChannelRow()
+        bindAdvancedRow()
         bindAvailability()
         binding.settingsFooter.text = getString(R.string.settings_footer, BuildConfig.VERSION_NAME)
         binding.menuPrivacy.setOnClickListener {
@@ -79,7 +79,6 @@ class SettingsFragment : Fragment(), Refreshable {
         binding.menuQqGroup.setOnClickListener { copyQqGroupNumber() }
         binding.menuOpenSource.setOnClickListener { openProjectRepo() }
         binding.menuSupport.setOnClickListener { SupportSheet(requireContext()).show() }
-        binding.menuSyncLog.setOnClickListener { SyncLogClipboard.copy(requireContext()) }
         binding.menuDelete.setOnClickListener {
             val danger = ContextCompat.getColor(requireContext(), R.color.danger_confirm_alt)
             Ui.confirm(
@@ -125,8 +124,7 @@ class SettingsFragment : Fragment(), Refreshable {
             bindReminderRow()
             bindLeaveRow()
             bindCoupleRow()
-            bindServerRow()
-            bindChannelRow()
+            bindAdvancedRow()
             bindAvailability()
         }
     }
@@ -142,8 +140,16 @@ class SettingsFragment : Fragment(), Refreshable {
         viewLifecycleOwner.lifecycleScope.launch {
             val hasSchedule = withContext(Dispatchers.IO) { ClassReminders.currentSchedule() != null }
             if (_binding == null) return@launch
+            setRowEnabled(binding.menuAppearance, hasSchedule)
             setRowEnabled(binding.menuLeave, hasSchedule)
             setRowEnabled(binding.menuExport, hasSchedule)
+        }
+    }
+
+    /** 「课表外观」行：切到课表页并打开外观面板，边调边看真实课表。 */
+    private fun bindAppearanceRow() {
+        binding.menuAppearance.setOnClickListener {
+            (activity as? MainActivity)?.openScheduleAppearance()
         }
     }
 
@@ -216,32 +222,34 @@ class SettingsFragment : Fragment(), Refreshable {
         }
     }
 
-    /** 「服务器」行：值是当前生效地址（前面的圆点是连接状态，见 [bindStatus]），点击打开更换面板。 */
-    private fun bindServerRow() {
+    /** 「高级与诊断」行：收纳更新通道、服务器地址、复制同步日志三项技术排查项，主屏保持清爽。 */
+    private fun bindAdvancedRow() {
         val override = Prefs.serverBaseUrlOverride
         binding.serverSub.text = if (override.isBlank()) {
             ServerAddress.labelOf(AppConfig.API_BASE_URL).ifBlank { getString(R.string.settings_status_local_mode) }
         } else {
             ServerAddress.labelOf(override.trimEnd('/'))
         }
-        binding.menuServer.setOnClickListener {
-            ServerSheet(requireContext()) {
-                bindStatus()
-                bindServerRow()
-            }.show()
-        }
-    }
-
-    /** 「更新通道」行：副标题显示当前通道名，点击打开通道面板。 */
-    private fun bindChannelRow() {
-        val id = Prefs.updateChannelId
-        val label = UpdateChannelOptions.builtIns(AppConfig.apiBase)
-            .plus(Prefs.customUpdateChannels)
-            .firstOrNull { it.id == id }?.label
-            ?: getString(R.string.channel_stable)
-        binding.updateChannelSub.text = label
-        binding.updateChannelRow.setOnClickListener {
-            ChannelSheet(requireContext()) { bindChannelRow() }.show()
+        binding.menuAdvanced.setOnClickListener {
+            val channelLabel = UpdateChannelOptions.builtIns(AppConfig.apiBase)
+                .plus(Prefs.customUpdateChannels)
+                .firstOrNull { it.id == Prefs.updateChannelId }?.label
+                ?: getString(R.string.channel_stable)
+            val actions = listOf(
+                ActionSheet.Item("${getString(R.string.settings_channel_row)} · $channelLabel", R.drawable.ic_menu_channel) {
+                    ChannelSheet(requireContext()) { bindAdvancedRow() }.show()
+                },
+                ActionSheet.Item("${getString(R.string.settings_server_row)} · ${binding.serverSub.text}", R.drawable.ic_tune) {
+                    ServerSheet(requireContext()) {
+                        bindStatus()
+                        bindAdvancedRow()
+                    }.show()
+                },
+                ActionSheet.Item(getString(R.string.settings_sync_log), R.drawable.ic_code, group = 1) {
+                    SyncLogClipboard.copy(requireContext())
+                }
+            )
+            ActionSheet(requireContext(), getString(R.string.settings_advanced_title), actions).show()
         }
     }
 

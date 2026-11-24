@@ -16,8 +16,8 @@ import com.zhusijiao.app.R
 object MenuRows {
     fun group(parent: LinearLayout): LinearLayout = LinearLayout(parent.context).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundResource(R.drawable.bg_card)
-        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(context, 16) }
+        setBackgroundResource(R.drawable.bg_sheet_group)
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(context, 14) }
         parent.addView(this)
     }
 

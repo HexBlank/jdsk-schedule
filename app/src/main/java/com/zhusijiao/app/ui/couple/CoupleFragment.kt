@@ -37,6 +37,7 @@ import com.zhusijiao.app.ui.common.CoupleDayView
 import com.zhusijiao.app.ui.common.EventDetailSheet
 import com.zhusijiao.app.ui.common.Refreshable
 import com.zhusijiao.app.ui.common.TimetableView
+import com.zhusijiao.app.ui.common.WeekPickerSheet
 import com.zhusijiao.app.ui.event.EventEditorActivity
 import com.zhusijiao.app.util.Rpx
 import com.zhusijiao.app.util.Ui
@@ -119,15 +120,28 @@ class CoupleFragment : Fragment(), Refreshable {
             Prefs.coupleOnlyPartner = checked
             renderWeek(jumpToCurrent = false)
         }
-        binding.prevWeek.setOnClickListener { binding.weekTimetable.previousWeek() }
-        binding.nextWeek.setOnClickListener { binding.weekTimetable.nextWeek() }
-        binding.weekTimetable.onWeekChanged = { week, isFirst, isLast -> updateWeekBar(week, isFirst, isLast) }
+        binding.coupleWeekPicker.setOnClickListener {
+            val base = mySchedule ?: partnerSchedule ?: return@setOnClickListener
+            val total = base.totalWeeks.coerceAtLeast(1)
+            val nowWeek = DateUtils.currentWeek(base.semesterStart, total)
+            WeekPickerSheet(
+                requireContext(),
+                totalWeeks = total,
+                semesterStart = base.semesterStart,
+                selectedWeek = currentWeek,
+                currentWeekNumber = nowWeek
+            ) { week -> binding.weekTimetable.goToWeek(week) }.show()
+        }
+        binding.weekTimetable.onWeekChanged = { week, _, _ -> updateWeekBar(week) }
         binding.weekTimetable.onCourseClick = { click -> showWeekCourse(click) }
         binding.weekTimetable.onEventClick = { click -> showEvent(click.event, click.week, click.dayName) }
         binding.weekTimetable.setAppearance(Prefs.timetableAppearance)
         // 两个视图都铺到屏幕底、悬浮底栏盖在上面：末尾留出底栏的位置，「铺满一屏」按扣掉后的高度算
         BottomNavView.padScrollContent(binding.dayScroll)
         BottomNavView.padScrollContent(binding.weekScroll)
+        binding.weekScroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            binding.weekTimetable.setScrollOffset(scrollY)
+        }
         binding.weekContent.addOnLayoutChangeListener { v, _, top, _, bottom, _, _, _, _ ->
             binding.weekTimetable.setViewportHeight(bottom - top - BottomNavView.contentInset(v))
         }
@@ -501,7 +515,7 @@ class CoupleFragment : Fragment(), Refreshable {
         container.contentDescription = getString(R.string.couple_edit_desc, name)
     }
 
-    private fun updateWeekBar(week: Int, isFirst: Boolean, isLast: Boolean) {
+    private fun updateWeekBar(week: Int) {
         if (_binding == null) return
         currentWeek = week
         binding.weekTitle.text = getString(R.string.couple_week_title, week)
@@ -510,12 +524,6 @@ class CoupleFragment : Fragment(), Refreshable {
         binding.weekCaption.text = if (dates.isNotEmpty()) {
             "${dates.first().month}.${dates.first().day}–${dates.last().month}.${dates.last().day}"
         } else ""
-        binding.prevIcon.setColorFilter(
-            ContextCompat.getColor(requireContext(), if (isFirst) R.color.tt_chevron_off else R.color.tt_chevron)
-        )
-        binding.nextIcon.setColorFilter(
-            ContextCompat.getColor(requireContext(), if (isLast) R.color.tt_chevron_off else R.color.tt_chevron)
-        )
     }
 
     // ===== 页头：日 / 周 切换 + 设置 =====

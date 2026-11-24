@@ -35,6 +35,20 @@
     <string name="next_class_now">马上开始</string>
     <string name="next_class_starts_at">%1$s 开始</string>
     <string name="index_week_empty">本周没有课程</string>
+    <string name="day_view_empty">当天没有课程</string>
+    <string name="day_view_suspended">当天已停课</string>
+    <string name="day_view_section_range">%1$d–%2$d节</string>
+    <string name="day_view_section_single">第%1$d节</string>
+    <string name="day_view_badge_adjusted">调课</string>
+    <string name="day_view_badge_makeup">补课</string>
+    <string name="day_view_badge_finished">已上</string>
+    <string name="appearance_soft_color">清透柔色</string>
+    <string name="appearance_show_teacher">格子显示教师</string>
+    <string name="settings_group_schedule">课表</string>
+    <string name="settings_group_manage">提醒与同步</string>
+    <string name="settings_group_app">应用</string>
+    <string name="settings_advanced_row">高级与诊断</string>
+    <string name="settings_advanced_title">高级与诊断</string>
     <string name="index_prev_week">上一周</string>
     <string name="index_next_week">下一周</string>
     <string name="week_picker_back_current">回到本周</string>
@@ -148,7 +162,8 @@
     <string name="appearance_desc_height">格子高度：</string>
     <string name="appearance_desc_padding">格子留白：</string>
     <string name="appearance_desc_text">文字大小：</string>
-    <string name="appearance_show_finished">已上状态</string>
+    <string name="appearance_show_finished">周视图已上状态</string>
+    <string name="appearance_show_day_finished">日视图已上状态</string>
     <string name="appearance_show_now_line">当前时间线</string>
     <string name="appearance_show_next_class">下一节课提示</string>
     <string name="appearance_tab_size">尺寸</string>
@@ -327,36 +342,43 @@
     <string name="import_preview_sub">%1$s · 第 %2$d–%3$d 节</string>
     <string name="import_week_range">%1$d–%2$d 周</string>
     <string name="import_week_list">%1$s 周</string>
-    <string name="import_guide_title">导出步骤</string>
-    <string name="import_guide_content">1. 点「从教务系统导入」，在打开的网页里登录
-2. 进入「学生课表」
-3. 点右下角「导入课表」
+    <string name="import_guide_title">导入步骤</string>
+    <string name="import_guide_content">1. 点「从教务系统导入」，先登录「智慧韩园」
+2. 在智慧韩园里点击「教务系统」
+3. 打开教务系统后，点底部「导入课表」按钮即可
 
 网页没把课表交回来时，点网页上的「复制课表数据」，回到这里点「读取剪贴板」。
 
 也可以在电脑浏览器运行导出助手生成 JSON，再选择文件导入。</string>
+    <string name="import_steps_summary">1 登录智慧韩园  →  2 点「教务系统」  →  3 打开后点导入</string>
     <string name="import_helper_unavailable_title">未配置数据服务</string>
     <string name="import_helper_unavailable_content">本机模式下没有导出助手地址。</string>
     <string name="import_helper_copied">导出助手地址已复制</string>
     <string name="import_original_failed">原课表加载失败</string>
     <string name="import_source_eams">来自教务系统</string>
-    <string name="import_eams_empty">教务页面没有交回课表数据，请回到教务页面再试一次</string>
+    <string name="import_eams_empty">教务页面没有交回课表数据，请确认已打开教务系统后再试一次</string>
     <string name="import_source_clipboard">来自剪贴板</string>
     <string name="import_file_default_name">课表文件</string>
 
     <!-- 教务系统 WebView -->
-    <string name="eams_title">教务系统登录</string>
-    <string name="eams_guide">登录后进入「学生课表」，点右下角「导入课表」</string>
+    <string name="eams_title">教务导入</string>
+    <string name="eams_step_1">1 登录智慧韩园</string>
+    <string name="eams_step_2">2 点教务系统</string>
+    <string name="eams_step_3">3 点导入课表</string>
+    <string name="eams_guide">先登录智慧韩园 → 点击「教务系统」→ 打开后再点导入</string>
+    <string name="eams_guide_step_1">第 1 步：请先登录智慧韩园</string>
+    <string name="eams_guide_step_2">第 2 步：请点击「教务系统」打开后再导入</string>
+    <string name="eams_guide_step_3">第 3 步：已进入教务系统，点右侧「导入课表」</string>
     <string name="eams_inject">导入课表</string>
     <string name="eams_mode_desktop">电脑模式</string>
     <string name="eams_mode_mobile">手机模式</string>
     <string name="eams_parsing">正在读取课表…</string>
     <string name="eams_parse_failed_title">没能读取课表</string>
-    <string name="eams_parse_error">%1$s\n\n请确认已经登录教务系统、并停在「学生课表」页面，然后再点一次右下角「导入课表」。反复失败可以在导入页用「复制导出助手地址」，改在电脑浏览器里导出。</string>
+    <string name="eams_parse_error">%1$s\n\n请按顺序操作：先登录智慧韩园 → 点击「教务系统」→ 打开教务系统后再点底部「导入课表」。反复失败可在导入页复制导出助手地址，改在电脑浏览器导出。</string>
     <string name="eams_error_unknown">教务系统没有给出原因</string>
-    <string name="eams_result_empty">网页交回的课表数据是空的，请回到「学生课表」页面再点一次「导入课表」。</string>
+    <string name="eams_result_empty">还没读到课表数据，请确认已点击「教务系统」并打开教务页面后，再点一次「导入课表」。</string>
     <string name="eams_stuck_title">还没收到课表数据</string>
-    <string name="eams_stuck_content">等了一会儿仍没有收到结果，可能是教务系统响应慢，或者登录已经过期。\n\n请重新登录后回到「学生课表」页面，再点一次右下角「导入课表」。\n\n如果网页上出现了「复制课表数据」按钮，点它复制，再回到导入页点「读取剪贴板」也能接着导入。</string>
+    <string name="eams_stuck_content">等了一会儿仍没有收到结果，可能是教务系统响应慢，或者登录已过期。\n\n请确认已登录智慧韩园并打开「教务系统」，再点一次底部「导入课表」。\n\n如果网页上出现了「复制课表数据」按钮，点它复制，再回到导入页点「读取剪贴板」也能接着导入。</string>
     <string name="eams_ssl_title">证书提示</string>
     <string name="eams_ssl_blocked_message">此页面的安全证书无效，已停止加载。请检查系统时间、网络环境或联系学校修复证书后再试。</string>
     <string name="eams_untrusted_page">请先回到学校教务页面再导入</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
@@ -24,42 +25,94 @@
             android:paddingEnd="@dimen/page_padding"
             android:paddingBottom="16dp">
 
+            <!-- 轻盈的双快捷入口卡片（有课表时显示） -->
             <LinearLayout
                 android:id="@+id/actionRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
-                <TextView
+                <LinearLayout
                     android:id="@+id/importBtn"
-                    style="@style/PrimaryButton"
                     android:layout_width="0dp"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:text="@string/library_import" />
+                    android:background="@drawable/bg_next_class"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
 
-                <TextView
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="8dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_menu_import"
+                        app:tint="@color/accent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/library_import"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_body"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/joinBtn"
-                    style="@style/GhostButton"
                     android:layout_width="0dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:text="@string/join_title" />
+                    android:background="@drawable/bg_next_class"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="8dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_menu_add"
+                        app:tint="@color/accent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/join_title"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_body"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/listHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="17dp"
+                android:layout_marginTop="18dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp">
 
                 <TextView
-                    style="@style/SectionTitle"
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/library_all" />
+                    android:text="@string/library_all"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="@dimen/text_hint"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/countText"
@@ -73,22 +126,22 @@
                 android:id="@+id/skeletonList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical">
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="94dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_height="96dp"
+                    android:layout_marginBottom="10dp"
                     android:background="@drawable/bg_skeleton" />
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="94dp"
+                    android:layout_height="96dp"
                     android:background="@drawable/bg_skeleton" />
             </LinearLayout>
 
-            <!-- 还没有课表：与课表页同款空状态，顶部按钮行和列表标题此时隐藏 -->
+            <!-- 还没有课表：只在空状态时突出导入/加入主按钮 -->
             <LinearLayout
                 android:id="@+id/emptyState"
                 android:layout_width="match_parent"
@@ -114,13 +167,15 @@
                 <TextView
                     android:id="@+id/emptyImport"
                     style="@style/PrimaryButton"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="22dp"
+                    android:minHeight="48dp"
                     android:text="@string/index_import" />
 
                 <TextView
                     android:id="@+id/emptyJoin"
                     style="@style/GhostButton"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="10dp"
+                    android:minHeight="48dp"
                     android:text="@string/join_title" />
             </LinearLayout>
 
@@ -128,7 +183,7 @@
                 android:id="@+id/cardList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

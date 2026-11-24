@@ -259,12 +259,14 @@ object AppToast {
 
             capsuleBg.setColor(ContextCompat.getColor(context, R.color.toast_bg))
             capsuleBg.cornerRadius = dp(22f).toFloat()
+            capsuleBg.setStroke(max(1, (0.5f * density).toInt()), 0x1AFFFFFF)
             capsule.background = capsuleBg
             capsule.orientation = LinearLayout.HORIZONTAL
             capsule.gravity = Gravity.CENTER_VERTICAL
             capsule.minimumHeight = dp(44f)
             capsule.setPadding(dp(16f), dp(10f), dp(16f), dp(10f))
-            capsule.elevation = dp(6f).toFloat()
+            // 不使用硬件 elevation：WindowManager 小窗口会按矩形硬切扩散投影，产生割裂的长方形阴影轮廓
+            capsule.elevation = 0f
             ViewCompat.setAccessibilityLiveRegion(capsule, ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE)
 
             icon.layoutParams = LinearLayout.LayoutParams(dp(18f), dp(18f)).apply { marginEnd = dp(8f) }
@@ -569,6 +571,6 @@ object AppToast {
     private const val REPLACE_OUT_MS = 90L
     private const val REPLACE_IN_MS = 120L
     private const val PULSE_MS = 180L
-    private const val EDGE_GAP_DP = 12f
-    private const val SHADOW_PAD_DP = 10f
+    private const val EDGE_GAP_DP = 14f
+    private const val SHADOW_PAD_DP = 0f
 }

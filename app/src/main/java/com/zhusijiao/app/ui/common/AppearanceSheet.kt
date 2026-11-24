@@ -47,8 +47,11 @@ class AppearanceSheet(
     private val textChoice: SegmentedChoiceView
     private val fitToggle: ToggleView
     private val finishedToggle: ToggleView
+    private val dayFinishedToggle: ToggleView
     private val nowLineToggle: ToggleView
     private val nextClassToggle: ToggleView
+    private val softColorToggle: ToggleView
+    private val showTeacherToggle: ToggleView
     private val resetButton: TextView
     private val modernCard: View
     private val classicCard: View
@@ -64,8 +67,11 @@ class AppearanceSheet(
         textChoice = findViewById(R.id.textChoice)
         fitToggle = findViewById(R.id.fitScreenToggle)
         finishedToggle = findViewById(R.id.showFinishedToggle)
+        dayFinishedToggle = findViewById(R.id.showDayFinishedToggle)
         nowLineToggle = findViewById(R.id.showNowLineToggle)
         nextClassToggle = findViewById(R.id.showNextClassToggle)
+        softColorToggle = findViewById(R.id.softColorToggle)
+        showTeacherToggle = findViewById(R.id.showTeacherToggle)
         resetButton = findViewById(R.id.appearanceReset)
         weekendToggle = findViewById(R.id.weekendAutoToggle)
         tabSize = findViewById(R.id.appearanceTabSize)
@@ -119,6 +125,10 @@ class AppearanceSheet(
         finishedToggle.onCheckedChange = { checked -> apply(current.copy(showFinished = checked)) }
         findViewById<View>(R.id.showFinishedRow).setOnClickListener { finishedToggle.toggle() }
 
+        dayFinishedToggle.setChecked(current.showDayFinished, animate = false)
+        dayFinishedToggle.onCheckedChange = { checked -> apply(current.copy(showDayFinished = checked)) }
+        findViewById<View>(R.id.showDayFinishedRow).setOnClickListener { dayFinishedToggle.toggle() }
+
         nowLineToggle.setChecked(current.showNowLine, animate = false)
         nowLineToggle.onCheckedChange = { checked -> apply(current.copy(showNowLine = checked)) }
         findViewById<View>(R.id.showNowLineRow).setOnClickListener { nowLineToggle.toggle() }
@@ -126,6 +136,14 @@ class AppearanceSheet(
         nextClassToggle.setChecked(current.showNextClass, animate = false)
         nextClassToggle.onCheckedChange = { checked -> apply(current.copy(showNextClass = checked)) }
         findViewById<View>(R.id.showNextClassRow).setOnClickListener { nextClassToggle.toggle() }
+
+        softColorToggle.setChecked(current.softColorStyle, animate = false)
+        softColorToggle.onCheckedChange = { checked -> apply(current.copy(softColorStyle = checked)) }
+        findViewById<View>(R.id.softColorRow).setOnClickListener { softColorToggle.toggle() }
+
+        showTeacherToggle.setChecked(current.showTeacher, animate = false)
+        showTeacherToggle.onCheckedChange = { checked -> apply(current.copy(showTeacher = checked)) }
+        findViewById<View>(R.id.showTeacherRow).setOnClickListener { showTeacherToggle.toggle() }
 
         modernCard = findViewById(R.id.stateStyleModern)
         classicCard = findViewById(R.id.stateStyleClassic)
@@ -147,14 +165,15 @@ class AppearanceSheet(
         showPage(display = focusStateStyle)
     }
 
-    /** 两页叠放，不在的那页只是不可见：面板高度不随换页跳动。选中的页签加粗变深。 */
+    /** 两页叠放，不在的那页只是不可见：面板高度不随换页跳动。选中的页签用纯白胶囊高亮。 */
     private fun showPage(display: Boolean) {
         pageSize.visibility = if (display) View.INVISIBLE else View.VISIBLE
         pageDisplay.visibility = if (display) View.VISIBLE else View.INVISIBLE
         fun style(tab: TextView, selected: Boolean) {
             tab.isSelected = selected
+            tab.setBackgroundResource(if (selected) R.drawable.bg_segment_pill else 0)
             tab.typeface = if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-            tab.setTextColor(ContextCompat.getColor(context, if (selected) R.color.text_primary else R.color.text_tertiary))
+            tab.setTextColor(ContextCompat.getColor(context, if (selected) R.color.text_primary else R.color.text_secondary))
         }
         style(tabSize, !display)
         style(tabDisplay, display)
@@ -216,8 +235,11 @@ class AppearanceSheet(
         textChoice.setSelection(target.textLevel)
         fitToggle.setChecked(target.fitScreen, animate = true)
         finishedToggle.setChecked(target.showFinished, animate = true)
+        dayFinishedToggle.setChecked(target.showDayFinished, animate = true)
         nowLineToggle.setChecked(target.showNowLine, animate = true)
         nextClassToggle.setChecked(target.showNextClass, animate = true)
+        softColorToggle.setChecked(target.softColorStyle, animate = true)
+        showTeacherToggle.setChecked(target.showTeacher, animate = true)
         apply(target)
         renderFitState()
         renderStateStyle()

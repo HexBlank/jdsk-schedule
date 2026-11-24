@@ -1,65 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 点空格子后的二选一：与全站底部面板保持同一套无框浅灰分组行样式 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="14dp"
+    android:background="@drawable/bg_sheet_group"
+    android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/addEntryCourse"
+    <LinearLayout
+        android:id="@+id/addEntryCourse"
+        style="@style/FormRow"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            style="@style/FormRowIcon"
+            android:src="@drawable/ic_menu_add" />
+
+        <TextView
+            style="@style/FormRowLabel"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/bg_choice_tile"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:minHeight="96dp"
-            android:orientation="vertical"
-            android:stateListAnimator="@animator/press_scale">
+            android:text="@string/course_new_title" />
 
-            <View
-                android:id="@+id/addEntryCourseSwatch"
-                android:layout_width="36dp"
-                android:layout_height="24dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/course_new_title"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_subtitle"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/addEntryEvent"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_choice_tile"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:minHeight="96dp"
-            android:orientation="vertical"
-            android:stateListAnimator="@animator/press_scale">
-
-            <View
-                android:id="@+id/addEntryEventSwatch"
-                android:layout_width="36dp"
-                android:layout_height="24dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/event_new_title"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_subtitle"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <TextView style="@style/FormRowChevron" />
     </LinearLayout>
+
+    <View
+        style="@style/FormDivider"
+        android:layout_marginStart="48dp" />
+
+    <LinearLayout
+        android:id="@+id/addEntryEvent"
+        style="@style/FormRow"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            style="@style/FormRowIcon"
+            android:src="@drawable/ic_calendar" />
+
+        <TextView
+            style="@style/FormRowLabel"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/event_new_title" />
+
+        <TextView style="@style/FormRowChevron" />
+    </LinearLayout>
+</LinearLayout>

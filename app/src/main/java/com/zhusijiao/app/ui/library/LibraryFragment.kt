@@ -171,6 +171,10 @@ class LibraryFragment : Fragment(), Refreshable {
 
         // 状态行只有一行小字高：可点（失败 / 已失效）时把触摸区在文字列内上下撑到 48dp
         if (card.syncRow.hasOnClickListeners()) expandTouchArea(card.syncRow)
+        card.actionShare.visibility = if (isOwner && !ApiClient.isLocalMode) View.VISIBLE else View.GONE
+        card.actionShare.setOnClickListener {
+            startActivity(Intent(requireContext(), ShareActivity::class.java).putExtra(ShareActivity.EXTRA_ID, item.id))
+        }
         card.cardMain.setOnClickListener { openSchedule(item.id) }
         card.cardMain.setOnLongClickListener { showActions(item, isOwner); true }
         card.actionMore.setOnClickListener { showActions(item, isOwner) }

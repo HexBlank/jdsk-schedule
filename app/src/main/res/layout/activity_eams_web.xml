@@ -10,25 +10,93 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/guide"
+    <!-- 三步明确指引：1 登录智慧韩园 → 2 点击「教务系统」→ 3 点底部导入按钮 -->
+    <LinearLayout
+        android:id="@+id/stepBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/accent_soft"
-        android:lineSpacingMultiplier="1.3"
-        android:paddingStart="14dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
         android:paddingTop="8dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="8dp"
-        android:text="@string/eams_guide"
-        android:textColor="@color/privacy_note_text"
-        android:textSize="@dimen/text_caption" />
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/step1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="@string/eams_step_1"
+            android:textColor="@color/accent_strong"
+            android:textSize="@dimen/text_caption"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:text="→"
+            android:textColor="@color/text_disabled"
+            android:textSize="@dimen/text_caption" />
+
+        <TextView
+            android:id="@+id/step2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="@string/eams_step_2"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_caption" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:text="→"
+            android:textColor="@color/text_disabled"
+            android:textSize="@dimen/text_caption" />
+
+        <TextView
+            android:id="@+id/step3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="@string/eams_step_3"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_caption" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="@color/divider" />
 
     <ProgressBar
         android:id="@+id/progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="3dp"
+        android:layout_height="2dp"
         android:max="100"
         android:progressTint="@color/accent"
         android:visibility="gone" />
@@ -38,4 +106,52 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
+
+    <!-- 底部操作栏：避让系统手势条，明确高亮导入主按钮 -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/divider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="10dp">
+
+            <TextView
+                android:id="@+id/guide"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="@string/eams_guide"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_hint" />
+
+            <TextView
+                android:id="@+id/importActionBtn"
+                style="@style/PrimaryButton"
+                android:layout_width="wrap_content"
+                android:minWidth="104dp"
+                android:minHeight="40dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="@string/eams_inject"
+                android:textSize="@dimen/text_body" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

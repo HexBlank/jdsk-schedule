@@ -20,8 +20,10 @@ data class TimetableAppearance(
     val textLevel: Int = DEFAULT_TEXT_LEVEL,
     /** 开启后行高改为「可视高度 ÷ 节次数」，课表本体不用滚动；此时高度档位不生效。 */
     val fitScreen: Boolean = false,
-    /** 开启后已经下课的课（精确到分钟）以灰色「鬼影」样式显示并标「已上」；默认关闭，保持原样。 */
+    /** 开启后周视图里已经下课的课以灰色「鬼影」样式显示并标「已上」；默认关闭。 */
     val showFinished: Boolean = false,
+    /** 开启后日视图里已经下课（或已过去日期）的课置灰并标「已上」；默认开启，与周视图独立控制。 */
+    val showDayFinished: Boolean = true,
     /**
      * 停课与日程的样式：[STATE_STYLE_MODERN] 新版（停课空心虚线加删除线、日程浅底实线），
      * [STATE_STYLE_CLASSIC] 经典（1.2.29 及之前：停课灰底、日程深色实心）。周课表与情侣日视图共用。
@@ -30,7 +32,11 @@ data class TimetableAppearance(
     /** 今天那一列上的红色「现在」横线；默认开启，关掉后周课表不再画它。 */
     val showNowLine: Boolean = true,
     /** 课表页顶部的「下一节课」提示条；默认开启。 */
-    val showNextClass: Boolean = true
+    val showNextClass: Boolean = true,
+    /** 清透柔色块风格（柔和浅底 + 左侧强调色条 + 深色同系字）；关闭后切回鲜明实色块。 */
+    val softColorStyle: Boolean = true,
+    /** 是否在课程块内显示授课教师；默认开启，可在外观面板关闭。 */
+    val showTeacher: Boolean = true
 ) {
 
     val modernStateStyle: Boolean get() = stateStyle != STATE_STYLE_CLASSIC

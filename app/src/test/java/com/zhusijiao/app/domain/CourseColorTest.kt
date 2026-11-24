@@ -1,13 +1,13 @@
 package com.zhusijiao.app.domain
 
-import org.json.JSONObject
+import com.zhusijiao.app.data.LocalScheduleStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** 手动课程颜色：优先于自动配色、非法值回退、跨课程集合保持稳定。 */
+/** 手动课程颜色：优先于自动配色、非法值回退、跨课程集合保持稳定、覆盖导入不丢失。 */
 class CourseColorTest {
 
     private fun course(name: String, day: Int = 1) = Course(
@@ -90,5 +90,23 @@ class CourseColorTest {
     fun manualColorsAcceptLowerCaseAndTrim() {
         assertEquals(ScheduleView.manualPalette("#b54e6c"), ScheduleView.manualPalette(" #B54E6C "))
         assertTrue(ScheduleView.manualPalette("#b54e6c") != null)
+    }
+
+    @Test
+    fun overwriteImportPreservesManualCourseColors() {
+        val existingColors = mapOf("高等数学" to "#B54E6C", "数据结构" to "#247A70")
+        val existing = schedule(existingColors).copy(shareCode = "ABCD1234", revision = 3)
+        val parsed = ParsedSchedule(
+            name = "更新后的课表",
+            school = "韩山师范学院",
+            semesterStart = "2026-09-07",
+            totalWeeks = 20,
+            timeSlots = emptyList(),
+            courses = listOf(course("高等数学"), course("数据结构", day = 2))
+        )
+        val saved = LocalScheduleStore.buildSavedSchedule(parsed, existing, "2026-09-08T00:00:00.000Z")
+        assertEquals(existingColors, saved.courseColors)
+        assertEquals(4, saved.revision)
+        assertTrue(saved.adjustments.isEmpty())
     }
 }

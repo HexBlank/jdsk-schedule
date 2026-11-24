@@ -2,11 +2,11 @@
 <resources>
     <!-- 尺寸约定：以 750 设计稿宽度 = 屏宽为基准，静态界面取 1dp ≈ 2 设计稿单位。
          课表（TimetableView）另行按屏宽等比换算 px，保证整周一屏、列宽精确。 -->
-    <dimen name="page_padding">14dp</dimen>
-    <!-- 圆角只用四级：小控件 8 / 输入与选择 12 / 卡片 16 / 抽屉与弹窗 24；按钮一律全圆角胶囊 -->
+    <dimen name="page_padding">16dp</dimen>
+    <!-- 圆角只用四级：小控件 8 / 输入与选择 12 / 卡片 18 / 抽屉与弹窗 24；按钮一律全圆角胶囊 -->
     <dimen name="radius_sm">8dp</dimen>
     <dimen name="radius_md">12dp</dimen>
-    <dimen name="radius_lg">16dp</dimen>
+    <dimen name="radius_lg">18dp</dimen>
     <dimen name="radius_xl">24dp</dimen>
     <dimen name="radius_pill">100dp</dimen>
     <!-- 旧名保留为别名，逐步替换 -->

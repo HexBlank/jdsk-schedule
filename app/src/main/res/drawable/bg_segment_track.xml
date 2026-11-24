@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 轻量胶囊分段底槽（周/日切换、外观面板页签等） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#e4eae8" />
+    <corners android:radius="@dimen/radius_pill" />
+</shape>

@@ -41,10 +41,8 @@ class EventDetailSheet(
             if (event.startTime != null) context.getString(R.string.course_sections_value, SlotSheet.sectionText(event.startSection..event.endSection)) else null
         ).joinToString(" · ")
         if (event.position.isNotBlank()) {
-            findViewById<TextView>(R.id.eventDetailPlace).apply {
-                visibility = View.VISIBLE
-                text = event.position
-            }
+            findViewById<View>(R.id.eventDetailPlaceRow).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.eventDetailPlace).text = event.position
         }
         if (event.note.isNotBlank()) {
             findViewById<TextView>(R.id.eventDetailNote).apply {
@@ -53,11 +51,6 @@ class EventDetailSheet(
             }
         }
 
-        findViewById<View>(R.id.eventAccent).background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = 999f
-            setColor(data.backgroundColor)
-        }
         findViewById<View>(R.id.eventDetailEdit).setOnClickListener { dismiss(); onEdit() }
         findViewById<View>(R.id.eventDetailDelete).setOnClickListener { dismiss(); onDelete() }
     }

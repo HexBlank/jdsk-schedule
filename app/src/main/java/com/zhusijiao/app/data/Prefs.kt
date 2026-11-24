@@ -35,9 +35,13 @@ object Prefs {
     private const val KEY_TT_TEXT = "timetableTextLevel"
     private const val KEY_TT_FIT_SCREEN = "timetableFitScreen"
     private const val KEY_TT_SHOW_FINISHED = "timetableShowFinished"
+    private const val KEY_TT_SHOW_DAY_FINISHED = "timetableShowDayFinished"
     private const val KEY_TT_STATE_STYLE = "timetableStateStyle"
     private const val KEY_TT_SHOW_NOW_LINE = "timetableShowNowLine"
     private const val KEY_TT_SHOW_NEXT_CLASS = "timetableShowNextClass"
+    private const val KEY_TT_SOFT_COLOR = "timetableSoftColorStyle"
+    private const val KEY_TT_SHOW_TEACHER = "timetableShowTeacher"
+    private const val KEY_SCHEDULE_VIEW_MODE = "scheduleViewMode"
     private const val KEY_STATE_STYLE_TIP = "stateStyleTip"
     private const val TIP_PENDING = "pending"
     private const val TIP_DONE = "done"
@@ -129,11 +133,14 @@ object Prefs {
                 .coerceIn(TimetableAppearance.TEXT_SCALES.indices),
             fitScreen = sp.getBoolean(KEY_TT_FIT_SCREEN, false),
             showFinished = sp.getBoolean(KEY_TT_SHOW_FINISHED, false),
+            showDayFinished = sp.getBoolean(KEY_TT_SHOW_DAY_FINISHED, true),
             stateStyle = if (sp.getInt(KEY_TT_STATE_STYLE, TimetableAppearance.STATE_STYLE_MODERN) ==
                 TimetableAppearance.STATE_STYLE_CLASSIC
             ) TimetableAppearance.STATE_STYLE_CLASSIC else TimetableAppearance.STATE_STYLE_MODERN,
             showNowLine = sp.getBoolean(KEY_TT_SHOW_NOW_LINE, true),
-            showNextClass = sp.getBoolean(KEY_TT_SHOW_NEXT_CLASS, true)
+            showNextClass = sp.getBoolean(KEY_TT_SHOW_NEXT_CLASS, true),
+            softColorStyle = sp.getBoolean(KEY_TT_SOFT_COLOR, true),
+            showTeacher = sp.getBoolean(KEY_TT_SHOW_TEACHER, true)
         )
         set(value) {
             sp.edit()
@@ -142,11 +149,19 @@ object Prefs {
                 .putInt(KEY_TT_TEXT, value.textLevel)
                 .putBoolean(KEY_TT_FIT_SCREEN, value.fitScreen)
                 .putBoolean(KEY_TT_SHOW_FINISHED, value.showFinished)
+                .putBoolean(KEY_TT_SHOW_DAY_FINISHED, value.showDayFinished)
                 .putInt(KEY_TT_STATE_STYLE, value.stateStyle)
                 .putBoolean(KEY_TT_SHOW_NOW_LINE, value.showNowLine)
                 .putBoolean(KEY_TT_SHOW_NEXT_CLASS, value.showNextClass)
+                .putBoolean(KEY_TT_SOFT_COLOR, value.softColorStyle)
+                .putBoolean(KEY_TT_SHOW_TEACHER, value.showTeacher)
                 .apply()
         }
+
+    /** 首页课表视图模式：false = 周视图（默认），true = 今日视图。 */
+    var scheduleDayView: Boolean
+        get() = sp.getBoolean(KEY_SCHEDULE_VIEW_MODE, false)
+        set(value) = sp.edit().putBoolean(KEY_SCHEDULE_VIEW_MODE, value).apply()
 
     /**
      * 「停课和日程换了新样式」一次性提示的状态：从旧版本升级上来的用户才提示，全新安装不提示。

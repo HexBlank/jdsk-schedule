@@ -145,15 +145,10 @@
         android:paddingEnd="@dimen/page_padding"
         android:paddingBottom="12dp">
 
-        <!-- 不拉满整行，避免按钮两角压在屏幕圆角上；名称没填时置灰 -->
         <TextView
             android:id="@+id/courseSave"
             style="@style/PrimaryButton"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:minWidth="200dp"
-            android:paddingStart="40dp"
-            android:paddingEnd="40dp"
+            android:minHeight="48dp"
             android:text="@string/course_save" />
     </LinearLayout>
 </LinearLayout>

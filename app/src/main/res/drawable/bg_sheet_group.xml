@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 白色底部面板内的分组卡片：用极浅灰底区隔，不加硬边框 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/surface_muted" />
+    <corners android:radius="@dimen/card_radius_lg" />
+</shape>

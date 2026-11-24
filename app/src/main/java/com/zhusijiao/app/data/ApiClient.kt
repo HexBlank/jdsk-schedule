@@ -256,17 +256,18 @@ object ApiClient {
             val created = scheduleFrom(
                 request("POST", "/api/v1/schedules", local.toParsedSchedule().toJson())
             )
+            val hasPostCreateData = local.adjustments.isNotEmpty() ||
+                local.holidays.isNotEmpty() || local.makeups.isNotEmpty() || local.courseColors.isNotEmpty()
             withContext(Dispatchers.IO) {
                 ScheduleSyncStore.link(
                     localId,
                     created.id,
                     created.revision,
-                    dirty = local.adjustments.isNotEmpty() ||
-                        local.holidays.isNotEmpty() || local.makeups.isNotEmpty()
+                    dirty = hasPostCreateData
                 )
             }
             record = withContext(Dispatchers.IO) { ScheduleSyncStore.get(localId) }
-            if (local.adjustments.isEmpty() && local.holidays.isEmpty() && local.makeups.isEmpty()) {
+            if (!hasPostCreateData) {
                 return storeRemote(created, localId, expectedLocal = local)
             }
         }

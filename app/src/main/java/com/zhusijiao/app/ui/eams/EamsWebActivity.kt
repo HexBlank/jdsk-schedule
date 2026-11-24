@@ -3,6 +3,8 @@ package com.zhusijiao.app.ui.eams
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Bundle
@@ -20,6 +22,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.zhusijiao.app.AppConfig
 import com.zhusijiao.app.R
 import com.zhusijiao.app.databinding.ActivityEamsWebBinding
@@ -29,7 +34,7 @@ import com.zhusijiao.app.util.Ui
 
 /**
  * 教务系统 WebView 导入页。
- * 打开教务/WebVPN 入口 → 用户登录 → 在学生课表页注入导出脚本 → 脚本本地解析后经 JS 桥回传 JSON。
+ * 三步清晰指引：1. 登录智慧韩园 → 2. 点击「教务系统」→ 3. 打开教务系统后点击底部「导入课表」。
  * 全程不接触、不上传账号、密码或 Cookie（Cookie 仅存在于 WebView 内）。
  */
 class EamsWebActivity : BaseActivity() {
@@ -73,9 +78,15 @@ class EamsWebActivity : BaseActivity() {
             setOnClickListener { toggleMode() }
         }
         binding.header.addAction(modeToggle)
-        binding.header.addAction(headerAction(getString(R.string.eams_inject)).apply {
-            setOnClickListener { manualRun() }
-        })
+        binding.importActionBtn.setOnClickListener { manualRun() }
+
+        // 底部操作栏避让系统手势导航条
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomBar) { v, insets ->
+            val bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, bottom)
+            insets
+        }
+        updateStepIndicator(AppConfig.EAMS_PORTAL_URL)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() = handleBack()
@@ -113,15 +124,13 @@ class EamsWebActivity : BaseActivity() {
             setAcceptThirdPartyCookies(binding.webView, false)
         }
 
-        // JS 桥只在这里注入一次。此前放在 onPageStarted 里反复 remove/add，会和页面 JS 上下文的
-        // 创建时机赛跑：WebVPN 多次重定向后 window.ZSJBridge 常常不存在，脚本明明解析成功
-        // （按钮显示「已读取 N 个时段」）却交不回 App，用户看到的就是「读完没反应」。
-        // 页面可信性改在 Bridge 每个方法里按当前地址校验，非教务页面的调用一律丢弃。
+        // JS 桥只在这里注入一次；来源可信性改在 Bridge 每个方法里按当前地址校验。
         binding.webView.addJavascriptInterface(Bridge(), "ZSJBridge")
 
         binding.webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                updateStepIndicator(url.orEmpty())
                 if (desktopMode) view?.let { injectDesktopViewportFix(it) }
                 if (url != null && hostAllowed(url)) view?.evaluateJavascript(exportScript, null)
             }
@@ -145,6 +154,51 @@ class EamsWebActivity : BaseActivity() {
         }
     }
 
+    /** 根据当前网页地址高亮对应步骤，让用户随时清楚自己处于哪一步、何时点导入。 */
+    private fun updateStepIndicator(url: String) {
+        val lower = url.lowercase()
+        val inEams = lower.contains("/eams") || lower.contains("jwgl") || lower.contains("jwxt") ||
+            lower.contains("coursetable")
+        val inLogin = !inEams && (lower.contains("login") || lower.contains("cas") ||
+            lower.contains("auth") || lower.contains("sso") || lower.isBlank())
+        val activeStep = when {
+            inEams -> 3
+            inLogin -> 1
+            else -> 2
+        }
+        val activeBg = GradientDrawable().apply {
+            cornerRadius = Rpx.dp(10f).toFloat()
+            setColor(ContextCompat.getColor(this@EamsWebActivity, R.color.accent_soft))
+        }
+        fun styleStep(view: TextView, step: Int) {
+            val active = step == activeStep
+            val passed = step < activeStep
+            view.background = if (active) activeBg else null
+            view.typeface = if (active) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            view.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    when {
+                        active -> R.color.accent_strong
+                        passed -> R.color.text_secondary
+                        else -> R.color.text_tertiary
+                    }
+                )
+            )
+        }
+        styleStep(binding.step1, 1)
+        styleStep(binding.step2, 2)
+        styleStep(binding.step3, 3)
+        binding.guide.text = getString(
+            when (activeStep) {
+                1 -> R.string.eams_guide_step_1
+                2 -> R.string.eams_guide_step_2
+                else -> R.string.eams_guide_step_3
+            }
+        )
+        binding.importActionBtn.alpha = if (inEams) 1f else 0.72f
+    }
+
     private fun hostAllowed(url: String): Boolean {
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
         if (uri.scheme?.lowercase() != "https") return false
@@ -153,8 +207,7 @@ class EamsWebActivity : BaseActivity() {
     }
 
     /**
-     * 页头「导入课表」：脚本没注入时（页面中途跳转、注入时页面还没就绪）先补注入再跑。
-     * 不再无条件弹「正在读取」——那会让什么都没发生的情况看起来像正在工作。
+     * 底部「导入课表」：脚本没注入时先补注入再跑。
      */
     private fun manualRun() {
         if (!hostAllowed(binding.webView.url.orEmpty())) {
@@ -177,7 +230,7 @@ class EamsWebActivity : BaseActivity() {
         setTextColor(Color.parseColor("#287760"))
         textSize = 13f
         gravity = Gravity.CENTER
-        setPadding(Rpx.dp(10f), Rpx.dp(6f), Rpx.dp(6f), Rpx.dp(6f))
+        setPadding(Rpx.dp(10f), Rpx.dp(6f), Rpx.dp(10f), Rpx.dp(6f))
         setBackgroundResource(R.drawable.bg_menu_row)
         isClickable = true
         isFocusable = true
@@ -187,18 +240,12 @@ class EamsWebActivity : BaseActivity() {
     private fun applyMode() {
         binding.webView.settings.apply {
             userAgentString = if (desktopMode) DESKTOP_UA else defaultMobileUA
-            // 桌面模式用 TEXT_AUTOSIZING，避免 PC 页被手机字体/排版策略压缩
             layoutAlgorithm = if (desktopMode) WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING
-                else WebSettings.LayoutAlgorithm.NORMAL
+            else WebSettings.LayoutAlgorithm.NORMAL
         }
-        // 按钮语义为「点击切换到该模式」：当前是桌面则显示“手机模式”，反之显示“电脑模式”
         modeToggle.text = getString(if (desktopMode) R.string.eams_mode_mobile else R.string.eams_mode_desktop)
     }
 
-    /**
-     * 桌面模式补全 viewport：移除移动端 viewport meta，注入 width=1280 并触发 resize，
-     * 使 PC 版教务页按 1280 宽布局（再缩放到屏宽），避免被挤压成手机窄版。参考拾光课程表实现。
-     */
     private fun injectDesktopViewportFix(view: WebView) {
         view.evaluateJavascript(
             """
@@ -240,13 +287,8 @@ class EamsWebActivity : BaseActivity() {
         finish()
     }
 
-    /** 当前停留的页面是否可信；桥对所有页面可见，靠这里拦住非教务页面的调用。 */
     private fun currentPageTrusted(): Boolean = hostAllowed(binding.webView.url.orEmpty())
 
-    /**
-     * 看门狗：脚本报告开始读取后若迟迟没有结果（桥失效、教务接口卡住、页面被重定向走），
-     * 到点主动把话说清楚并给出下一步，不让用户干等在「正在读取课表…」上。
-     */
     private fun startWatchdog() {
         cancelWatchdog()
         watchdog.postDelayed(watchdogRunnable, WATCHDOG_MS)
@@ -317,7 +359,6 @@ class EamsWebActivity : BaseActivity() {
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         private const val MAX_BRIDGE_CHARS = 1_800_000
-        /** 点下「导入课表」后等结果的上限；教务接口慢时也够用，超时只提示、不打断页面。 */
         private const val WATCHDOG_MS = 25_000L
     }
 }

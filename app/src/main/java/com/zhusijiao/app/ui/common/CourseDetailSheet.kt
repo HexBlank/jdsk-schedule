@@ -1,12 +1,12 @@
 package com.zhusijiao.app.ui.common
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -15,10 +15,9 @@ import com.zhusijiao.app.R
 import com.zhusijiao.app.domain.Leaves
 
 /**
- * 课程详情底部抽屉：课程色浅底的头部里，教室用大字、时间和节次紧随其后（最常被问的「在哪上、几点上」），
- * 周次与教师并成一行；能对这节课做的事（请假、颜色、调课……）是底部一排等宽操作块，
- * 没权限做的那块不出现——所有操作都看得见，不依赖长按之类的隐藏手势。
- * 没有「完成」按钮——下拉或点外面就关，一个操作都没有时整行不出现。
+ * 课程详情底部抽屉：
+ * 头部采用白底 + 左侧课程色竖条 + 大号课名 + 醒目教室胶囊；
+ * 下方用矢量图标引导时间、周次、教师；底部操作超过 2 项时主操作独立沉底，清晰不挤字。
  */
 class CourseDetailSheet(
     context: Context,
@@ -26,45 +25,40 @@ class CourseDetailSheet(
     canEdit: Boolean = false,
     onReschedule: (() -> Unit)? = null,
     onUndo: (() -> Unit)? = null,
-    /** 只读时的一行标注（如「自己加的课」「TA 的课」）；不传就什么都不写，没有按钮本身已经说明只能看。 */
     readOnlyNote: String? = null,
-    /** 「这节课请假」或查看已有请假；为 null 时不显示入口（情侣课表、没有开学日期的课表）。 */
     onLeave: (() -> Unit)? = null,
-    /** 自己加的课：底部给「编辑」和「删除」（课表自带的课不传，照旧是调课）。 */
     onEditExtra: (() -> Unit)? = null,
     onDeleteExtra: (() -> Unit)? = null,
-    /** 改这门课的颜色；为 null 时不出现（订阅者不能改课表自带课的颜色）。 */
     onColor: (() -> Unit)? = null
-) :
-    SheetDialog(context) {
+) : SheetDialog(context) {
 
     init {
         setContentView(R.layout.dialog_course_detail)
         setCanceledOnTouchOutside(true)
 
-        // 头部配色：课程色朝白色混出浅底，文字朝墨色加深，浅色课程（如麦黄）上也清楚
-        val color = data.backgroundColor
-        val heroText = BlockStyles.blend(color, ContextCompat.getColor(context, R.color.text_primary), 0.45f)
-        findViewById<View>(R.id.sheetHero).background = GradientDrawable().apply {
-            cornerRadius = context.resources.getDimension(R.dimen.radius_md) + context.resources.displayMetrics.density * 2f
-            setColor(BlockStyles.blend(color, Color.WHITE, 0.88f))
+        val tone = data.backgroundColor
+        val softFill = BlockStyles.courseSoftFill(tone)
+        val softText = BlockStyles.courseSoftText(tone)
+
+        findViewById<TextView>(R.id.sheetTitle).text = data.course.name
+
+        val roomPill = findViewById<View>(R.id.sheetRoomPill)
+        roomPill.background = GradientDrawable().apply {
+            cornerRadius = 999f
+            setColor(softFill)
         }
-        findViewById<TextView>(R.id.sheetTitle).apply {
-            text = data.course.name
-            setTextColor(heroText)
-        }
+        findViewById<ImageView>(R.id.sheetRoomIcon).setColorFilter(softText)
         findViewById<TextView>(R.id.sheetRoom).apply {
             text = data.course.position.ifBlank { context.getString(R.string.detail_room_pending) }
-            setTextColor(BlockStyles.blend(color, ContextCompat.getColor(context, R.color.text_primary), 0.62f))
+            setTextColor(softText)
         }
-        findViewById<TextView>(R.id.sheetSubtitle).apply {
-            text = "${data.dayName} " +
-                context.getString(R.string.detail_sections, data.course.startSection, data.course.endSection, data.timeText)
-            setTextColor(heroText)
-        }
-        findViewById<TextView>(R.id.sheetMeta).apply {
-            text = listOf(data.weekSummary, data.course.teacher).filter { it.isNotBlank() }.joinToString(" · ")
-            setTextColor(heroText)
+
+        findViewById<TextView>(R.id.sheetSubtitle).text = "${data.dayName} · " +
+            context.getString(R.string.detail_sections, data.course.startSection, data.course.endSection, data.timeText)
+        findViewById<TextView>(R.id.sheetWeeks).text = data.weekSummary
+        if (data.course.teacher.isNotBlank()) {
+            findViewById<View>(R.id.sheetTeacherRow).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.sheetTeacher).text = data.course.teacher
         }
 
         val adjustment = data.adjustment
@@ -106,7 +100,7 @@ class CourseDetailSheet(
                 text = readOnlyNote
             }
         }
-        // 请假：当天真要上的课可以请假；已经在请假时段里的显示时段一行，点进去修改或取消
+
         val attends = data.holiday == null && data.madeUpNote == null &&
             data.occurrence != TimetableView.Occurrence.MOVED_OUT
         val canLeave = onLeave != null && !data.partner && data.dateIso != null && (data.leave != null || attends)
@@ -122,38 +116,58 @@ class CourseDetailSheet(
             ).joinToString("\n")
         }
 
-        // 操作块从左到右：请假 · 颜色 · 撤销 / 删除 · 主操作（调课 / 编辑）
-        val actions = findViewById<LinearLayout>(R.id.sheetActions)
+        data class ActionItem(
+            val label: String,
+            val primary: Boolean = false,
+            val danger: Boolean = false,
+            val onClick: () -> Unit
+        )
+
+        val secondaryItems = mutableListOf<ActionItem>()
         if (canLeave && leave == null) {
-            addAction(actions, context.getString(R.string.leave_title)) { onLeave?.invoke() }
+            secondaryItems += ActionItem(context.getString(R.string.leave_title)) { onLeave?.invoke() }
         }
-        if (onColor != null) addAction(actions, context.getString(R.string.event_color_label), onClick = onColor)
+        if (onColor != null) {
+            secondaryItems += ActionItem(context.getString(R.string.event_color_label), onClick = onColor)
+        }
         if (canEdit && adjustment != null) {
-            addAction(actions, context.getString(R.string.reschedule_undo)) { onUndo?.invoke() }
+            secondaryItems += ActionItem(context.getString(R.string.reschedule_undo)) { onUndo?.invoke() }
         }
-        // 自己加的课不走调课（它不在课表里，调课记录无处可存），直接改或删
         if (onDeleteExtra != null) {
-            addAction(actions, context.getString(R.string.course_extra_delete), danger = true, onClick = onDeleteExtra)
+            secondaryItems += ActionItem(context.getString(R.string.course_extra_delete), danger = true, onClick = onDeleteExtra)
         }
-        // 补课块与停课块表示的是「某一天的整体安排」，不支持对单节课再调课
-        if (canEdit && !data.orphaned && data.makeup == null && data.holiday == null) {
-            addAction(
-                actions,
+
+        val primaryItem: ActionItem? = when {
+            canEdit && !data.orphaned && data.makeup == null && data.holiday == null -> ActionItem(
                 context.getString(if (adjustment == null) R.string.reschedule_action else R.string.reschedule_edit_action),
                 primary = true
             ) { onReschedule?.invoke() }
+            onEditExtra != null -> ActionItem(context.getString(R.string.course_extra_edit), primary = true, onClick = onEditExtra)
+            else -> null
         }
-        if (onEditExtra != null) {
-            addAction(actions, context.getString(R.string.course_extra_edit), primary = true, onClick = onEditExtra)
+
+        val actionsRow = findViewById<LinearLayout>(R.id.sheetActions)
+        val primaryBar = findViewById<TextView>(R.id.sheetPrimaryAction)
+
+        if (primaryItem != null && secondaryItems.size >= 2) {
+            // 次要操作较多时，主操作独占底部一行，清晰稳重不挤字
+            secondaryItems.forEach { addAction(actionsRow, it.label, false, it.danger, it.onClick) }
+            actionsRow.isVisible = true
+            primaryBar.visibility = View.VISIBLE
+            primaryBar.text = primaryItem.label
+            primaryBar.setOnClickListener { dismiss(); primaryItem.onClick() }
+        } else {
+            secondaryItems.forEach { addAction(actionsRow, it.label, false, it.danger, it.onClick) }
+            primaryItem?.let { addAction(actionsRow, it.label, true, false, it.onClick) }
+            actionsRow.isVisible = actionsRow.childCount > 0
         }
-        actions.isVisible = actions.childCount > 0
     }
 
     private fun addAction(
         parent: LinearLayout,
         label: String,
-        primary: Boolean = false,
-        danger: Boolean = false,
+        primary: Boolean,
+        danger: Boolean,
         onClick: () -> Unit
     ) {
         val density = context.resources.displayMetrics.density
@@ -177,7 +191,7 @@ class CourseDetailSheet(
             isClickable = true
             isFocusable = true
             setOnClickListener { dismiss(); onClick() }
-            layoutParams = LinearLayout.LayoutParams(0, (48 * density).toInt(), 1f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, (46 * density).toInt(), 1f).apply {
                 if (parent.childCount > 0) marginStart = (8 * density).toInt()
             }
         })

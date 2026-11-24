@@ -37,16 +37,30 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/eamsBtn"
-                    style="@style/PrimaryButton"
-                    android:layout_marginTop="8dp"
-                    android:minHeight="52dp"
-                    android:text="@string/import_from_eams" />
+                <LinearLayout
+                    style="@style/FormGroup"
+                    android:layout_marginTop="4dp"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/eamsBtn"
+                        style="@style/PrimaryButton"
+                        android:minHeight="48dp"
+                        android:text="@string/import_from_eams" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="@string/import_steps_summary"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_caption" />
+                </LinearLayout>
 
                 <LinearLayout
                     style="@style/FormGroup"
-                    android:layout_marginTop="20dp">
+                    android:layout_marginTop="16dp">
 
                     <LinearLayout
                         android:id="@+id/fileBtn"
@@ -379,15 +393,10 @@
         android:paddingBottom="12dp"
         android:visibility="gone">
 
-        <!-- 不拉满整行，避免按钮两角压在屏幕圆角上 -->
         <TextView
             android:id="@+id/saveBtn"
             style="@style/PrimaryButton"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:minWidth="200dp"
-            android:paddingStart="40dp"
-            android:paddingEnd="40dp"
+            android:minHeight="48dp"
             android:text="@string/import_save_new" />
     </LinearLayout>
 </LinearLayout>

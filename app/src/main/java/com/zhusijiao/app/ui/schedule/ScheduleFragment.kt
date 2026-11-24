@@ -1,15 +1,17 @@
 package com.zhusijiao.app.ui.schedule
 
 import android.content.Intent
-import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.InsetDrawable
-import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.AppCompatImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -22,15 +24,17 @@ import com.zhusijiao.app.data.Prefs
 import com.zhusijiao.app.data.ScheduleSyncStore
 import com.zhusijiao.app.data.SyncLog
 import com.zhusijiao.app.databinding.FragmentScheduleBinding
+import com.zhusijiao.app.databinding.ItemDayCourseCardBinding
 import com.zhusijiao.app.domain.Course
 import com.zhusijiao.app.domain.DateUtils
 import com.zhusijiao.app.domain.ExtraCourse
 import com.zhusijiao.app.domain.ExtraCourses
 import com.zhusijiao.app.domain.Leave
+import com.zhusijiao.app.domain.Leaves
 import com.zhusijiao.app.domain.NextClass
 import com.zhusijiao.app.domain.PersonalEvent
-import com.zhusijiao.app.domain.ReminderOccurrence
 import com.zhusijiao.app.domain.Schedule
+import com.zhusijiao.app.domain.ScheduleOccurrences
 import com.zhusijiao.app.domain.ScheduleTime
 import com.zhusijiao.app.domain.ScheduleView
 import com.zhusijiao.app.domain.TimetableAppearance
@@ -38,6 +42,7 @@ import com.zhusijiao.app.ui.common.ActionSheet
 import com.zhusijiao.app.ui.common.AddEntrySheet
 import com.zhusijiao.app.ui.common.AppToast
 import com.zhusijiao.app.ui.common.AppearanceSheet
+import com.zhusijiao.app.ui.common.BlockStyles
 import com.zhusijiao.app.ui.common.BottomNavView
 import com.zhusijiao.app.ui.common.ColorPickerSheet
 import com.zhusijiao.app.ui.common.CourseDetailSheet
@@ -90,7 +95,12 @@ class ScheduleFragment : Fragment(), Refreshable {
     private var sharedColors: Map<String, String> = emptyMap()
     private var currentWeekNumber = 1
     private var currentWeek = 1
+    /** 今日视图正在查看的星期（1=周一..7=周日）。 */
+    private var selectedDay = todayDayOfWeek()
+    /** 视图模式：false = 周视图，true = 今日视图。 */
+    private var dayViewMode = false
     private var restoredWeek: Int? = null
+    private var contentState = STATE_LOADING
     private var syncRunning = false
 
     /** 本机全部课表的摘要，页头切换课表用。 */
@@ -118,7 +128,17 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.timetable.onWeekChanged = { week, isFirst, isLast -> updateWeekBar(week, isFirst, isLast) }
         binding.timetable.onPageScroll = { shown, local -> followPage(shown, local) }
         binding.weekCenter.setOnClickListener { showWeekPicker() }
-        binding.backToCurrentWeek.setOnClickListener { binding.timetable.goToWeek(currentWeekNumber) }
+        binding.backToCurrentWeek.setOnClickListener {
+            selectedDay = todayDayOfWeek()
+            if (currentWeek != currentWeekNumber) binding.timetable.goToWeek(currentWeekNumber)
+            else renderDayView()
+            updateBackButton()
+        }
+        binding.weekMoreBtn.setOnClickListener { showMoreActions() }
+        dayViewMode = Prefs.scheduleDayView
+        binding.modeWeekBtn.setOnClickListener { setDayViewMode(false) }
+        binding.modeDayBtn.setOnClickListener { setDayViewMode(true) }
+        renderViewModeSegment()
         binding.nextClassBar.setOnClickListener { openNextClass() }
         binding.emptyImport.setOnClickListener {
             startActivity(Intent(requireContext(), ImportActivity::class.java))
@@ -128,10 +148,12 @@ class ScheduleFragment : Fragment(), Refreshable {
         binding.emptyJoin.visibility = if (ApiClient.isLocalMode) View.GONE else View.VISIBLE
         binding.errorRetry.setOnClickListener { load(silent = false) }
         binding.timetable.setAppearance(Prefs.timetableAppearance)
-        // 「铺满一屏」要按可视高度平分行高；用始终可见的内容区测量，首帧就是最终高度，
-        // 容器高度变化（分屏、系统字体缩放）时也会再次告知
         // 内容区铺到屏幕底、悬浮底栏盖在上面：可视高度要扣掉底栏占的那一段
         BottomNavView.padScrollContent(binding.scroll)
+        BottomNavView.padScrollContent(binding.dayScroll)
+        binding.scroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            binding.timetable.setScrollOffset(scrollY)
+        }
         binding.contentArea.addOnLayoutChangeListener { v, _, top, _, bottom, _, _, _, _ ->
             binding.timetable.setViewportHeight(bottom - top - BottomNavView.contentInset(v))
         }
@@ -224,21 +246,63 @@ class ScheduleFragment : Fragment(), Refreshable {
     }
 
     private fun setState(state: Int) {
-        // 有课表时页头正中是周次栏（第 N 周 + 日期与课表名），页头自己的标题让位
-        binding.weekBar.visibility = if (state == STATE_CONTENT) View.VISIBLE else View.GONE
-        binding.header.setTitle(if (state == STATE_CONTENT) "" else getString(R.string.index_default_title))
-        binding.scroll.visibility = if (state == STATE_CONTENT) View.VISIBLE else View.GONE
+        contentState = state
+        val hasContent = state == STATE_CONTENT
+        // 有课表时页头由 weekBar 接管（左侧第 N 周 + 日期课表名，右侧周/日切换 + 更多）
+        binding.weekBar.visibility = if (hasContent) View.VISIBLE else View.GONE
+        binding.header.setTitle(if (hasContent) "" else getString(R.string.index_default_title))
+        binding.scroll.visibility = if (hasContent && !dayViewMode) View.VISIBLE else View.GONE
+        binding.dayViewContainer.visibility = if (hasContent && dayViewMode) View.VISIBLE else View.GONE
         binding.loading.visibility = if (state == STATE_LOADING) View.VISIBLE else View.GONE
         binding.emptyState.visibility = if (state == STATE_EMPTY) View.VISIBLE else View.GONE
         binding.errorState.visibility = if (state == STATE_ERROR) View.VISIBLE else View.GONE
+        if (hasContent && dayViewMode) renderDayView()
+        updateBackButton()
         updateNextClass()
+    }
+
+    private fun setDayViewMode(dayMode: Boolean) {
+        if (dayViewMode == dayMode) return
+        dayViewMode = dayMode
+        Prefs.scheduleDayView = dayMode
+        if (dayMode && currentWeek == currentWeekNumber) selectedDay = todayDayOfWeek()
+        renderViewModeSegment()
+        if (contentState == STATE_CONTENT) {
+            binding.scroll.visibility = if (dayMode) View.GONE else View.VISIBLE
+            binding.dayViewContainer.visibility = if (dayMode) View.VISIBLE else View.GONE
+            if (dayMode) renderDayView()
+            updateBackButton()
+            updateNextClass()
+        }
+    }
+
+    private fun renderViewModeSegment() {
+        val ctx = context ?: return
+        fun styleBtn(btn: TextView, active: Boolean) {
+            btn.setBackgroundResource(if (active) R.drawable.bg_segment_pill else 0)
+            btn.typeface = if (active) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            btn.setTextColor(ContextCompat.getColor(ctx, if (active) R.color.text_primary else R.color.text_secondary))
+        }
+        styleBtn(binding.modeWeekBtn, !dayViewMode)
+        styleBtn(binding.modeDayBtn, dayViewMode)
+    }
+
+    private fun updateBackButton() {
+        val show = if (dayViewMode) {
+            currentWeek != currentWeekNumber || selectedDay != todayDayOfWeek()
+        } else {
+            currentWeek != currentWeekNumber
+        }
+        binding.backToCurrentWeek.visibility = if (show) View.VISIBLE else View.GONE
+        binding.backToCurrentWeek.setText(if (dayViewMode) R.string.couple_back_today else R.string.index_back_current_week)
     }
 
     @Suppress("UNUSED_PARAMETER")
     private fun updateWeekBar(week: Int, isFirst: Boolean, isLast: Boolean) {
         currentWeek = week
         showWeekTitle(week)
-        binding.backToCurrentWeek.visibility = if (week != currentWeekNumber) View.VISIBLE else View.GONE
+        if (dayViewMode) renderDayView()
+        updateBackButton()
         updateNextClass()
     }
 
@@ -252,21 +316,39 @@ class ScheduleFragment : Fragment(), Refreshable {
     }
 
     /**
-     * 页头「第 N 周」与课表页面同一个进度：页面往左翻，标题也往左滑并淡出，
-     * 过了一半换成下一周的字、从右侧滑回居中——两者步调一致，而不是翻完才突然变字。
+     * 页头「第 N 周」与课表页面同一个进度：页面往左翻，标题也轻柔往左微移并淡出，
+     * 过了一半换成下一周的字再淡入回位——两者步调一致，且位移小于左留白不会撞边裁切。
      */
     private fun followPage(shown: Int, local: Float) {
         if (shown != titleWeek) showWeekTitle(shown)
         val center = binding.weekCenter
         center.translationX = local * WEEK_TITLE_SHIFT_DP * resources.displayMetrics.density
-        center.alpha = (1f - abs(local) * 2f).coerceIn(0f, 1f)
+        center.alpha = (1f - abs(local) * 2.2f).coerceIn(0f, 1f)
     }
 
-    /** 已在课表页时再点底栏的「课表」：回到本周；已经在本周就滚回顶部。 */
+    /** 已在课表页时再点底栏的「课表」：回到本周（日视图同步回到今天）；已经在本周就滚回顶部。 */
     fun onReselected() {
         if (_binding == null || schedule == null) return
-        if (currentWeek != currentWeekNumber) binding.timetable.goToWeek(currentWeekNumber)
-        else binding.scroll.smoothScrollTo(0, 0)
+        val today = todayDayOfWeek()
+        if (currentWeek != currentWeekNumber) {
+            selectedDay = today
+            binding.timetable.goToWeek(currentWeekNumber)
+        } else if (dayViewMode && selectedDay != today) {
+            selectedDay = today
+            renderDayView()
+            updateBackButton()
+        } else if (dayViewMode) {
+            binding.dayScroll.smoothScrollTo(0, 0)
+        } else {
+            binding.scroll.smoothScrollTo(0, 0)
+        }
+    }
+
+    /** 供设置页「课表外观」跳转课表页后直接呼出外观面板。 */
+    fun openAppearanceFromSettings() {
+        if (_binding == null) return
+        if (dayViewMode) setDayViewMode(false)
+        binding.root.post { showAppearanceSheet() }
     }
 
     // ===== 请假 =====
@@ -296,15 +378,14 @@ class ScheduleFragment : Fragment(), Refreshable {
     private var nextClass: NextClass.Info? = null
     private val nextClassTick = Runnable { updateNextClass() }
 
-    /** 只在看本周、今天还有没下课的课时显示（课表外观里可整条关掉）；每到整分钟刷新一次倒计时。 */
+    /** 只在周视图、看本周、今天还有没下课的课时显示（课表外观里可整条关掉）；每到整分钟刷新一次倒计时。 */
     private fun updateNextClass() {
         val b = _binding ?: return
         b.root.removeCallbacks(nextClassTick)
         val s = schedule
         val now = System.currentTimeMillis()
         val enabled = Prefs.timetableAppearance.showNextClass
-        val info = if (enabled && s != null && b.scroll.visibility == View.VISIBLE && currentWeek == currentWeekNumber) {
-            // 今天的课上完了就预告明天第一节（明天已经是下一周时不预告：点它找不到本周的块）
+        val info = if (enabled && !dayViewMode && s != null && contentState == STATE_CONTENT && currentWeek == currentWeekNumber) {
             (NextClass.find(s, events, now, leaves) ?: NextClass.firstTomorrow(s, events, now, leaves))
                 ?.takeIf { it.week == currentWeekNumber }
         } else null
@@ -314,35 +395,326 @@ class ScheduleFragment : Fragment(), Refreshable {
             return
         }
         val item = info.item
-        b.nextClassLabel.text = getString(
-            when {
-                info.tomorrow -> R.string.widget_tomorrow
-                info.ongoing -> R.string.next_class_ongoing
-                else -> R.string.next_class_upcoming
-            }
-        )
-        b.nextClassTitle.text = if (item.position.isNotBlank()) {
-            getString(R.string.next_class_title_format, item.title, item.position)
-        } else item.title
+        val ctx = requireContext()
+        b.nextClassTitle.text = item.title
+        val timeRange = listOf(item.startTime, item.endTime).filter { it.isNotBlank() }.joinToString("–")
+        b.nextClassSub.text = listOfNotNull(
+            item.position.takeIf { it.isNotBlank() },
+            timeRange.takeIf { it.isNotBlank() }
+        ).joinToString(" · ")
         b.nextClassTime.text = when {
-            info.tomorrow -> item.startTime
+            info.tomorrow -> "${getString(R.string.widget_tomorrow)} ${item.startTime}"
             info.ongoing -> getString(if (item.isEvent) R.string.next_class_event_ends_at else R.string.next_class_ends_at, item.endTime)
             info.minutesUntil <= 0 -> getString(R.string.next_class_now)
             info.minutesUntil <= 60 -> getString(R.string.next_class_in_minutes, info.minutesUntil)
             else -> getString(R.string.next_class_starts_at, item.startTime)
         }
-        b.nextClassDot.background = GradientDrawable().apply {
-            shape = GradientDrawable.OVAL
-            setColor(nextClassColor(s!!, item))
+        val (pillBg, pillText) = when {
+            info.ongoing -> R.color.couple_status_busy_bg to R.color.danger
+            info.tomorrow -> R.color.surface_muted to R.color.text_secondary
+            else -> R.color.accent_soft to R.color.accent_strong
         }
+        b.nextClassTime.background = GradientDrawable().apply {
+            cornerRadius = Rpx.dp(100f).toFloat()
+            setColor(ContextCompat.getColor(ctx, pillBg))
+        }
+        b.nextClassTime.setTextColor(ContextCompat.getColor(ctx, pillText))
         b.nextClassBar.visibility = View.VISIBLE
         b.root.postDelayed(nextClassTick, 60_000L - now % 60_000L + 500L)
     }
 
-    private fun nextClassColor(s: Schedule, item: ReminderOccurrence): Int {
-        if (item.isEvent) return ContextCompat.getColor(requireContext(), R.color.accent)
-        val palette = ScheduleView.buildCoursePaletteMap(s.courses + s.adjustments.map { it.courseSnapshot }, s.courseColors)
-        return palette[item.title]?.background ?: ContextCompat.getColor(requireContext(), R.color.accent)
+    // ===== 今日视图（日视图） =====
+
+    private fun todayDayOfWeek(): Int {
+        val d = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+        return if (d == Calendar.SUNDAY) 7 else d - 1
+    }
+
+    /** 渲染今日视图：顶部居中对齐的本周七天选择条 + 左侧时间线 + 清晰课程卡片流。 */
+    private fun renderDayView() {
+        val b = _binding ?: return
+        val s = schedule ?: return
+        val ctx = context ?: return
+        val dates = DateUtils.datesForWeek(s.semesterStart, currentWeek)
+        val shortNames = listOf("一", "二", "三", "四", "五", "六", "日")
+        val slots = ScheduleTime.slotsOf(s.timeSlots)
+        val palette = ScheduleView.buildCoursePaletteMap(
+            s.courses + s.adjustments.map { it.courseSnapshot }, s.courseColors
+        )
+
+        // 1. 顶部一周 7 天快速切换条（星期、日期数字、有课圆点严格同轴居中对齐）
+        b.dayStrip.removeAllViews()
+        for (day in 1..7) {
+            val dateInfo = dates.getOrNull(day - 1)
+            val isSelected = day == selectedDay
+            val isToday = dateInfo?.today == true
+            val hasItems = ScheduleOccurrences.occurrencesOn(s, currentWeek, day).isNotEmpty() ||
+                events.any { it.day == day && it.occursIn(currentWeek) }
+            val cell = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
+                    marginStart = Rpx.dp(2f); marginEnd = Rpx.dp(2f)
+                }
+                background = GradientDrawable().apply {
+                    cornerRadius = Rpx.dp(14f).toFloat()
+                    setColor(
+                        when {
+                            isSelected -> ContextCompat.getColor(ctx, R.color.accent)
+                            isToday -> ContextCompat.getColor(ctx, R.color.accent_soft)
+                            else -> Color.TRANSPARENT
+                        }
+                    )
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    if (selectedDay != day) {
+                        selectedDay = day
+                        renderDayView()
+                        updateBackButton()
+                    }
+                }
+            }
+            val wrap = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            cell.addView(TextView(ctx).apply {
+                layoutParams = wrap
+                gravity = Gravity.CENTER
+                includeFontPadding = false
+                text = shortNames[day - 1]
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                setTextColor(
+                    ContextCompat.getColor(
+                        ctx,
+                        when {
+                            isSelected -> R.color.surface
+                            isToday -> R.color.accent_strong
+                            else -> R.color.text_tertiary
+                        }
+                    )
+                )
+            })
+            cell.addView(TextView(ctx).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = Rpx.dp(3f) }
+                gravity = Gravity.CENTER
+                includeFontPadding = false
+                text = dateInfo?.day?.toString() ?: shortNames[day - 1]
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                typeface = if (isSelected || isToday) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                setTextColor(
+                    ContextCompat.getColor(
+                        ctx,
+                        when {
+                            isSelected -> R.color.surface
+                            isToday -> R.color.accent_strong
+                            else -> R.color.text_primary
+                        }
+                    )
+                )
+            })
+            cell.addView(View(ctx).apply {
+                val size = Rpx.dp(4f)
+                layoutParams = LinearLayout.LayoutParams(size, size).apply { topMargin = Rpx.dp(4f) }
+                visibility = if (hasItems) View.VISIBLE else View.INVISIBLE
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(
+                        ContextCompat.getColor(
+                            ctx,
+                            if (isSelected) R.color.surface else R.color.accent
+                        )
+                    )
+                }
+            })
+            b.dayStrip.addView(cell)
+        }
+
+        // 2. 当天课程与日程列表（使用独立的日视图已上状态开关 Prefs.timetableAppearance.showDayFinished）
+        b.dayCardList.removeAllViews()
+        val dateIso = dates.getOrNull(selectedDay - 1)?.iso
+        val todayIso = DateUtils.formatDate(Calendar.getInstance())
+        val isToday = dates.getOrNull(selectedDay - 1)?.today == true
+        val isPastDay = dateIso != null && dateIso < todayIso
+        val showDayFinished = Prefs.timetableAppearance.showDayFinished
+        val nowMinutes = Calendar.getInstance().let { it.get(Calendar.HOUR_OF_DAY) * 60 + it.get(Calendar.MINUTE) }
+        val suspended = s.holidays.any { it.week == currentWeek && it.day == selectedDay }
+
+        data class DayEntry(
+            val title: String,
+            val position: String,
+            val teacher: String,
+            val startSection: Int,
+            val endSection: Int,
+            val startTime: String,
+            val endTime: String,
+            val color: Int,
+            val isEvent: Boolean,
+            val badge: String,
+            val ongoing: Boolean,
+            val faded: Boolean
+        )
+
+        val entries = mutableListOf<DayEntry>()
+        ScheduleOccurrences.occurrencesOn(s, currentWeek, selectedDay).forEach { occ ->
+            val course = occ.course
+            val startTime = slots.find { it.number == course.startSection }?.startTime.orEmpty()
+            val endTime = slots.find { it.number == course.endSection }?.endTime.orEmpty()
+            val leave = Leaves.leaveFor(leaves, s, dateIso, course)
+            val startMin = parseMinutes(startTime)
+            val endMin = parseMinutes(endTime)
+            val ongoing = isToday && leave == null && startMin != null && endMin != null && nowMinutes in startMin until endMin
+            val finished = showDayFinished && leave == null &&
+                (isPastDay || (isToday && endMin != null && nowMinutes >= endMin))
+            val badge = when {
+                leave != null -> leave.type.label
+                ongoing -> getString(R.string.next_class_ongoing)
+                finished -> getString(R.string.day_view_badge_finished)
+                occ.source == ScheduleOccurrences.Source.ADJUSTED -> getString(R.string.day_view_badge_adjusted)
+                occ.source == ScheduleOccurrences.Source.MAKEUP -> getString(R.string.day_view_badge_makeup)
+                else -> ScheduleView.alternatingWeekBadge(course.weeks)
+            }
+            val tone = palette[course.name]?.background ?: ContextCompat.getColor(ctx, R.color.accent)
+            entries += DayEntry(
+                title = course.name,
+                position = course.position,
+                teacher = course.teacher,
+                startSection = course.startSection,
+                endSection = course.endSection,
+                startTime = startTime,
+                endTime = endTime,
+                color = tone,
+                isEvent = false,
+                badge = badge,
+                ongoing = ongoing,
+                faded = leave != null || finished
+            )
+        }
+        events.filter { it.day == selectedDay && it.occursIn(currentWeek) }.forEach { ev ->
+            val startTime = ev.startTime ?: slots.find { it.number == ev.startSection }?.startTime.orEmpty()
+            val endTime = ev.endTime ?: slots.find { it.number == ev.endSection }?.endTime.orEmpty()
+            val startMin = parseMinutes(startTime)
+            val endMin = parseMinutes(endTime)
+            val ongoing = isToday && startMin != null && endMin != null && nowMinutes in startMin until endMin
+            val finished = showDayFinished &&
+                (isPastDay || (isToday && endMin != null && nowMinutes >= endMin))
+            val tone = ScheduleView.manualPalette(ev.color)?.background ?: BlockStyles.DEFAULT_EVENT_COLOR
+            entries += DayEntry(
+                title = ev.title,
+                position = ev.position,
+                teacher = ev.note,
+                startSection = ev.startSection,
+                endSection = ev.endSection,
+                startTime = startTime,
+                endTime = endTime,
+                color = tone,
+                isEvent = true,
+                badge = when {
+                    ongoing -> getString(R.string.next_class_ongoing)
+                    finished -> getString(R.string.day_view_badge_finished)
+                    else -> getString(R.string.event_badge)
+                },
+                ongoing = ongoing,
+                faded = finished
+            )
+        }
+
+        entries.sortWith(compareBy({ it.startSection }, { it.isEvent }, { it.startTime }))
+
+        if (entries.isEmpty()) {
+            b.dayEmptyCard.visibility = View.VISIBLE
+            b.dayEmptyTitle.setText(if (suspended) R.string.day_view_suspended else R.string.day_view_empty)
+            b.dayEmptySub.visibility = View.GONE
+            return
+        }
+        b.dayEmptyCard.visibility = View.GONE
+
+        entries.forEachIndexed { index, item ->
+            val card = ItemDayCourseCardBinding.inflate(layoutInflater, b.dayCardList, false)
+            card.dayStartTime.text = item.startTime.ifBlank { "-" }
+            card.dayEndTime.text = item.endTime.ifBlank { "-" }
+            card.dayStartTime.setTextColor(
+                ContextCompat.getColor(
+                    ctx,
+                    when {
+                        item.ongoing -> R.color.couple_now_line
+                        item.faded -> R.color.text_tertiary
+                        else -> R.color.text_primary
+                    }
+                )
+            )
+
+            // 侧边时间线：首项隐藏上段，末项隐藏下段；圆点区分已上/正在上/未上
+            card.timelineTopLine.visibility = if (index == 0) View.INVISIBLE else View.VISIBLE
+            card.timelineBottomLine.visibility = if (index == entries.lastIndex) View.INVISIBLE else View.VISIBLE
+            val dotStrokePx = Rpx.dp(2f)
+            card.timelineDot.background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                when {
+                    item.ongoing -> {
+                        setColor(ContextCompat.getColor(ctx, R.color.couple_now_line))
+                        setStroke(dotStrokePx, ContextCompat.getColor(ctx, R.color.couple_status_busy_bg))
+                    }
+                    item.faded -> {
+                        setColor(ContextCompat.getColor(ctx, R.color.background))
+                        setStroke(dotStrokePx, ContextCompat.getColor(ctx, R.color.text_disabled))
+                    }
+                    else -> {
+                        setColor(BlockStyles.courseSoftAccent(item.color))
+                        setStroke(dotStrokePx, ContextCompat.getColor(ctx, R.color.background))
+                    }
+                }
+            }
+
+            card.dayTitle.text = item.title
+            card.dayCardRoot.alpha = if (item.faded) 0.56f else 1f
+            if (item.badge.isNotBlank()) {
+                card.dayBadge.visibility = View.VISIBLE
+                card.dayBadge.text = item.badge
+                val (bgColor, fgColor) = when {
+                    item.ongoing -> ContextCompat.getColor(ctx, R.color.couple_status_busy_bg) to ContextCompat.getColor(ctx, R.color.danger)
+                    item.faded -> ContextCompat.getColor(ctx, R.color.surface_muted) to ContextCompat.getColor(ctx, R.color.text_tertiary)
+                    else -> BlockStyles.courseSoftFill(item.color) to BlockStyles.courseSoftText(item.color)
+                }
+                card.dayBadge.background = GradientDrawable().apply {
+                    cornerRadius = Rpx.dp(100f).toFloat()
+                    setColor(bgColor)
+                }
+                card.dayBadge.setTextColor(fgColor)
+            }
+
+            val sectionLabel = if (item.startSection == item.endSection) {
+                getString(R.string.day_view_section_single, item.startSection)
+            } else {
+                getString(R.string.day_view_section_range, item.startSection, item.endSection)
+            }
+            card.dayPlace.text = listOfNotNull(
+                item.position.takeIf { it.isNotBlank() },
+                sectionLabel
+            ).joinToString(" · ")
+
+            if (item.teacher.isNotBlank()) {
+                card.dayTeacherRow.visibility = View.VISIBLE
+                card.dayTeacher.text = item.teacher
+            }
+            card.dayCardRoot.setOnClickListener {
+                binding.timetable.openDayItem(selectedDay, item.title, item.isEvent, item.startSection)
+            }
+            b.dayCardList.addView(card.root)
+        }
+    }
+
+    private fun parseMinutes(hhmm: String): Int? {
+        val parts = hhmm.split(":")
+        if (parts.size != 2) return null
+        val h = parts[0].toIntOrNull() ?: return null
+        val m = parts[1].toIntOrNull() ?: return null
+        return h * 60 + m
     }
 
     private fun openNextClass() {
@@ -518,6 +890,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             leaves = leaves
         )
         binding.timetable.goToWeek(currentWeek)
+        if (dayViewMode) renderDayView()
     }
 
     // ===== 自己加的课 =====
@@ -735,24 +1108,27 @@ class ScheduleFragment : Fragment(), Refreshable {
             leaves = leaves
         )
         binding.timetable.goToWeek(currentWeek)
+        if (dayViewMode) renderDayView()
     }
 
     /**
-     * 页头右侧只有一个「⋯」：点开是带文字的操作面板，课表页能做的事都列在里面，
-     * 不必靠长按、点表头日期这些看不见的手势去发现（手势仍保留为快捷方式）。
-     * 有两份以上课表时第一项是「切换课表」，不用绕到课表库。
+     * 页头右侧的操作已并入 weekBar（周/日切换 + ⋯），AppHeader 保持纯净无多余按钮。
      */
     private fun updateHeaderActions() {
-        val header = binding.header
-        header.clearActions()
-        header.addAction(headerIconButton(R.drawable.ic_more, getString(R.string.library_more)) { showMoreActions() })
+        binding.header.clearActions()
     }
 
     private fun showMoreActions() {
         val current = schedule ?: return
         val day = defaultHolidayDay()
         val actions = buildList {
-            if (allSchedules.size > 1) add(ActionSheet.Item(getString(R.string.schedule_switch), R.drawable.ic_swap) { showScheduleSwitcher() })
+            if (allSchedules.size > 1) add(ActionSheet.Item(getString(R.string.schedule_switch), R.drawable.ic_swap, group = 0) { showScheduleSwitcher() })
+            add(ActionSheet.Item(getString(R.string.course_new_title), R.drawable.ic_menu_add, group = 0) {
+                startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, 1))
+            })
+            add(ActionSheet.Item(getString(R.string.event_new_title), R.drawable.ic_calendar, group = 0) {
+                showEventEditor(null, currentWeek, day, 1)
+            })
             if (current.isOwner) add(ActionSheet.Item(getString(R.string.holiday_title), R.drawable.ic_menu_holiday, group = 1) {
                 showHolidaySheet(currentWeek, day)
             })
@@ -765,10 +1141,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             })
             add(ActionSheet.Item(getString(R.string.library_action_export), R.drawable.ic_menu_export, group = 2) { exportFlow.show(current.id) })
         }
-        ActionSheet(requireContext(), current.name, actions, primaryActions = Pair(
-            { startActivity(CourseEditorActivity.intent(requireContext(), current.id, null, day, 1)) },
-            { showEventEditor(null, currentWeek, day, 1) }
-        )).show()
+        ActionSheet(requireContext(), current.name, actions).show()
     }
 
     /** 「⋯」里的「切换课表」：列出本机全部课表，当前那份带勾；点另一份就地切换。 */
@@ -787,29 +1160,6 @@ class ScheduleFragment : Fragment(), Refreshable {
         }
         ActionSheet(requireContext(), getString(R.string.schedule_switch), items).show()
     }
-
-    /** 页头图标按钮：44dp 触摸区，里面画一个 34dp 的圆形浅底，按下有水波纹。 */
-    private fun headerIconButton(iconRes: Int, description: String, onClick: () -> Unit): View =
-        AppCompatImageView(requireContext()).apply {
-            setImageResource(iconRes)
-            val inset = Rpx.dp(5f)
-            val circle = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(ContextCompat.getColor(context, R.color.hover_bg))
-            }
-            background = RippleDrawable(
-                ColorStateList.valueOf(ContextCompat.getColor(context, R.color.line)),
-                InsetDrawable(circle, inset),
-                InsetDrawable(GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(0xff000000.toInt()) }, inset)
-            )
-            val pad = Rpx.dp(12f)
-            setPadding(pad, pad, pad, pad)
-            layoutParams = ViewGroup.MarginLayoutParams(Rpx.dp(44f), Rpx.dp(44f))
-            isClickable = true
-            isFocusable = true
-            contentDescription = description
-            setOnClickListener { onClick() }
-        }
 
     /**
      * 课表外观面板：改一下即时生效并写入本机偏好。
@@ -853,6 +1203,7 @@ class ScheduleFragment : Fragment(), Refreshable {
         val beforeRow = binding.timetable.currentRowHeightPx()
         val beforeScroll = scroll.scrollY
         binding.timetable.setAppearance(value)
+        if (dayViewMode) renderDayView()
         updateNextClass()
         if (beforeRow <= 0f || beforeScroll <= 0) return
         scroll.post {
@@ -953,6 +1304,7 @@ class ScheduleFragment : Fragment(), Refreshable {
             leaves = leaves
         )
         binding.timetable.goToWeek(currentWeek)
+        if (dayViewMode) renderDayView()
     }
 
     private fun persistColors(colors: Map<String, String>, undoable: Boolean = true) {
@@ -1016,8 +1368,8 @@ class ScheduleFragment : Fragment(), Refreshable {
         private const val STATE_EMPTY = 2
         private const val STATE_ERROR = 3
         private const val STATE_WEEK = "selectedWeek"
-        /** 翻过半页时页头标题最多跟着平移多远。 */
-        private const val WEEK_TITLE_SHIFT_DP = 48f
+        /** 翻过半页时页头标题最多跟着平移多远（半页 ±10dp，始终小于左侧 16dp 留白）。 */
+        private const val WEEK_TITLE_SHIFT_DP = 20f
 
         /** 本进程内已弹过「课表已失效」的课表，跨 Fragment 重建保留。 */
         private val promptedGone = mutableSetOf<String>()

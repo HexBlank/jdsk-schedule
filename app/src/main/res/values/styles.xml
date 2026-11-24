@@ -124,18 +124,36 @@
         <item name="android:orientation">vertical</item>
     </style>
 
-    <!-- 一行：左字段名、右值、可点时末尾一个 › -->
+    <!-- 一行：左字段名、右值、可点时末尾一个矢量箭头 -->
     <style name="FormRow">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:minHeight">52dp</item>
+        <item name="android:minHeight">54dp</item>
         <item name="android:background">@drawable/bg_menu_row</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">14dp</item>
-        <item name="android:paddingTop">8dp</item>
-        <item name="android:paddingBottom">8dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+    <style name="FormGroupTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginTop">18dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:textSize">@dimen/text_hint</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="FormRowIcon">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:importantForAccessibility">no</item>
     </style>
 
     <style name="FormRowLabel">
@@ -158,13 +176,12 @@
     </style>
 
     <style name="FormRowChevron">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">16dp</item>
+        <item name="android:layout_height">16dp</item>
         <item name="android:layout_marginStart">6dp</item>
+        <item name="android:drawableEnd">@drawable/ic_chevron_right</item>
         <item name="android:importantForAccessibility">no</item>
-        <item name="android:text">›</item>
-        <item name="android:textColor">@color/arrow_grey</item>
-        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:text"></item>
     </style>
 
     <!-- 单选行末尾的勾：选中可见，未选中 invisible（占位不变） -->
@@ -207,7 +224,7 @@
     <style name="FormDivider">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1px</item>
-        <item name="android:layout_marginStart">14dp</item>
+        <item name="android:layout_marginStart">16dp</item>
         <item name="android:background">@color/divider</item>
     </style>
 
